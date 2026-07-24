@@ -30,6 +30,7 @@ import {
 
 import { PageContainer } from '@/shared/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/ui/card';
+import { AiHarvestPredictionModal } from "./components/AiHarvestPredictionModal";
 import {
   Select,
   SelectContent,
@@ -131,7 +132,15 @@ export function FarmerDashboardPage() {
         </div>
 
         {activeSeason && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-end shrink-0">
+              <AiHarvestPredictionModal 
+                seasonName={activeSeason.cropName} 
+                plantingDate={activeSeason.startDate} 
+                expectedGrowthDays={75}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
             <Card className="bg-card shadow-sm border-border/50">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="p-2.5 bg-primary/10 rounded-lg text-primary">
@@ -165,6 +174,7 @@ export function FarmerDashboardPage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
           </div>
         )}
 

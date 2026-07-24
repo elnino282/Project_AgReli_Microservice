@@ -9,19 +9,17 @@ export interface ImagePlaceholderProps {
 }
 
 export function ImagePlaceholder({
-  icon: Icon = ImageOff,
   label = "Chưa có ảnh",
   className,
 }: ImagePlaceholderProps) {
   return (
     <div
       className={cn(
-        "flex h-full w-full flex-col items-center justify-center bg-earth-100 text-earth-400",
+        "flex h-full w-full items-center justify-center overflow-hidden bg-earth-100",
         className
       )}
     >
-      <Icon className="mb-2 h-8 w-8 opacity-50" />
-      <span className="text-sm font-medium">{label}</span>
+      <img src="/Dashboard2.png" alt={label} className="h-full w-full object-cover" />
     </div>
   );
 }

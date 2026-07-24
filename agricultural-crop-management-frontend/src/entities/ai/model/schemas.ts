@@ -1,4 +1,4 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // AI SUGGESTION PARAMS (Farmer)
@@ -132,3 +132,27 @@ export const AiQaResponseSchema = z.object({
 });
 
 export type AiQaResponse = z.infer<typeof AiQaResponseSchema>;
+
+// PREDICT HARVEST REQUEST
+export const PredictHarvestRequestSchema = z.object({
+    cropName: z.string(),
+    plantingDate: z.string(),
+    expectedGrowthDays: z.number(),
+    recentLogs: z.array(z.object({
+        date: z.string(),
+        activityType: z.string(),
+        materialName: z.string(),
+        phiDays: z.number().nullable().optional(),
+    })).optional(),
+});
+
+export type PredictHarvestRequest = z.infer<typeof PredictHarvestRequestSchema>;
+
+// PREDICT HARVEST RESPONSE
+export const PredictHarvestResponseSchema = z.object({
+    predictedHarvestDate: z.string(),
+    safeHarvestDate: z.string(),
+    recommendation: z.string(),
+});
+
+export type PredictHarvestResponse = z.infer<typeof PredictHarvestResponseSchema>;

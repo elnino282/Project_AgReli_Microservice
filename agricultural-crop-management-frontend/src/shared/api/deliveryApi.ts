@@ -6,6 +6,11 @@ export interface CalculateShippingRequest {
   weightKg: number;
   requiresColdChain: boolean;
   prefersSameDay: boolean;
+  senderLat?: number;
+  senderLon?: number;
+  recipientLat?: number;
+  recipientLon?: number;
+  isGroupedDelivery?: boolean;
 }
 
 export interface ShippingOption {

@@ -1,4 +1,4 @@
-﻿import httpClient from '@/shared/api/http';
+import httpClient from '@/shared/api/http';
 import { parseApiResponse } from '@/shared/api/types';
 import { z } from 'zod';
 import {
@@ -14,6 +14,8 @@ import {
     BuyerAiChatResponseSchema,
     AiQaRequestSchema,
     AiQaResponseSchema,
+    PredictHarvestRequestSchema,
+    PredictHarvestResponseSchema
 } from '../model/schemas';
 import type {
     AiSuggestion,
@@ -28,6 +30,8 @@ import type {
     BuyerAiChatResponse,
     AiQaRequest,
     AiQaResponse,
+    PredictHarvestRequest,
+    PredictHarvestResponse
 } from '../model/types';
 
 export const aiApi = {
@@ -63,9 +67,29 @@ export const aiApi = {
         return parseApiResponse(response.data, CostOptimizationSchema);
     },
 
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    /** POST /api/v1/farmer/ai/predict-harvest - Predict harvest time */
+    predictHarvest: async (data: PredictHarvestRequest): Promise<PredictHarvestResponse> => {
+        const validatedPayload = PredictHarvestRequestSchema.parse(data);
+        const response = await httpClient.post('/api/v1/farmer/ai/predict-harvest', validatedPayload);
+        
+        let rawData = response.data.result || response.data.data;
+        if (typeof rawData === 'string') {
+            let jsonString = rawData;
+            if (jsonString.startsWith('```json')) {
+                jsonString = jsonString.replace(/```json\n?/, '').replace(/```\n?$/, '');
+            }
+            rawData = JSON.parse(jsonString);
+        }
+        
+        // We can't use parseApiResponse directly if the response.data.result was a string and we just parsed it.
+        // We'll reconstruct a response-like object to pass to parseApiResponse, or just parse the result directly.
+        // Since we know we want to return PredictHarvestResponse, we just parse rawData with the schema.
+        return PredictHarvestResponseSchema.parse(rawData);
+    },
+
+    // ════════════════════════════════════════════════════════════════════════════
     // BUYER AI ENDPOINTS
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // ════════════════════════════════════════════════════════════════════════════
 
     /** POST /api/v1/buyer/ai/chat - Buyer procurement Q&A chat */
     buyerChat: async (data: BuyerAiChatRequest): Promise<BuyerAiChatResponse> => {

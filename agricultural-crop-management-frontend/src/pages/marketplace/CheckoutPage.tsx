@@ -153,6 +153,7 @@ export function CheckoutPage() {
   const [addressForm, setAddressForm] = useState<AddressFormState>(() => emptyAddressForm());
   const [addressFormMessage, setAddressFormMessage] = useState<string | null>(null);
   const [selectedShippingOption, setSelectedShippingOption] = useState<ShippingOption | null>(null);
+  const [isGroupedDelivery, setIsGroupedDelivery] = useState(false);
 
   const mockCart = useMemo<MarketplaceCart | undefined>(() => {
     if (!buyNowItem) return undefined;
@@ -261,7 +262,7 @@ export function CheckoutPage() {
   const recipientProvince = addressMode === "new" ? addressForm.province : selectedAddress?.province;
 
   const { data: shippingOptions, isLoading: isShippingLoading } = useQuery({
-    queryKey: ["shippingOptions", senderProvince, recipientProvince, totalWeight, requiresColdChain],
+    queryKey: ["shippingOptions", senderProvince, recipientProvince, totalWeight, requiresColdChain, isGroupedDelivery],
     queryFn: () =>
       deliveryApi.calculate({
         senderProvince,
@@ -269,9 +270,20 @@ export function CheckoutPage() {
         weightKg: totalWeight,
         requiresColdChain,
         prefersSameDay: false,
+        isGroupedDelivery,
+        // Mock tọa độ nông trại và người mua để test tính phí theo bán kính Haversine
+        senderLat: 11.9404, // Đà Lạt
+        senderLon: 108.4583,
+        recipientLat: recipientProvince === "Lâm Đồng" ? 11.9450 : 10.7626, // Cùng TP hoặc HCM
+        recipientLon: recipientProvince === "Lâm Đồng" ? 108.4550 : 106.6601,
       }),
     enabled: !!recipientProvince && totalWeight > 0,
   });
+
+  useEffect(() => {
+    // Reset selected shipping option if cart changes
+    setSelectedShippingOption(null);
+  }, [cart]);
 
   useEffect(() => {
     if (shippingOptions && shippingOptions.length > 0) {
@@ -701,6 +713,41 @@ export function CheckoutPage() {
                   value={addressLine}
                   onChange={(event) => setAddressLine(event.target.value)}
                 />
+              </div>
+
+              {/* Delivery Schedule Options */}
+              <div className="space-y-3 pt-2">
+                <label className="block text-sm font-medium text-foreground">Thời gian nhận hàng</label>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <div
+                    onClick={() => setIsGroupedDelivery(false)}
+                    className={cn(
+                      "flex cursor-pointer items-center justify-between rounded-lg border-2 p-4 transition-all",
+                      !isGroupedDelivery ? "border-primary bg-primary/5" : "border-border bg-card hover:border-border/80"
+                    )}
+                  >
+                    <div>
+                      <div className="font-semibold text-foreground">Giao hàng tiêu chuẩn</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">Nhận hàng ngay khi có thể</div>
+                    </div>
+                  </div>
+                  
+                  <div
+                    onClick={() => setIsGroupedDelivery(true)}
+                    className={cn(
+                      "flex cursor-pointer items-center justify-between rounded-lg border-2 p-4 transition-all relative overflow-hidden",
+                      isGroupedDelivery ? "border-emerald-500 bg-emerald-500/5" : "border-border bg-card hover:border-border/80"
+                    )}
+                  >
+                    <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">
+                      Giảm 30% phí
+                    </div>
+                    <div>
+                      <div className="font-semibold text-foreground text-emerald-700">Hẹn lịch cuối tuần</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">Gom đơn - Tiết kiệm chi phí ship</div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Shipping Options Selector */}

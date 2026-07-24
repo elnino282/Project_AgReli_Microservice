@@ -67,4 +67,10 @@ public class AiController {
         String result = geminiService.diagnoseDisease(imageBytes, request.getMimeType());
         return ApiResponse.success(result);
     }
+    @PreAuthorize("hasRole('FARMER')")
+    @PostMapping("/farmer/ai/predict-harvest")
+    public ApiResponse<String> predictHarvest(@RequestBody org.example.ai.dto.request.PredictHarvestRequest request) {
+        String result = geminiService.predictHarvestDate(request);
+        return ApiResponse.success(result);
+    }
 }

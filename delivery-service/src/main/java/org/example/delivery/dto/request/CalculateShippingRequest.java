@@ -15,5 +15,14 @@ public record CalculateShippingRequest(
     BigDecimal weightKg,
 
     boolean requiresColdChain,
-    boolean prefersSameDay
+    boolean prefersSameDay,
+    
+    // Tọa độ để tính khoảng cách (Optional)
+    Double senderLat,
+    Double senderLon,
+    Double recipientLat,
+    Double recipientLon,
+    
+    // Giao hàng gom cuối tuần
+    boolean isGroupedDelivery
 ) {}

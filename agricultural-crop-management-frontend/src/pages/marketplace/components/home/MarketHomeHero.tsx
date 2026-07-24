@@ -106,9 +106,12 @@ export function MarketHomeHero({ heroImageUrl, totalFarms }: MarketHomeHeroProps
                 </div>
               </div>
             ) : (
-              <div className="flex aspect-[4/3] w-full flex-col items-center justify-center space-y-4 rounded-2xl bg-earth-200/50 p-8 text-center text-sm font-medium text-earth-800/60 ring-1 ring-earth-900/5">
-                <Leaf size={48} className="text-earth-300" />
-                <span>Tham gia cộng đồng nông sản sạch</span>
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-2xl ring-1 ring-earth-900/10">
+                <img
+                  src="/Dashboard1.png"
+                  alt="Nông trại xanh tươi"
+                  className="h-full w-full object-cover"
+                />
               </div>
             )}
           </div>

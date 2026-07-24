@@ -11,4 +11,6 @@ export type {
     BuyerAiChatResponse,
     AiQaRequest,
     AiQaResponse,
+    PredictHarvestRequest,
+    PredictHarvestResponse
 } from './schemas';

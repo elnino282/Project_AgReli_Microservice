@@ -243,6 +243,55 @@ public class GeminiService {
         }
     }
 
+    public String predictHarvestDate(org.example.ai.dto.request.PredictHarvestRequest request) {
+        String requestId = UUID.randomUUID().toString();
+        if (!aiEnabled) {
+            log.warn("Gemini harvest prediction skipped because AI is disabled (requestId={}).", requestId);
+            throw new IllegalStateException("Gemini AI is disabled");
+        }
+
+        String prompt = "Bạn là Kỹ sư Nông nghiệp (Agronomist). Hãy phân tích dữ liệu mùa vụ sau để dự đoán ngày thu hoạch.\n" +
+                "Loại cây: " + request.getCropName() + "\n" +
+                "Ngày trồng: " + request.getPlantingDate() + "\n" +
+                "Thời gian sinh trưởng dự kiến: " + request.getExpectedGrowthDays() + " ngày\n";
+
+        if (request.getRecentLogs() != null && !request.getRecentLogs().isEmpty()) {
+            prompt += "Lịch sử dùng phân/thuốc gần nhất:\n";
+            for (org.example.ai.dto.request.PredictHarvestRequest.FarmingLogDto logItem : request.getRecentLogs()) {
+                prompt += "- " + logItem.getDate() + ": " + logItem.getActivityType() + " (" + logItem.getMaterialName() + ")";
+                if (logItem.getPhiDays() != null) {
+                    prompt += " - Cách ly (PHI): " + logItem.getPhiDays() + " ngày";
+                }
+                prompt += "\n";
+            }
+        }
+
+        prompt += "\nHãy trả về kết quả dưới định dạng JSON bao gồm 3 trường:\n" +
+                "1. predictedHarvestDate (Ngày thu hoạch ước tính, định dạng YYYY-MM-DD)\n" +
+                "2. safeHarvestDate (Ngày thu hoạch an toàn sau khi đã trừ đi số ngày cách ly lớn nhất của lần phun thuốc cuối, định dạng YYYY-MM-DD)\n" +
+                "3. recommendation (Lời khuyên canh tác, ví dụ: 'Cần ngừng bón phân đạm từ hôm nay', 'Có thể thu hoạch từ ngày X').";
+
+        GenerateContentConfig config = GenerateContentConfig.builder()
+                .responseMimeType("application/json")
+                .temperature(0.1F)
+                .maxOutputTokens(1024)
+                .build();
+                
+        Content content = Content.fromParts(Part.fromText(prompt));
+
+        try {
+            GenerateContentResponse response = client.models.generateContent(model, content, config);
+            String text = response.text();
+            if (text == null || text.isBlank()) {
+                throw new IllegalStateException("Empty response from Gemini");
+            }
+            return text;
+        } catch (Exception ex) {
+            logUnexpectedException(requestId, ex);
+            throw new IllegalStateException("Gemini API error during harvest prediction", ex);
+        }
+    }
+
     private String chatWithPrompt(String userMessage,
                                   String context,
                                   String systemPrompt,

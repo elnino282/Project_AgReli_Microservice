@@ -127,9 +127,8 @@ function ProductImage({ src, alt }: { src?: string | null; alt: string }) {
 
   if (!src || hasError) {
     return (
-      <div className="fs-product-card__image-fallback">
-        <ImageOff aria-hidden="true" />
-        <span>Ảnh sản phẩm đang cập nhật</span>
+      <div className="fs-product-card__image-fallback overflow-hidden">
+        <img src="/png-la-gi-2.png" alt="Placeholder" className="w-full h-full object-cover" />
       </div>
     );
   }
@@ -178,8 +177,8 @@ function FarmHero({ farm, isAuthenticated, currentUserId }: FarmHeroProps) {
             referrerPolicy="no-referrer"
           />
         ) : (
-          <div className="farm-store-hero__cover-placeholder" aria-hidden="true">
-            <Tractor />
+          <div className="farm-store-hero__cover-placeholder overflow-hidden" aria-hidden="true">
+            <img src="/png-la-gi-2.png" alt="Placeholder" className="w-full h-full object-cover" />
           </div>
         )}
       </div>
