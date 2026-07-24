@@ -1,12 +1,12 @@
 import httpClient from '@/shared/api/http';
 import type {
   Season,
-  SeasonDetail,
-  CreateSeasonRequest,
-  CompleteSeasonRequest,
-  CancelSeasonRequest,
-  SeasonSearchParams,
-} from '../types/Season';
+  SeasonDetailResponse as SeasonDetail,
+  SeasonCreateRequest as CreateSeasonRequest,
+  SeasonCompleteRequest as CompleteSeasonRequest,
+  SeasonCancelRequest as CancelSeasonRequest,
+  SeasonListParams as SeasonSearchParams,
+} from '../model/types';
 
 export interface PageResponse<T> {
   content: T[];

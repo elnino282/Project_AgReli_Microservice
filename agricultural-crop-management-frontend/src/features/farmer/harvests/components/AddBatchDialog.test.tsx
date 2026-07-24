@@ -61,6 +61,7 @@ const baseFormData: HarvestFormData = {
   brokenGrains: "",
   harvestLoss: "",
   cropResidueHandling: "",
+  qualityGrade: "PASSED",
 };
 
 describe("AddBatchDialog", () => {

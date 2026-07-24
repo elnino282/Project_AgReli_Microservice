@@ -40,9 +40,9 @@ import {
 import { Calendar, Plus, Search, CheckCircle2, AlertCircle, Award, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { farmsApi } from "../../api/farmsApi";
-import { seasonsApi } from "../../api/seasonsApi";
-import type { SeasonSearchParams } from "../../types/Season";
+import { farmsApi } from "@/entities/farm/api/farmsApi";
+import { seasonsApi } from "@/entities/season/api/seasonsApi";
+import type { SeasonListParams as SeasonSearchParams } from "@/entities/season/model/types";
 
 function SeasonHarvestSafetyBadge({ seasonId }: { seasonId: number }) {
   const { data: activePHI } = useQuery({
@@ -208,7 +208,7 @@ export function SeasonsPage() {
   } = useQuery({
     queryKey: ["seasons", { ...filters, q: debouncedSearch || undefined }],
     queryFn: () =>
-      seasonsApi.searchSeasons({ ...filters, q: debouncedSearch || undefined }),
+      seasonsApi.searchSeasons({ ...filters, q: debouncedSearch || undefined } as any),
     placeholderData: keepPreviousData,
   });
 
@@ -436,7 +436,7 @@ export function SeasonsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('seasons.filters.allFarms')}</SelectItem>
-                {farms?.map((farm) => (
+                {farms?.map((farm: any) => (
                   <SelectItem key={farm.id} value={farm.id.toString()}>
                     {farm.farmName}
                   </SelectItem>
@@ -502,7 +502,7 @@ export function SeasonsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {seasons.map((season) => (
+                  {seasons.map((season: any) => (
                     <TableRow key={season.id}>
                       <TableCell className="font-medium">
                         {season.seasonName}

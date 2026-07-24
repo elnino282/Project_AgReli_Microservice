@@ -48,4 +48,7 @@ export {
   useUpdateSeasonPayrollRecord,
   useEmployeeAcceptTask,
   useEmployeeReportTaskProgress,
+  useApproveTask,
+  useRejectTask,
+  useTaskProgressLogs,
 } from "./api/hooks";

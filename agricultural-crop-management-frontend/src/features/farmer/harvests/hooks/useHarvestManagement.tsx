@@ -51,6 +51,7 @@ const INITIAL_FORM_DATA: HarvestFormData = {
   brokenGrains: "",
   harvestLoss: "",
   cropResidueHandling: "",
+  qualityGrade: "PASSED",
 };
 
 const parseSeasonId = (value?: string | number | null): number | undefined => {

@@ -243,7 +243,7 @@ function OrderActionButtons({ orderId, t }: { orderId: number; t: Translator }) 
 function OrderCard({ order, t }: { order: MarketplaceOrder; t: Translator }) {
   const cancellable = isMarketplaceBuyerOrderCancellable(order);
   const itemCount = order.items.length;
-  const isActive = order.status === "PROCESSING" || order.status === "SHIPPED";
+  const isActive = (order.status as any) === "PROCESSING" || (order.status as any) === "SHIPPED";
 
   return (
     <article className={`rounded-3xl border bg-white p-5 shadow-sm transition-all hover:shadow-md sm:p-6 ${isActive ? 'border-emerald-200' : 'border-neutral-200'}`}>
@@ -354,7 +354,7 @@ function HealthMetrics() {
 }
 
 function FoodJourneyTimeline({ order }: { order: MarketplaceOrder }) {
-  if (order.status !== "PROCESSING" && order.status !== "SHIPPED") return null;
+  if ((order.status as any) !== "PROCESSING" && (order.status as any) !== "SHIPPED") return null;
 
   return (
     <div className="relative mb-8 overflow-hidden rounded-2xl border border-emerald-200 bg-white p-6 shadow-sm">
@@ -514,7 +514,7 @@ export function MyOrdersPage() {
   const orderPage = ordersQuery.data;
   const orders = orderPage?.items ?? [];
   const totalPages = Math.max(orderPage?.totalPages ?? 1, 1);
-  const activeOrder = orders.find(o => o.status === "PROCESSING" || o.status === "SHIPPED");
+  const activeOrder = orders.find(o => (o.status as any) === "PROCESSING" || (o.status as any) === "SHIPPED");
 
   return (
     <OrdersPageShell>

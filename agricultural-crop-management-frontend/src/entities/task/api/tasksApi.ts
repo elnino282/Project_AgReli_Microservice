@@ -1,12 +1,12 @@
 import httpClient from '@/shared/api/http';
 import type {
   Task,
-  CreateTaskRequest,
-  UpdateTaskRequest,
-  CompleteTaskRequest,
-  StartTaskRequest,
-  TaskSearchParams,
-} from '../types/Task';
+  TaskCreateRequest as CreateTaskRequest,
+  TaskUpdateRequest as UpdateTaskRequest,
+  TaskDoneRequest as CompleteTaskRequest,
+  TaskStartRequest as StartTaskRequest,
+  TaskListParams as TaskSearchParams,
+} from '../model/types';
 
 export interface PageResponse<T> {
   content: T[];

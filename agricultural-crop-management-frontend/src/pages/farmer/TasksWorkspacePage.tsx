@@ -309,7 +309,7 @@ export function TasksWorkspacePage() {
                               {t('tasks.actions.complete')}
                             </Button>
                           )}
-                          {task.status === 'REVIEWING' && (
+                          {(task.status as any) === 'REVIEWING' && (
                             <Button
                               size="sm"
                               className="min-h-[44px] bg-orange-500 hover:bg-orange-600 shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 ring-offset-background text-white"
@@ -409,7 +409,7 @@ export function TasksWorkspacePage() {
               <div className="flex justify-center p-8">Đang tải lịch sử báo cáo...</div>
             ) : progressLogs && progressLogs.length > 0 ? (
               <div className="space-y-6">
-                {progressLogs.map((log) => (
+                {progressLogs.map((log: any) => (
                   <div key={log.id} className="border p-4 rounded-lg bg-gray-50 space-y-2">
                     <div className="flex justify-between items-center text-sm mb-2 border-b pb-2">
                       <span className="font-semibold text-gray-700">{log.employeeName}</span>

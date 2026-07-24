@@ -110,7 +110,7 @@ export function ProductWarehousePage() {
   const [searchInput, setSearchInput] = useState<string>("");
   const [lotPage, setLotPage] = useState(0);
   const [transactionPage, setTransactionPage] = useState(0);
-  const [selectedTraceLotId, setSelectedTraceLotId] = useState<number | null>(null);
+  const [selectedTraceLotId, setSelectedTraceLotId] = useState<number | undefined>(undefined);
   const [adjustingLot, setAdjustingLot] = useState<ProductWarehouseLot | null>(null);
   const [stockingOutLot, setStockingOutLot] = useState<ProductWarehouseLot | null>(null);
   const [subStandardLot, setSubStandardLot] = useState<ProductWarehouseLot | null>(null);

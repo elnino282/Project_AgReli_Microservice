@@ -109,7 +109,7 @@ export function SelfAssessmentPage() {
         <PageHeader 
           title="Kết quả tự đánh giá VietGAP" 
           subtitle="Báo cáo kết quả tự kiểm tra mức độ tuân thủ tiêu chuẩn."
-          action={<BackButton onClick={() => setShowResult(false)} label="Làm lại" />}
+          actions={<BackButton onClick={() => setShowResult(false)} label="Làm lại" />}
         />
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -183,7 +183,7 @@ export function SelfAssessmentPage() {
       <PageHeader 
         title="Tự đánh giá VietGAP" 
         subtitle="Checklist tự kiểm tra nội bộ trước khi đăng ký đánh giá chính thức."
-        action={<BackButton onClick={() => navigate(`/farmer/farms/${farmId}/certification`)} />}
+        actions={<BackButton onClick={() => navigate(`/farmer/farms/${farmId}/certification`)} />}
       />
 
       <div className="bg-blue-50 text-blue-800 p-4 rounded-lg flex gap-3 mb-6 border border-blue-200">

@@ -65,7 +65,7 @@ export function CreateWorkTeamDialog({ open, onOpenChange, seasonId, onSuccess }
       if (seasonEmployeesData?.items) {
         seasonEmployeesData.items.forEach(emp => {
           if (emp.employeeUserId) {
-            seasonEmployeeMap.set(emp.employeeUserId, emp.isTrained ?? false);
+            seasonEmployeeMap.set(emp.employeeUserId, (emp as any).isTrained ?? false);
           }
         });
       }
