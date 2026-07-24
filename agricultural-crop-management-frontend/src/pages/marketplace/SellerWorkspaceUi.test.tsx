@@ -177,7 +177,7 @@ describe("seller marketplace workspace UI", () => {
 
     const nav = screen.getByRole("navigation", { name: "Không gian bán hàng" });
 
-    expect(nav).toHaveClass("rounded-lg");
+    expect(nav).toHaveClass("border-b");
     expect(nav).not.toHaveClass("rounded-xl");
     expect(screen.queryByRole("heading", { name: "Workspace bán hàng" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Sản phẩm/ })).toHaveAttribute("aria-current", "page");

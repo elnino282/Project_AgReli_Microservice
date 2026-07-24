@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SecurityPage } from './SecurityPage';
@@ -60,6 +60,10 @@ describe('SecurityPage', () => {
     await waitFor(() => {
       expect(mockMutateAsync).not.toHaveBeenCalled();
     });
+    
+    // Wait for the validation error to appear to prevent act(...) warning
+    expect(await screen.findByText('Mật khẩu xác nhận không khớp')).toBeInTheDocument();
+    
     expect(mockToastSuccess).not.toHaveBeenCalled();
   });
 

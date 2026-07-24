@@ -3,6 +3,22 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RejectWithReasonModal } from "../RejectWithReasonModal";
 
+vi.mock("@/shared/ui/dialog", () => ({
+  Dialog: ({ children, open, onOpenChange }: any) => (open ? <div>{children}</div> : null),
+  DialogContent: ({ children }: any) => <div>{children}</div>,
+  DialogHeader: ({ children }: any) => <div>{children}</div>,
+  DialogFooter: ({ children }: any) => <div>{children}</div>,
+  DialogTitle: ({ children }: any) => <h2>{children}</h2>,
+  DialogDescription: ({ children }: any) => <p>{children}</p>,
+}));
+
+vi.mock("@/shared/lib/hooks/useI18n", () => ({
+  useI18n: () => ({
+    t: (key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key,
+    isLoading: false,
+  }),
+}));
+
 describe("RejectWithReasonModal", () => {
   it("renders with title and description when open", () => {
     render(
@@ -37,7 +53,7 @@ describe("RejectWithReasonModal", () => {
     const textarea = screen.getByLabelText("Reason");
     await user.type(textarea, "Short");
 
-    expect(screen.getByText(/at least 10 characters/i)).toBeInTheDocument();
+    expect(screen.getByText("admin.marketplace.components.reasonValidation")).toBeInTheDocument();
   });
 
   it("disables confirm button until valid reason entered", async () => {

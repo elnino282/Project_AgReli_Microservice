@@ -28,7 +28,7 @@ export interface UseI18nReturn {
 export function useI18n(): UseI18nReturn {
   const { t: i18nT, i18n, ready } = useTranslation();
 
-  const locale = useMemo(() => getCurrentLocale(), [i18n.language]);
+  const locale = useMemo(() => getCurrentLocale(), [i18n?.language]);
 
   const setLocale = useCallback(async (newLocale: SupportedLocale) => {
     await changeLanguage(newLocale);
@@ -47,11 +47,11 @@ export function useI18n(): UseI18nReturn {
   return {
     t,
     locale,
-    languageCode: i18n.language,
+    languageCode: i18n?.language || "vi",
     setLocale,
     supportedLocales: SUPPORTED_LOCALES,
     localeDisplayNames: LANGUAGE_DISPLAY_NAMES,
-    isLoading: !ready,
+    isLoading: ready === false,
   };
 }
 

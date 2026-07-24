@@ -1,6 +1,15 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useHarvestManagement } from "./useHarvestManagement";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+);
 
 const mocks = vi.hoisted(() => ({
   useAllFarmerHarvests: vi.fn(),
@@ -117,7 +126,7 @@ describe("useHarvestManagement", () => {
   });
 
   it("maps only backend fields without placeholder transform values", () => {
-    const { result } = renderHook(() => useHarvestManagement());
+    const { result } = renderHook(() => useHarvestManagement(), { wrapper });
 
     expect(result.current.batches).toHaveLength(1);
     expect(result.current.batches[0]).toMatchObject({
@@ -137,7 +146,7 @@ describe("useHarvestManagement", () => {
   });
 
   it("builds status badge from backend harvest status", () => {
-    const { result } = renderHook(() => useHarvestManagement());
+    const { result } = renderHook(() => useHarvestManagement(), { wrapper });
 
     expect(result.current.getStatusBadge(result.current.batches[0].status)?.props.children)
       .toEqual(expect.arrayContaining(["Stored"]));
@@ -159,7 +168,7 @@ describe("useHarvestManagement", () => {
       },
     });
 
-    const { result } = renderHook(() => useHarvestManagement());
+    const { result } = renderHook(() => useHarvestManagement(), { wrapper });
 
     expect(result.current.totalHarvested).toBe(300);
     expect(result.current.lotsCount).toBe(3);
@@ -174,7 +183,7 @@ describe("useHarvestManagement", () => {
 
   it("does not show success or call create mutation when season is invalid", () => {
     mocks.useOptionalSeason.mockReturnValue(null);
-    const { result } = renderHook(() => useHarvestManagement());
+    const { result } = renderHook(() => useHarvestManagement(), { wrapper });
 
     act(() => {
       result.current.setFormData((previous) => ({
@@ -202,7 +211,7 @@ describe("useHarvestManagement", () => {
   });
 
   it("rejects non-positive quantity before create mutation", () => {
-    const { result } = renderHook(() => useHarvestManagement());
+    const { result } = renderHook(() => useHarvestManagement(), { wrapper });
 
     act(() => {
       result.current.setFormData((previous) => ({
@@ -229,7 +238,7 @@ describe("useHarvestManagement", () => {
       seasons: [{ id: 11, status: "ACTIVE", seasonName: "Spring 2026", plotId: undefined }],
     });
 
-    const { result } = renderHook(() => useHarvestManagement());
+    const { result } = renderHook(() => useHarvestManagement(), { wrapper });
 
     act(() => {
       result.current.setFormData((previous) => ({
@@ -260,7 +269,7 @@ describe("useHarvestManagement", () => {
       seasons: [{ id: 11, status: "PLANNED", seasonName: "Spring 2026", plotId: 21 }],
     });
 
-    const { result } = renderHook(() => useHarvestManagement());
+    const { result } = renderHook(() => useHarvestManagement(), { wrapper });
 
     act(() => {
       result.current.setFormData((previous) => ({
@@ -287,7 +296,7 @@ describe("useHarvestManagement", () => {
   });
 
   it("calls create mutation with validated payload for valid season", () => {
-    const { result } = renderHook(() => useHarvestManagement());
+    const { result } = renderHook(() => useHarvestManagement(), { wrapper });
 
     act(() => {
       result.current.setFormData((previous) => ({
@@ -326,7 +335,7 @@ describe("useHarvestManagement", () => {
   });
 
   it("opens edit form and calls update mutation for an existing batch", () => {
-    const { result } = renderHook(() => useHarvestManagement());
+    const { result } = renderHook(() => useHarvestManagement(), { wrapper });
 
     act(() => {
       result.current.handleEditBatch({
@@ -368,7 +377,7 @@ describe("useHarvestManagement", () => {
   });
 
   it("does not inject optional numeric metadata when user leaves fields empty", () => {
-    const { result } = renderHook(() => useHarvestManagement());
+    const { result } = renderHook(() => useHarvestManagement(), { wrapper });
 
     act(() => {
       result.current.setFormData((previous) => ({
@@ -398,7 +407,7 @@ describe("useHarvestManagement", () => {
   });
 
   it("calls delete mutation for a real batch", async () => {
-    const { result } = renderHook(() => useHarvestManagement());
+    const { result } = renderHook(() => useHarvestManagement(), { wrapper });
 
     await act(async () => {
       await result.current.handleDeleteBatch(result.current.batches[0]);
@@ -457,7 +466,7 @@ describe("useHarvestManagement", () => {
       },
     });
 
-    const { result } = renderHook(() => useHarvestManagement());
+    const { result } = renderHook(() => useHarvestManagement(), { wrapper });
     act(() => {
       result.current.handleExport(result.current.batches);
     });

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import type { HarvestFormData } from "../types";
 import { AddBatchDialog } from "./AddBatchDialog";
@@ -91,16 +92,18 @@ describe("AddBatchDialog", () => {
     });
 
     render(
-      <AddBatchDialog
-        open={true}
-        onOpenChange={vi.fn()}
-        formData={baseFormData}
-        onFormChange={vi.fn()}
-        onSubmit={vi.fn()}
-        seasonId={11}
-        warehouseCount={1}
-        onCancel={vi.fn()}
-      />,
+      <MemoryRouter>
+        <AddBatchDialog
+          open={true}
+          onOpenChange={vi.fn()}
+          formData={baseFormData}
+          onFormChange={vi.fn()}
+          onSubmit={vi.fn()}
+          seasonId={11}
+          warehouseCount={1}
+          onCancel={vi.fn()}
+        />
+      </MemoryRouter>,
     );
 
     expect(screen.getByLabelText(/Harvest Date/i)).toBeInTheDocument();
@@ -137,16 +140,18 @@ describe("AddBatchDialog", () => {
     });
 
     render(
-      <AddBatchDialog
-        open={true}
-        onOpenChange={vi.fn()}
-        formData={baseFormData}
-        onFormChange={vi.fn()}
-        onSubmit={vi.fn()}
-        seasonId={11}
-        warehouseCount={1}
-        onCancel={vi.fn()}
-      />,
+      <MemoryRouter>
+        <AddBatchDialog
+          open={true}
+          onOpenChange={vi.fn()}
+          formData={baseFormData}
+          onFormChange={vi.fn()}
+          onSubmit={vi.fn()}
+          seasonId={11}
+          warehouseCount={1}
+          onCancel={vi.fn()}
+        />
+      </MemoryRouter>,
     );
 
     fireEvent.click(screen.getByText("Advanced Inventory & Quality"));

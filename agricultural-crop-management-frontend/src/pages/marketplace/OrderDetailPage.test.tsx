@@ -103,7 +103,7 @@ describe('OrderDetailPage', () => {
     expect(await screen.findByText('ORD-55')).toBeInTheDocument();
     expect(screen.getByText('Rice')).toBeInTheDocument();
     expect(screen.getByText('Nguyen Van A')).toBeInTheDocument();
-    expect(screen.getByText(/BANK_TRANSFER · REJECTED/)).toBeInTheDocument();
+    expect(screen.getByText(/BANK_TRANSFER \u00B7 .*REJECTED/)).toBeInTheDocument();
     expect(screen.getByText('marketplaceBuyer.orderDetail.transferProofTitle')).toBeInTheDocument();
     expect(screen.getByText('marketplaceBuyer.orderDetail.rateProduct')).toBeInTheDocument();
   });

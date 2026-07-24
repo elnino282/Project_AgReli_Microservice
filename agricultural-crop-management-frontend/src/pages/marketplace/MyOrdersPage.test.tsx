@@ -170,9 +170,9 @@ describe("MyOrdersPage", () => {
 
     renderPage();
 
-    expect(screen.getByText("My orders")).toBeInTheDocument();
+    expect(screen.getByText("Kệ Thức Ăn An Toàn")).toBeInTheDocument();
     expect(
-      screen.getByText("Track fulfillment and payment verification for each farmer order."),
+      screen.getByText("Hành trình nông sản minh bạch từ nông trại đến gia đình bạn."),
     ).toBeInTheDocument();
     expect(screen.getByText("#ORD-1")).toBeInTheDocument();
     expect(screen.getByTestId("order-status-1")).toHaveTextContent("Pending payment");

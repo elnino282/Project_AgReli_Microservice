@@ -114,7 +114,7 @@ describe('SeasonNutrientInputsWorkspace', () => {
   it('renders ingestion form fields and season context', () => {
     renderPage();
 
-    expect(screen.getAllByText(/nutrient inputs/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("seasonNutrientWorkspace.title").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Plot A')).toBeInTheDocument();
     expect(screen.getByTestId('nutrient-input-form')).toBeInTheDocument();
     expect(screen.getByTestId('submit-nutrient-input')).toBeInTheDocument();

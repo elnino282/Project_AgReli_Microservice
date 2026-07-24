@@ -10,8 +10,8 @@ import { portalConfig } from '../lib/config';
 describe('Farmer Portal Navigation Configuration', () => {
     const farmerNav = portalConfig.FARMER.navigation;
 
-    it('should contain exactly 12 navigation items', () => {
-        expect(farmerNav).toHaveLength(12);
+    it('should contain exactly 11 navigation items', () => {
+        expect(farmerNav).toHaveLength(11);
     });
 
     it('should have items in the exact required order', () => {
@@ -21,10 +21,9 @@ describe('Farmer Portal Navigation Configuration', () => {
             'farms',
             'seasons',
             'suppliers-supplies',
-            'inventory',
             'product-warehouse',
             'documents',
-            'reports',
+            'farm-documents',
             'ai-assistant',
             'chat',
             'notifications',
@@ -57,10 +56,9 @@ describe('Farmer Portal Navigation Configuration', () => {
         expect(itemLabels['farms']).toBe('Farms & Plots');
         expect(itemLabels['seasons']).toBe('Seasons');
         expect(itemLabels['suppliers-supplies']).toBe('Suppliers & Supplies');
-        expect(itemLabels['inventory']).toBe('Supply Warehouse');
         expect(itemLabels['product-warehouse']).toBe('Product Warehouse');
         expect(itemLabels['documents']).toBe('Documents');
-        expect(itemLabels['reports']).toBe('Reports');
+        expect(itemLabels['farm-documents']).toBe('VietGAP Documents');
         expect(itemLabels['chat']).toBe('Chat');
         expect(itemLabels['notifications']).toBe('Notifications');
         expect(itemLabels['ai-assistant']).toBe('AI Assistant');

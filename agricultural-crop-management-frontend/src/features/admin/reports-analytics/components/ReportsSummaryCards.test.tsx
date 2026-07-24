@@ -31,7 +31,7 @@ describe("ReportsSummaryCards", () => {
     expect(screen.getByText("2,500 kg")).toBeInTheDocument();
     expect(screen.getByText("$10,000.00")).toBeInTheDocument();
     expect(screen.getByText("$2.00/kg")).toBeInTheDocument();
-    expect(screen.getByText("50.0% margin")).toBeInTheDocument();
+    expect(screen.getByText("admin.reportsAnalytics.summary.marginPercent")).toBeInTheDocument();
     expect(
       screen.getByText("No harvested yield in selected range while expenses exist"),
     ).toBeInTheDocument();
@@ -44,7 +44,7 @@ describe("ReportsSummaryCards", () => {
     render(<ReportsSummaryCards stats={null} warnings={[]} />);
 
     expect(screen.getByText("0 kg")).toBeInTheDocument();
-    expect(screen.getByText("—")).toBeInTheDocument();
+    expect(screen.getByText("common.notAvailable")).toBeInTheDocument();
     expect(screen.getAllByText("$0.00").length).toBeGreaterThanOrEqual(2);
   });
 });

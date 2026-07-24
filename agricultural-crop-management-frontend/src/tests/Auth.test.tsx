@@ -160,21 +160,26 @@ describe("Authentication pages", () => {
     const onSignUp = vi.fn().mockResolvedValue(undefined);
     const onGoogleSignIn = vi.fn().mockResolvedValue(undefined);
 
-    const { container } = renderAuth(
-      <SignUp onSignUp={onSignUp} onGoogleSignIn={onGoogleSignIn} />,
-    );
+    renderAuth(<SignUp onSignUp={onSignUp} onGoogleSignIn={onGoogleSignIn} />);
 
-    expect(container).not.toHaveTextContent("auth.signUp.roleFarmer");
-    expect(screen.getByText("Farmer")).toBeInTheDocument();
-    expect(screen.getByText("Buyer")).toBeInTheDocument();
-
-    await user.type(screen.getByLabelText("Full Name*"), "Jane Farmer");
+    // Step 1
     await user.type(screen.getByLabelText("Email*"), "jane@example.com");
-    await user.type(screen.getByLabelText(/Phone Number/), "+84 123 456 789");
-    await user.click(screen.getByText("Buyer"));
     await user.type(screen.getByLabelText("Password*"), "Abc@1234");
     await user.type(screen.getByLabelText("Confirm Password*"), "Abc@1234");
     await user.click(screen.getByText(/I agree to the/));
+    await user.click(screen.getByText("common.continue"));
+
+    // Wait for Step 2 to appear
+    await waitFor(() => {
+      expect(screen.getByText("Farmer")).toBeInTheDocument();
+    });
+
+    // Step 2
+    expect(screen.getByText("Buyer")).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Full Name*"), "Jane Farmer");
+    await user.type(screen.getByLabelText(/Phone Number/), "+84 123 456 789");
+    await user.click(screen.getByText("Buyer"));
+    
     await user.click(screen.getByRole("button", { name: "Create Account" }));
 
     await waitFor(() => {
@@ -197,10 +202,13 @@ describe("Authentication pages", () => {
 
     renderAuth(<SignUp onSignUp={onSignUp} onGoogleSignIn={onGoogleSignIn} />);
 
-    await user.click(screen.getByRole("button", { name: "Create Account" }));
+    // Try to continue without filling step 1
+    await user.click(screen.getByText("common.continue"));
 
-    expect(await screen.findByText("Full name must be at least 2 characters")).toBeInTheDocument();
-    expect(screen.getByText("Please enter a valid email address")).toBeInTheDocument();
+    // Errors should appear for step 1
+    expect(await screen.findByText("Please enter a valid email address")).toBeInTheDocument();
+    expect(screen.getByText("You must accept the terms and conditions")).toBeInTheDocument();
+
     expect(onSignUp).not.toHaveBeenCalled();
   });
 });

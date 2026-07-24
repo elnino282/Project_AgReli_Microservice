@@ -2,6 +2,15 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { RecentActivityTimeline } from "./RecentActivityTimeline";
+import { vi } from "vitest";
+
+vi.mock('@/shared/lib/hooks/useI18n', () => ({
+  useI18n: () => ({
+    t: (key: string, options?: any) => (typeof options === 'string' ? options : (options?.defaultValue ?? key)),
+    isLoading: false,
+    locale: 'en-US'
+  }),
+}));
 
 describe("RecentActivityTimeline", () => {
   it("shows empty state when there are no activities", () => {

@@ -20,6 +20,10 @@ vi.mock("@/features/auth", () => ({
   }),
 }));
 
+vi.mock("@/shared/lib/hooks/useTheme", () => ({
+  useTheme: () => ({ theme: "light", setTheme: vi.fn() }),
+}));
+
 vi.mock("../ai/BuyerAiAssistantDrawer", () => ({
   BuyerAiAssistantDrawer: () => null,
 }));
@@ -27,6 +31,8 @@ vi.mock("../ai/BuyerAiAssistantDrawer", () => ({
 vi.mock("../hooks", () => ({
   useMarketplaceCartCount: () => 0,
   useMarketplaceCartMergeBridge: vi.fn(),
+  useMarketplaceAddToCart: () => ({ addToCart: vi.fn(), isAdding: false }),
+  useMarketplaceProducts: () => ({ data: undefined, isLoading: false }),
   useScrolled: () => false,
 }));
 
@@ -97,7 +103,7 @@ describe("MarketplacePublicLayout document scrolling", () => {
     const farmsLink = screen.getByRole("link", { name: "Nông trại", hidden: true });
 
     expect(farmsLink).toHaveAttribute("href", "/marketplace/farms");
-    expect(farmsLink).toHaveClass("fb-active");
+    expect(farmsLink).toHaveClass("bg-white/15", "font-semibold");
   });
 
   it("includes the farms link in the mobile menu", async () => {

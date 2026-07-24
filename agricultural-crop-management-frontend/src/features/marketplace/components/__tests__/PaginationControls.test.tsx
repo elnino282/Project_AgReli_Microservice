@@ -4,6 +4,18 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PaginationControls } from '../PaginationControls';
 
+vi.mock('@/shared/lib/hooks/useI18n', () => ({
+  useI18n: () => ({
+    t: (key: string, options?: any) => {
+      if (key === 'admin.marketplace.components.pagination.showing') {
+        return `Showing ${options?.start} to ${options?.end} of ${options?.total}`;
+      }
+      return options?.defaultValue ?? key;
+    },
+    isLoading: false,
+  }),
+}));
+
 vi.mock('@/shared/ui/select', () => {
   const Select = ({
     value,
@@ -135,7 +147,7 @@ describe('PaginationControls', () => {
     );
 
     expect(screen.getByTestId('page-size-select')).toBeInTheDocument();
-    expect(screen.getByText('Items per page:')).toBeInTheDocument();
+    expect(screen.getByText('admin.marketplace.components.pagination.itemsPerPage')).toBeInTheDocument();
   });
 
   it('renders page size selector with current value', () => {

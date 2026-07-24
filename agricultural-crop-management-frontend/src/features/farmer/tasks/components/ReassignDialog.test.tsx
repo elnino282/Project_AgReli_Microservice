@@ -2,6 +2,14 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReassignDialog } from './ReassignDialog';
 
+vi.mock('@/shared/lib/hooks/useI18n', () => ({
+  useI18n: () => ({
+    t: (key: string, options?: any) => (typeof options === 'string' ? options : (options?.defaultValue ?? key)),
+    isLoading: false,
+    locale: 'en-US'
+  }),
+}));
+
 const ensurePointerCapturePolyfill = () => {
   if (!HTMLElement.prototype.hasPointerCapture) {
     Object.defineProperty(HTMLElement.prototype, 'hasPointerCapture', {

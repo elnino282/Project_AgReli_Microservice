@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
@@ -80,7 +80,7 @@ describe('AdminInventoryPage', () => {
     expect(adminInventoryMocks.listRiskLots).toHaveBeenCalled();
 
     vi.useFakeTimers();
-    fireEvent.change(screen.getByPlaceholderText('Search item or lot code'), {
+    fireEvent.change(screen.getByPlaceholderText('admin.inventoryRisks.searchPlaceholder'), {
       target: { value: 'urea' },
     });
 

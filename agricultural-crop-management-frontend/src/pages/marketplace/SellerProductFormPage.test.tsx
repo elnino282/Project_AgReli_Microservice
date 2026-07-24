@@ -1,13 +1,22 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { RouterProvider, createMemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MarketplaceFarmerProductFormOptions, MarketplaceProductDetail } from '@/shared/api';
 import { marketplaceApi } from '@/shared/api';
 import { SellerProductFormPage } from './SellerProductFormPage';
 
 // Polyfills for JSDOM limitations with Radix UI
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
 if (!Element.prototype.hasPointerCapture) {
   Element.prototype.hasPointerCapture = () => false;
 }
@@ -144,21 +153,18 @@ function renderPage(route = '/farmer/marketplace-products/new') {
       mutations: { retry: false },
     },
   });
-  const router = createMemoryRouter(
-    [
-      { path: '/farmer/marketplace-products', element: <div>Products route</div> },
-      { path: '/farmer/marketplace-products/new', element: <SellerProductFormPage /> },
-      { path: '/farmer/marketplace-products/:id/edit', element: <SellerProductFormPage /> },
-    ],
-    { initialEntries: [route] },
-  );
-
   const result = render(
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <MemoryRouter initialEntries={[route]}>
+        <Routes>
+          <Route path="/farmer/marketplace-products" element={<div>Products route</div>} />
+          <Route path="/farmer/marketplace-products/new" element={<SellerProductFormPage />} />
+          <Route path="/farmer/marketplace-products/:id/edit" element={<SellerProductFormPage />} />
+        </Routes>
+      </MemoryRouter>
     </QueryClientProvider>,
   );
-  return { ...result, router };
+  return { ...result };
 }
 
 async function chooseOption(label: string, option: string) {
@@ -191,7 +197,7 @@ describe('SellerProductFormPage', () => {
   });
 
   it('creates a harvest-backed listing end-to-end', async () => {
-    const { router } = renderPage();
+    renderPage();
     const user = userEvent.setup();
 
     await screen.findByRole('heading', { name: 'Create marketplace listing' });
@@ -227,7 +233,7 @@ describe('SellerProductFormPage', () => {
     });
     expect(marketplaceApi.uploadFarmerProductImage).not.toHaveBeenCalled();
     await waitFor(() => {
-      expect(router.state.location.pathname).toBe('/farmer/marketplace-products');
+      expect(mockNavigate).toHaveBeenCalledWith('/farmer/marketplace-products');
     });
   }, 10000);
 

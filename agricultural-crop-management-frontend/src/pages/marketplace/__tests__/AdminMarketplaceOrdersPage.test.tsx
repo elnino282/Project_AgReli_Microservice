@@ -6,7 +6,7 @@ import { MemoryRouter } from "react-router-dom";
 import { AdminMarketplaceOrdersPage } from "../AdminMarketplaceOrdersPage";
 import * as marketplaceHooks from "@/features/marketplace/hooks/useMarketplaceQueries";
 
-vi.mock("../../hooks/useMarketplaceQueries");
+vi.mock("@/features/marketplace/hooks/useMarketplaceQueries");
 
 describe("AdminMarketplaceOrdersPage", () => {
   let queryClient: QueryClient;
@@ -144,10 +144,10 @@ describe("AdminMarketplaceOrdersPage", () => {
     await user.click(orderButton);
 
     await waitFor(() => {
-      expect(screen.getByText("Order detail")).toBeInTheDocument();
+      expect(screen.getByText("admin.marketplace.orders.detail.title")).toBeInTheDocument();
     });
 
-    const verifyButton = screen.getByRole("button", { name: /mark verified/i });
+    const verifyButton = screen.getByRole("button", { name: "admin.marketplace.orders.actions.markVerified" });
     await user.click(verifyButton);
 
     expect(mutateAsync).toHaveBeenCalledWith({
@@ -213,19 +213,19 @@ describe("AdminMarketplaceOrdersPage", () => {
     await user.click(orderButton);
 
     await waitFor(() => {
-      expect(screen.getByText("Order detail")).toBeInTheDocument();
+      expect(screen.getByText("admin.marketplace.orders.detail.title")).toBeInTheDocument();
     });
 
-    const rejectButton = screen.getByRole("button", { name: /reject proof/i });
+    const rejectButton = screen.getByRole("button", { name: "admin.marketplace.orders.actions.rejectProof" });
     await user.click(rejectButton);
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText("Reject Payment Proof")).toBeInTheDocument();
+    expect(screen.getByText("admin.marketplace.orders.rejectPayment.title")).toBeInTheDocument();
 
-    const confirmButton = screen.getByRole("button", { name: /confirm/i });
+    const confirmButton = screen.getByRole("button", { name: "common.confirm" });
     expect(confirmButton).toBeDisabled();
 
-    const textarea = screen.getByLabelText(/reason for rejection/i);
+    const textarea = screen.getByLabelText("admin.marketplace.orders.rejectPayment.reasonLabel");
     await user.type(textarea, "Payment proof is unclear");
 
     expect(confirmButton).toBeEnabled();
@@ -254,7 +254,7 @@ describe("AdminMarketplaceOrdersPage", () => {
 
     renderPage();
 
-    expect(screen.getByText("Loading orders...")).toBeInTheDocument();
+    expect(screen.getByText("admin.marketplace.orders.list.loading")).toBeInTheDocument();
   });
 
   it("shows error message when orders fail to load", () => {
@@ -272,6 +272,6 @@ describe("AdminMarketplaceOrdersPage", () => {
 
     renderPage();
 
-    expect(screen.getByText("Failed to load admin orders.")).toBeInTheDocument();
+    expect(screen.getByText("admin.marketplace.orders.list.loadError")).toBeInTheDocument();
   });
 });

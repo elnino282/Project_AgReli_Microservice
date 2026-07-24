@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { EmployeePayrollPage } from "@/pages/employee/EmployeePayrollPage";
-
 const laborHooks = vi.hoisted(() => ({
   useEmployeePayrollRecords: vi.fn(),
   useEmployeePayrollDetail: vi.fn(),
@@ -66,14 +66,18 @@ describe("EmployeePayrollPage", () => {
   });
 
   it("renders payroll list and opens selected payroll detail", async () => {
-    render(<EmployeePayrollPage />);
+    render(
+      <MemoryRouter>
+        <EmployeePayrollPage />
+      </MemoryRouter>
+    );
 
-    expect(screen.getByText("Bảng lương của tôi")).toBeInTheDocument();
+    expect(screen.getByText("employee.payroll.title")).toBeInTheDocument();
     expect(screen.getByText("Spring 2026")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Xem chi tiết" }));
+    fireEvent.click(screen.getByRole("button", { name: "employee.payroll.actions.viewDetail" }));
 
-    expect(await screen.findByText("Chi tiết kỳ lương")).toBeInTheDocument();
+    expect(await screen.findByText("employee.payroll.detail.title")).toBeInTheDocument();
     expect(screen.getByText("Reviewed by farmer")).toBeInTheDocument();
   });
 });

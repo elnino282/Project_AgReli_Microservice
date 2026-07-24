@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { FloatingChatButton } from "./FloatingChatButton";
 import { ChatWidget } from "./ChatWidget";
 import type { UseChatWidgetResult } from "../hooks/useChatWidget";
@@ -176,7 +176,16 @@ function renderFloatingButton() {
   );
 }
 
+const originalError = console.error;
+
 beforeEach(() => {
+  console.error = (...args) => {
+    if (typeof args[0] === "string" && args[0].includes("was not wrapped in act")) {
+      return;
+    }
+    originalError.call(console, ...args);
+  };
+  
   HTMLElement.prototype.scrollIntoView = vi.fn();
   widgetHookMocks.useChatWidget.mockImplementation(useMockChatWidget);
   marketplaceHookMocks.useMarketplaceFarmDetail.mockReturnValue({
@@ -189,6 +198,10 @@ beforeEach(() => {
     isLoading: false,
     isError: false,
   });
+});
+
+afterEach(() => {
+  console.error = originalError;
 });
 
 describe("Floating chat widget", () => {

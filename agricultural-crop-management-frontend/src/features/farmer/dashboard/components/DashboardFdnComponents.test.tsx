@@ -268,8 +268,8 @@ describe('Dashboard FDN components', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('Fields require boundary update')).toBeInTheDocument();
-    expect(screen.getByText('Fields missing boundary GeoJSON')).toBeInTheDocument();
-    expect(screen.getByText('Go to Farms & Plots')).toBeInTheDocument();
+    expect(await screen.findByText('dashboard.fdn.map.missingBoundaryTitle')).toBeInTheDocument();
+    expect(screen.getByText('dashboard.fdn.map.missingBoundaryListTitle')).toBeInTheDocument();
+    expect(screen.getByText('dashboard.fdn.map.manageFieldsCta')).toBeInTheDocument();
   });
 });

@@ -24,13 +24,17 @@ vi.mock("@/features/auth", () => ({
   useAuth: () => authMock,
 }));
 
-vi.mock("@/shared/ui", () => ({
-  Button: ({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
-    <button type="button" {...props}>
-      {children}
-    </button>
-  ),
-}));
+vi.mock("@/shared/ui", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/shared/ui")>();
+  return {
+    ...actual,
+    Button: ({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+      <button type="button" {...props}>
+        {children}
+      </button>
+    ),
+  };
+});
 
 vi.mock("@/features/marketplace/hooks", () => ({
   useMarketplaceAddToCart: vi.fn(),

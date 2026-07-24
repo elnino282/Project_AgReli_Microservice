@@ -17,12 +17,20 @@ const toastMocks = vi.hoisted(() => ({
   error: vi.fn(),
 }));
 
-vi.mock('@/shared/api/http', () => ({
-  default: {
-    get: httpMocks.get,
-    post: httpMocks.post,
-  },
-}));
+vi.mock('@/shared/api/http', () => {
+  const mockFn = function (config: any) {
+    if (config.method === 'GET' || !config.method) {
+      return httpMocks.get(config.url);
+    }
+    if (config.method === 'POST') {
+      return httpMocks.post(config.url, config.data);
+    }
+    return Promise.resolve({ data: {} });
+  };
+  mockFn.get = httpMocks.get;
+  mockFn.post = httpMocks.post;
+  return { default: mockFn };
+});
 
 vi.mock('sonner', () => ({
   toast: {
