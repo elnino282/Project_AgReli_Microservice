@@ -1,6 +1,6 @@
 import { FileQuestion } from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 interface EmptyStateProps {
     searchQuery: string;

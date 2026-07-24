@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/shared/ui/card";
 import { usePreferences } from "@/shared/contexts";
 import { convertToDisplayCurrency, formatMoney, formatWeight } from "@/shared/lib";
 import { CheckCircle2, DollarSign, TrendingDown, TrendingUp, Wheat } from "lucide-react";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 export interface KPICardsProps {
   totalCost?: number;

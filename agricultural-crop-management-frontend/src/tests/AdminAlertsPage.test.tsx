@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { AdminAlertsPage } from '@/pages/admin/AdminAlertsPage';
 
-vi.mock('@/hooks/useI18n', () => ({
+vi.mock('@/shared/lib/hooks/useI18n', () => ({
   useI18n: () => ({
     t: (key: string) => key,
   }),

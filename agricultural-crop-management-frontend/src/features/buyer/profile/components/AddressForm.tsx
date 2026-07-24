@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Input, Label, RadioGroup, RadioGroupItem, Checkbox } from '@/shared/ui';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { AddressAutocompleteInput } from './AddressAutocompleteInput';
 import { useAddressFormBackend } from '../hooks/useAddressFormBackend';

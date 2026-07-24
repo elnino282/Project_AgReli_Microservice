@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 // eslint-disable-next-line no-restricted-imports
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import type { MarketplaceStatsUnavailableReason } from "@/shared/api";
 import { AsyncState, Button, Card, CardContent, PageContainer } from "@/shared/ui";
 import { useMarketplaceFarmerDashboard, useMarketplaceFarmerProducts } from "@/features/marketplace/hooks";

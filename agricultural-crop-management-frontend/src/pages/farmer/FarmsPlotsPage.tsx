@@ -4,7 +4,7 @@ import { CreatePlotModal } from '@/features/farmer/farms/components/CreatePlotMo
 import { FarmList } from '@/features/farmer/farms/components/FarmList';
 import { PlotList } from '@/features/farmer/farms/components/PlotList';
 import { CreateFarmRequest, CreatePlotRequest, Farm, Plot } from '@/features/farmer/farms/types';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { Button, PageContainer, PageHeader } from '@/shared/ui';
 import { Map, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';

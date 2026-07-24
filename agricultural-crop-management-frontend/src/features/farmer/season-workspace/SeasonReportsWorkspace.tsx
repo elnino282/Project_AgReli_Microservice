@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/shared/ui/card";
 import { useAllFarmerHarvests } from "@/entities/harvest";
 import { useSeasonById } from "@/entities/season";
 import { Reports } from "@/features/farmer/reports";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 const computeHarvestProgressPercent = (
   expectedYieldKg: number,

@@ -1,5 +1,5 @@
 import { useEmployeePayrollDetail, useEmployeePayrollRecords } from "@/entities/labor";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import {
   BackButton,
   Button,

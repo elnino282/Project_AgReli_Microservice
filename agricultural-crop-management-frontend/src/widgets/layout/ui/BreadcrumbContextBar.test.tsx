@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { BreadcrumbContextBar } from './BreadcrumbContextBar';
 
-vi.mock('@/hooks/useI18n', () => ({
+vi.mock('@/shared/lib/hooks/useI18n', () => ({
     useI18n: () => ({
         t: (_key: string, defaultValue?: string) => defaultValue ?? _key,
     }),

@@ -4,7 +4,7 @@ import {
     CardContent,
 } from "@/shared/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useOptionalSeason } from "@/shared/contexts";
 import { ConfirmDialog, PageContainer, PageHeader } from "@/shared/ui";
 import { BarChart3, Bell, DollarSign, Download, FileText, Plus } from "lucide-react";

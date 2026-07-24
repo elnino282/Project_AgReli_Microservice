@@ -174,4 +174,9 @@ jobs:
             MVN_CMD="mvn"
           fi
 
+          if [ "${{ matrix.service }}" == "identity-service" ]; then
+            mkdir -p src/test/resources/test-keys
+            java GenerateTestKeys.java
+          fi
+
           $MVN_CMD -q test

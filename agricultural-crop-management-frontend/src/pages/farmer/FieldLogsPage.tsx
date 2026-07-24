@@ -1,4 +1,4 @@
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { useOptionalSeason } from '@/shared/contexts';
 import type { AxiosError } from 'axios';
 import { AlertCircle, Calendar, FileText, Loader2, Pencil, Plus, Search, Trash2 } from 'lucide-react';

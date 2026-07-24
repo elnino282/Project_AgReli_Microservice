@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useGetProductionDiary } from "@/entities/season/api/generated/season-service";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { AsyncState } from "@/shared/ui/async-state";

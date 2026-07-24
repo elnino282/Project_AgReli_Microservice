@@ -17,7 +17,7 @@ tags:
 - name: Admin Roles
   description: Quản lý vai trò người dùng (chỉ ADMIN)
 paths:
-  /api/v1/user/profile:
+  /api/v1/users/profile:
     put:
       tags:
       - user-controller
@@ -35,7 +35,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseFarmerResponse"
-  /api/v1/user/change-password:
+  /api/v1/users/change-password:
     put:
       tags:
       - user-controller
@@ -82,6 +82,18 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponsePreferencesResponse"
+  /api/v1/firebase/chat-token:
+    post:
+      tags:
+      - firebase-chat-token-controller
+      operationId: createChatToken
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFirebaseChatTokenResponse"
   /api/v1/auth/sign-up:
     post:
       tags:
@@ -337,7 +349,7 @@ paths:
                 $ref: "#/components/schemas/ApiResponseRoleResponse"
       security:
       - bearerAuth: []
-  /api/v1/user/me:
+  /api/v1/users/me:
     get:
       tags:
       - user-controller
@@ -418,7 +430,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/PageUserInternalDto"
+                $ref: "#/components/schemas/PageResponseUserInternalDto"
   /api/v1/internal/users/employees/{id}/validate:
     get:
       tags:
@@ -438,6 +450,38 @@ paths:
             '*/*':
               schema:
                 type: boolean
+  /api/v1/firebase/chat-contacts:
+    get:
+      tags:
+      - firebase-chat-token-controller
+      operationId: getChatContacts
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: userIds
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int64
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListFirebaseChatContactResponse"
   /api/v1/auth/reset-password/validate:
     get:
       tags:
@@ -657,6 +701,31 @@ components:
         weightUnit:
           type: string
         locale:
+          type: string
+    ApiResponseFirebaseChatTokenResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/FirebaseChatTokenResponse"
+        data:
+          $ref: "#/components/schemas/FirebaseChatTokenResponse"
+        generatedAt:
+          type: string
+    FirebaseChatTokenResponse:
+      type: object
+      properties:
+        appUid:
+          type: string
+        role:
+          type: string
+        customToken:
           type: string
     SignUpRequest:
       type: object
@@ -885,65 +954,63 @@ components:
           type: string
         phone:
           type: string
-    PageUserInternalDto:
+    PageResponseUserInternalDto:
       type: object
       properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserInternalDto"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
         totalElements:
           type: integer
           format: int64
         totalPages:
           type: integer
           format: int32
-        size:
+    ApiResponseListFirebaseChatContactResponse:
+      type: object
+      properties:
+        status:
           type: integer
           format: int32
-        content:
+        code:
+          type: string
+        message:
+          type: string
+        result:
           type: array
           items:
-            $ref: "#/components/schemas/UserInternalDto"
-        number:
-          type: integer
-          format: int32
-        sort:
-          $ref: "#/components/schemas/SortObject"
-        numberOfElements:
-          type: integer
-          format: int32
-        first:
-          type: boolean
-        last:
-          type: boolean
-        pageable:
-          $ref: "#/components/schemas/PageableObject"
-        empty:
-          type: boolean
-    PageableObject:
+            $ref: "#/components/schemas/FirebaseChatContactResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/FirebaseChatContactResponse"
+        generatedAt:
+          type: string
+    FirebaseChatContactResponse:
       type: object
       properties:
-        offset:
+        userId:
           type: integer
           format: int64
-        sort:
-          $ref: "#/components/schemas/SortObject"
-        paged:
-          type: boolean
-        unpaged:
-          type: boolean
-        pageNumber:
-          type: integer
-          format: int32
-        pageSize:
-          type: integer
-          format: int32
-    SortObject:
-      type: object
-      properties:
-        empty:
-          type: boolean
-        sorted:
-          type: boolean
-        unsorted:
-          type: boolean
+        firebaseUid:
+          type: string
+        displayName:
+          type: string
+        representativeName:
+          type: string
+        farmName:
+          type: string
+        address:
+          type: string
+        role:
+          type: string
     ApiResponseListRoleResponse:
       type: object
       properties:
@@ -967,6 +1034,5 @@ components:
   securitySchemes:
     bearerAuth:
       type: http
-      name: bearerAuth
       scheme: bearer
       bearerFormat: JWT

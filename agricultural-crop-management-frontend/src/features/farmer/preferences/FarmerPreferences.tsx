@@ -1,7 +1,7 @@
 import { BackButton, Card, CardContent, PageContainer } from '@/shared/ui';
 import { ChangePasswordSection } from '@/features/farmer/account/components/ChangePasswordSection';
 import { PreferencesForm } from '@/features/shared/preferences';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { Settings } from 'lucide-react';
 import { useState } from 'react';
 

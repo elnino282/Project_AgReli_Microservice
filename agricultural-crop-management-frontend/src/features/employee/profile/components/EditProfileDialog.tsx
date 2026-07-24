@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useProfileUpdate } from "@/entities/user";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import {
   AddressSelector,
   AlertDialog,

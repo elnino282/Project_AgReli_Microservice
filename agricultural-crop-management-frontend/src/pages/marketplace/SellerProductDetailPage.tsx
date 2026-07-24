@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Eye, EyeOff, Pencil } from "lucide-react";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, PageContainer } from "@/shared/ui";
 import { BackButton } from "@/shared/ui/back-button";
 import type { MarketplaceProductStatus } from "@/shared/api";

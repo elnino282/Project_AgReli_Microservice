@@ -6,7 +6,7 @@ import { Button } from "@/shared/ui/button";
 import { Label } from "@/shared/ui/label";
 import { Switch } from "@/shared/ui/switch";
 import { Separator } from "@/shared/ui/separator";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import type { ExportFormat } from "../types";
 
 interface ExportModalProps {

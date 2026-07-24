@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { useProfileMe } from "@/entities/user";
 import { useAuth } from "@/features/auth";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { AddressDisplay, BackButton } from "@/shared/ui";
 import {
   Briefcase,

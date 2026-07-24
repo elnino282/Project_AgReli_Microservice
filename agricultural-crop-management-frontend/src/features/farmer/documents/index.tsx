@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Clock, FileText, Star } from "lucide-react";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { PageContainer, PageHeader } from "@/shared/ui";
 import { DocumentFilterBar } from "./components/DocumentFilterBar";
 import { DocumentGrid } from "./components/DocumentGrid";

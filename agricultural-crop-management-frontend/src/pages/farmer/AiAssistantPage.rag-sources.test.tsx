@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { AiAssistantPage } from './AiAssistantPage';
 
-vi.mock('@/hooks/useI18n', () => ({
+vi.mock('@/shared/lib/hooks/useI18n', () => ({
     useI18n: () => ({
         t: (_key: string, fallback?: string) => (typeof fallback === 'string' ? fallback : _key),
     }),

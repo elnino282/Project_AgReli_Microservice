@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import httpClient from "@/shared/api/http";
 import { farmApi } from "@/features/farmer/farms/api";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import {
   Badge,
   Button,

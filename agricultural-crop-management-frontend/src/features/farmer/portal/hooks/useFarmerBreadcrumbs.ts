@@ -5,7 +5,7 @@ import {
   useMarketplaceFarmerOrderDetail,
   useMarketplaceFarmerProductDetail,
 } from '@/features/marketplace/hooks';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { useSeason } from '@/shared/contexts';
 import { useLocation } from 'react-router-dom';
 

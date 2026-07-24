@@ -1,4 +1,4 @@
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { Button, ScrollArea, Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui';
 import { AlertTriangle, Bell, CheckSquare, Package, Sun } from 'lucide-react';
 import type { Notification, NotificationsDrawerProps } from '../model/types';

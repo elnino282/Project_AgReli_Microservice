@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/features/auth';
 import { useProfileMe, useProfileUpdate } from '@/entities/user';
 import { Button } from '@/shared/ui';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { PersonalInfoForm } from '../components/PersonalInfoForm';

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, Store } from "lucide-react";
 import { useAuth } from "@/features/auth";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { Button } from "@/shared/ui";
 
 /**

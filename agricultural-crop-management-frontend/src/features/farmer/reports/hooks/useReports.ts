@@ -18,7 +18,7 @@ import type {
 import { DEFAULT_FILTERS } from "../constants";
 // eslint-disable-next-line no-restricted-imports -- keep legacy reports client until dedicated FSD entity API is introduced
 import { farmerReportsApi } from "@/entities/user/api/api.farmer";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useSeason } from "@/shared/contexts";
 import { taskApi } from "@/entities/task";
 import { fieldLogApi } from "@/entities/field-log";

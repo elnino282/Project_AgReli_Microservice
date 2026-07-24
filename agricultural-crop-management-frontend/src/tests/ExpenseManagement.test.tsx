@@ -102,7 +102,7 @@ const buildHookState = (overrides?: Record<string, unknown>) => {
     };
 };
 
-vi.mock("@/hooks/useI18n", () => ({
+vi.mock("@/shared/lib/hooks/useI18n", () => ({
     useI18n: () => ({
         t: (key: string) => {
             const dictionary: Record<string, string> = {

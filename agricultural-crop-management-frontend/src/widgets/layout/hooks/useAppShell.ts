@@ -3,7 +3,7 @@ import {
     useMarkNotificationRead,
     type Notification as FarmerNotification,
 } from '@/entities/notification';
-import { useTheme } from '@/hooks/useTheme';
+import { useTheme } from '@/shared/lib/hooks/useTheme';
 import i18n, { changeLanguage, getCurrentLocale, getLanguageCode } from '@/i18n';
 import { adminAlertApi, type AdminAlert } from '@/entities/user/api/api.admin';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

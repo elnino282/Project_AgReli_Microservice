@@ -1,5 +1,5 @@
 import { forgotPassword } from '@/features/auth/api/auth';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { useMutation } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';

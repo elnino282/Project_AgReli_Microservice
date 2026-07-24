@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useMemo } from "react";
 
 const formatDate = (value: string | null | undefined, locale: string) => {

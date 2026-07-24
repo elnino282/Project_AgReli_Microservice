@@ -157,8 +157,8 @@ export const useReportsAnalytics = () => {
         if (taskPerformance) {
             metrics.push(
                 { id: '1', module: t('admin.reportsAnalytics.metrics.modules.taskManagement'), metric: t('admin.reportsAnalytics.metrics.names.totalTasks'), value: String(taskPerformance.totalTasks), change: 0, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
-                { id: '2', module: t('admin.reportsAnalytics.metrics.modules.taskManagement'), metric: t('admin.reportsAnalytics.metrics.names.completionRate'), value: `${taskPerformance.completionRate ?? 0}%`, change: Number(taskPerformance.completionRate) ?? 0, lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
-                { id: '3', module: t('admin.reportsAnalytics.metrics.modules.taskManagement'), metric: t('admin.reportsAnalytics.metrics.names.overdueRate'), value: `${taskPerformance.overdueRate ?? 0}%`, change: -(Number(taskPerformance.overdueRate) ?? 0), lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
+                { id: '2', module: t('admin.reportsAnalytics.metrics.modules.taskManagement'), metric: t('admin.reportsAnalytics.metrics.names.completionRate'), value: `${taskPerformance.completionRate ?? 0}%`, change: Number(taskPerformance.completionRate ?? 0), lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
+                { id: '3', module: t('admin.reportsAnalytics.metrics.modules.taskManagement'), metric: t('admin.reportsAnalytics.metrics.names.overdueRate'), value: `${taskPerformance.overdueRate ?? 0}%`, change: -(Number(taskPerformance.overdueRate ?? 0)), lastUpdated: new Date().toISOString().slice(0, 16).replace('T', ' ') },
             );
         }
 

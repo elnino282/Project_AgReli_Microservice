@@ -2,7 +2,7 @@ import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Skeleton } from '@/shared/ui/skeleton';
 import type { DashboardIncidentAlert } from '@/entities/dashboard';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { AlertTriangle, Clock3, Flame } from 'lucide-react';
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';

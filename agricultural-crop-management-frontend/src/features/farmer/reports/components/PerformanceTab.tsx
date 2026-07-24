@@ -5,7 +5,7 @@ import {
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/shared/ui/table";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import type { TaskPerformance } from "../types";
 
 interface PerformanceTabProps {

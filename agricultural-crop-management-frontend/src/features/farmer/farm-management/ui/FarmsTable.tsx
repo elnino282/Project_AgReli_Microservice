@@ -1,5 +1,5 @@
 import type { Farm } from '@/entities/farm';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { AddressDisplay, Badge, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 

@@ -26,7 +26,7 @@ import {
   useEmployeeSeasonSupplyLots,
   useSupplyLots,
 } from "@/entities/supplies";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useOptionalSeason } from "@/shared/contexts";
 import {
   AlertDialog,

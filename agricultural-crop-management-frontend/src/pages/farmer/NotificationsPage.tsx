@@ -1,5 +1,5 @@
 import { useFarmerNotifications, useMarkNotificationRead } from '@/entities/notification';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { usePreferences } from '@/shared/contexts';
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, PageContainer, PageHeader } from '@/shared/ui';
 import { Bell, CheckCircle2 } from 'lucide-react';

@@ -13,7 +13,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Label } from "@/shared/ui/label";
 import { Separator } from "@/shared/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/shared/ui/sheet";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import type { Document, DocumentType } from "../types";
 
 interface DocumentPreviewProps {

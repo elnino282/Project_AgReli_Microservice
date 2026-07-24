@@ -6,7 +6,7 @@ import { Switch } from "@/shared/ui/switch";
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/shared/ui/select";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import type { FilterState } from "../types";
 import {
     PLOT_OPTIONS, CROP_TYPE_OPTIONS, SEASON_OPTIONS, TIME_RANGE_OPTIONS,

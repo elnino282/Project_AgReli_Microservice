@@ -23,7 +23,7 @@ import {
   TableRow,
 } from "@/shared/ui";
 // eslint-disable-next-line no-restricted-imports
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import {
   useMarketplaceFarmerProducts,
   useMarketplaceUpdateFarmerProductStatusMutation,

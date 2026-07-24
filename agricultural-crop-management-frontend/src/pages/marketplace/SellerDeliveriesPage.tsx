@@ -3,7 +3,7 @@ import { Eye, Inbox, Truck, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { cn } from "@/shared/lib";
 import {
   Badge,

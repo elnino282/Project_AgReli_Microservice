@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { Bug, CalendarDays, FileText, Loader2 } from "lucide-react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 

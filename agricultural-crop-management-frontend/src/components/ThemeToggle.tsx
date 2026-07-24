@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/ui";
 import { cn } from "@/shared/lib";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme } from "@/shared/lib/hooks/useTheme";
 
 interface ThemeToggleProps {
   className?: string;

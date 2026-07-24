@@ -14,7 +14,7 @@ import type {
 
 vi.mock("@/features/marketplace/hooks");
 
-vi.mock("@/hooks/useI18n", () => {
+vi.mock("@/shared/lib/hooks/useI18n", () => {
   const labels: Record<string, string> = {
     "marketplaceSeller.tabs.ariaLabel": "Không gian bán hàng",
     "marketplaceSeller.tabs.brand": "Bán hàng",

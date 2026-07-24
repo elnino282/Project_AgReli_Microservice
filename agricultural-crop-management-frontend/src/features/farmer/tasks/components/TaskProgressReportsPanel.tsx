@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/shared/ui";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useState } from "react";
 import { toast } from "sonner";
 

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import type { Season } from "@/entities/season";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import {
   Dialog,
   DialogContent,

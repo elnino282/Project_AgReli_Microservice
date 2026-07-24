@@ -1,6 +1,6 @@
 import { MarkdownMessage } from '@/components/MarkdownMessage';
 import { AiChatSources, useAiChatSession } from '@/features/ai';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { cn } from '@/shared/lib';
 import {
     Badge,

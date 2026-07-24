@@ -1,6 +1,6 @@
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { PageHeader } from "@/shared/ui";
 import { Plus, Wheat } from "lucide-react";
 

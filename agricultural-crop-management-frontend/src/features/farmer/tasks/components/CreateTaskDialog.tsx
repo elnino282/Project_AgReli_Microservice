@@ -21,7 +21,7 @@ import {
 import { useEffect, useState } from "react";
 import { useSeason } from "@/shared/contexts/SeasonContext";
 import { usePlots } from "@/entities/plot";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 interface CreateTaskDialogProps {
   open: boolean;

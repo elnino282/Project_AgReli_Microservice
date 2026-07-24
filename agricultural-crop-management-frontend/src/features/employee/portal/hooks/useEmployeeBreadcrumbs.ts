@@ -1,6 +1,6 @@
 import { useEmployeeAssignedSeasons } from '@/entities/field-log';
 import type { BreadcrumbPath } from '@/features/shared/layout/types';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { useLocation } from 'react-router-dom';
 
 import type { EmployeeView } from '../types';

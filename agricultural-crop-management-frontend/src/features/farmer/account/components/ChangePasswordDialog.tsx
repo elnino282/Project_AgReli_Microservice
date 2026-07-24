@@ -10,7 +10,7 @@ import {
 } from "@/shared/ui/form";
 import { Input } from "@/shared/ui/input";
 import { useProfileChangePassword } from "@/entities/user";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import {
     Dialog,
     DialogContent,

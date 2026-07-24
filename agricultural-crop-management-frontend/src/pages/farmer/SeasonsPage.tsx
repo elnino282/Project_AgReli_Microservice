@@ -1,4 +1,4 @@
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { usePreferences } from "@/shared/contexts";
 import { convertWeight, getWeightUnitLabel, useDebounce } from "@/shared/lib";
 import {

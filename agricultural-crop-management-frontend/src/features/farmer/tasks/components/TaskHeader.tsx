@@ -1,7 +1,7 @@
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { CalendarDays, ClipboardList, Columns3, List, Plus } from 'lucide-react';
 import type { ViewMode } from '../types';
 

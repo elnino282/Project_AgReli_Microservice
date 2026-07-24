@@ -13,7 +13,7 @@ import { usePreferences } from "@/shared/contexts";
 import {
   convertCostPerKg, convertToDisplayCurrency, formatMoney, getWeightUnitLabel,
 } from "@/shared/lib";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import type { CostOptimizationAiSuggestion, CostOptimizationSummary } from "../types";
 
 interface CostTabProps {

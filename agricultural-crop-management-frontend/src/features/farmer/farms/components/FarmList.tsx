@@ -1,4 +1,4 @@
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { Badge } from '@/shared/ui/badge';
 import { MapPin, Wheat } from 'lucide-react';
 import { Farm } from '../types';

@@ -1,7 +1,7 @@
 import type { Task, TaskStatus } from '../types';
 import { KanbanColumn } from './KanbanColumn';
 import { KANBAN_COLUMNS } from '../constants';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface BoardViewProps {
   tasks: Task[];

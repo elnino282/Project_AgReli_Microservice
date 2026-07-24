@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { MarketplaceOrderStatus } from "@/shared/api";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from "@/shared/ui";
 import { BackButton } from "@/shared/ui/back-button";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { deliveryApi } from "@/shared/api";
 import {
   useMarketplaceFarmerOrderDetail,

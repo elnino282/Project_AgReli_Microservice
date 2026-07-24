@@ -1,7 +1,7 @@
 import { useProfileMe } from '@/entities/user';
 import { useAuth } from '@/features/auth';
 import type { BreadcrumbPath } from '@/features/shared/layout/types';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { useSeason } from '@/shared/contexts';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';

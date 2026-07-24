@@ -7,7 +7,7 @@ import { preferencesApi } from '@/entities/preferences/api/client';
 import { preferencesKeys } from '@/entities/preferences/model/keys';
 import { PreferencesForm } from './PreferencesForm';
 
-vi.mock('@/hooks/useI18n', () => ({
+vi.mock('@/shared/lib/hooks/useI18n', () => ({
     useI18n: () => ({
         t: (key: string) => key,
     }),

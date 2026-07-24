@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from "@/shared/ui/select";
 import { useDocumentsMeta } from "@/entities/document";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { Search, X } from "lucide-react";
 import type {
   DocumentFiltersState,

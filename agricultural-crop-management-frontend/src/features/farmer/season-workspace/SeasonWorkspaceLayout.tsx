@@ -38,7 +38,7 @@ import { useExpenseManagement } from "@/features/farmer/expense-management/hooks
 import { AddBatchDialog } from "@/features/farmer/harvests/components/AddBatchDialog";
 import { useHarvestManagement } from "@/features/farmer/harvests/hooks/useHarvestManagement";
 import { CreateTaskDialog } from "@/features/farmer/tasks/components/CreateTaskDialog";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useSeason } from "@/shared/contexts";
 import {
   AlertCircle,

@@ -9,7 +9,7 @@ import { PerformanceTab } from "./components/PerformanceTab";
 import { PesticideTab } from "./components/PesticideTab";
 import { FilterDrawer } from "./components/FilterDrawer";
 import { ExportModal } from "./components/ExportModal";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import type { ReportSection } from "./types";
 
 export type SeasonReportMode = "interim" | "final";

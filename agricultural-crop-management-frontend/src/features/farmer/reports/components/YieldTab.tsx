@@ -13,7 +13,7 @@ import { useMemo } from "react";
 import type { YieldViewMode, YieldBySeason, YieldByCrop, YieldByPlot } from "../types";
 import { usePreferences } from "@/shared/contexts";
 import { convertWeight, getWeightUnitLabel } from "@/shared/lib";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 
 interface YieldTabProps {
     yieldViewMode: YieldViewMode;

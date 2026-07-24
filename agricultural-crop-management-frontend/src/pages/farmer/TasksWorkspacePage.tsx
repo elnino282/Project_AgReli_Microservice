@@ -1,7 +1,7 @@
 import type { TaskListParams } from '@/entities/task';
 import { taskApi, taskKeys } from '@/entities/task';
 import { useApproveTask, useRejectTask, useTaskProgressLogs } from '@/entities/labor';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { useDebounce } from '@/shared/lib';
 import {
     AsyncState,

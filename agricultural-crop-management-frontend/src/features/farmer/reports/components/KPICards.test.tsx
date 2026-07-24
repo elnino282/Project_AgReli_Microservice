@@ -12,7 +12,7 @@ vi.mock('@/shared/contexts', () => ({
     }),
 }));
 
-vi.mock('@/hooks/useI18n', () => ({
+vi.mock('@/shared/lib/hooks/useI18n', () => ({
     useI18n: () => ({
         t: (key: string) => key,
     }),

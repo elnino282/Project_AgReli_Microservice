@@ -7,7 +7,7 @@ import type { MarketplaceOrder, MarketplaceOrderStatus } from '@/shared/api';
 import { marketplaceApi } from '@/shared/api';
 import { SellerOrderDetailPage } from './SellerOrderDetailPage';
 
-vi.mock('@/hooks/useI18n', () => ({
+vi.mock('@/shared/lib/hooks/useI18n', () => ({
   useI18n: () => ({
     locale: 'en-US',
     t: (key: string, optionsOrDefault?: Record<string, unknown> | string) => {

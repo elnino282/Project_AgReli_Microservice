@@ -1,7 +1,7 @@
 import React from "react";
 import { MapPin, Droplets, CloudRain, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/shared/ui/card";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import type { WeatherData, WeatherWidgetDataState } from "../types";
 
 interface CompactViewProps extends React.HTMLAttributes<HTMLDivElement> {

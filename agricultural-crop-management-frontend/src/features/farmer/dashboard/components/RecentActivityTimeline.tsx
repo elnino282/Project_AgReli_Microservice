@@ -17,7 +17,7 @@ import {
   CardTitle,
 } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import type { RecentActivityItem } from "../types";
 
 interface RecentActivityTimelineProps {

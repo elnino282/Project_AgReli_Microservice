@@ -3,7 +3,7 @@ import { Eye, Inbox, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { MarketplaceOrderStatus } from "@/shared/api";
 // eslint-disable-next-line no-restricted-imports
-import { useI18n } from "@/hooks/useI18n";
+import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { cn } from "@/shared/lib";
 import {
   Badge,

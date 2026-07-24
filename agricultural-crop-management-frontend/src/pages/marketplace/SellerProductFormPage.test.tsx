@@ -56,7 +56,7 @@ vi.mock('@/shared/lib/hooks/useI18n', () => ({
   }),
 }));
 
-vi.mock('@/hooks/useI18n', () => ({
+vi.mock('@/shared/lib/hooks/useI18n', () => ({
   useI18n: () => ({
     t: (_key: string, optionsOrDefault?: Record<string, unknown> | string) => {
       if (typeof optionsOrDefault === 'string') return optionsOrDefault;

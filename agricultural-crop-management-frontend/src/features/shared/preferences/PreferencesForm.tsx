@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select';
 import type { CurrencyCode, WeightUnit } from '@/entities/preferences';
 import { useUpdatePreferences } from '@/entities/preferences';
-import { useI18n } from '@/hooks/useI18n';
+import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { changeLanguage, type SupportedLocale } from '@/i18n';
 import { usePreferences } from '@/shared/contexts';
 import { DollarSign, Globe, Scale } from 'lucide-react';
