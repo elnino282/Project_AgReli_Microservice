@@ -563,7 +563,7 @@ export function SeasonWorkspaceLayout() {
             <div className="space-y-2">
               <p className="acm-body-text text-muted-foreground uppercase">{t("seasonWorkspace.subtitle")}</p>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+                <h1 className="text-2xl font-bold text-foreground leading-tight">
                   {isSeasonLoading ? t("common.loading") : season?.seasonName ?? t("seasonWorkspace.fallbackSeasonName", { id: seasonIdNumber })}
                 </h1>
                 <Badge className={getSeasonStatusClassName(season?.status)}>

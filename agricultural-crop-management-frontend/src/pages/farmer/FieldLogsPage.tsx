@@ -343,28 +343,25 @@ export function FieldLogsPage() {
 
     return (
         <PageContainer>
-            <Card className="mb-6 border border-border rounded-xl shadow-sm">
-                <CardContent className="px-6 py-4">
-                    <PageHeader
-                        className="mb-0"
-                        icon={<FileText className="w-8 h-8" />}
-                        title={t('fieldLogs.title')}
-                        subtitle={t('fieldLogs.subtitle')}
-                        actions={
-                            <Button 
-                                onClick={openCreateModal}
-                                disabled={!selectedSeasonId || isSeasonWriteLocked}
-                                title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
-                                variant="accent"
-                                className="min-h-[44px] bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 ring-offset-[var(--background)]"
-                            >
-                                <Plus className="w-4 h-4 mr-2" />
-                                {t('fieldLogs.createButton')}
-                            </Button>
-                        }
-                    />
-                </CardContent>
-            </Card>
+            <div className="mb-6">
+                <PageHeader
+                    icon={<FileText className="w-8 h-8" />}
+                    title={t('fieldLogs.title')}
+                    subtitle={t('fieldLogs.subtitle')}
+                    actions={
+                        <Button 
+                            onClick={openCreateModal}
+                            disabled={!selectedSeasonId || isSeasonWriteLocked}
+                            title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
+                            variant="accent"
+                            className="min-h-[44px] bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 ring-offset-[var(--background)]"
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            {t('fieldLogs.createButton')}
+                        </Button>
+                    }
+                />
+            </div>
 
             {/* Filters */}
             <Card className="mb-6 border border-border rounded-xl shadow-sm">

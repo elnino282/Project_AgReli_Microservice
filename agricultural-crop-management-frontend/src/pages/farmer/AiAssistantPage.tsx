@@ -91,7 +91,7 @@ export function AiAssistantPage() {
     return (
         <PageContainer maxWidth="default">
             {/* --- BẮT ĐẦU PHẦN CHỈNH SỬA --- */}
-            <div className="mb-8">
+            <div className="mb-6">
                 <PageHeader
                     className="mb-0"
                     icon={<Bot className="w-8 h-8 text-primary" />}

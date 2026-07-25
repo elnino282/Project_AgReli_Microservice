@@ -29,7 +29,7 @@ export function FarmInfoCard({
         <div className="py-2 space-y-8 mb-4">
             <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">{farm.name}</h1>
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">{farm.name}</h1>
                     <div className="mt-3 flex items-center gap-3">
                         <span className="text-muted-foreground text-sm">{t('farmDetail.farmId', { id: farm.id })}</span>
                         <div className="h-4 w-px bg-border"></div>

@@ -75,79 +75,77 @@ export function PlotToolbar({
 
     return (
     <div className="space-y-4">
-      <Card variant="page-header">
-        <CardContent className="px-6 py-4">
-          {/* Header Row: Title + Actions */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            {/* Title Section */}
-            <div className="flex-shrink-0">
-              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 leading-tight">
-                <MapPin className="w-6 h-6 text-primary" />
-                {t("plots.myPlots")}
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t("plots.pageSubtitle")}
-              </p>
-            </div>
+      <div className="mb-6">
+        {/* Header Row: Title + Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          {/* Title Section */}
+          <div className="flex-shrink-0">
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 leading-tight">
+              <MapPin className="w-6 h-6 text-primary" />
+              {t("plots.myPlots")}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("plots.pageSubtitle")}
+            </p>
+          </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              {/* Merge Plots Button (conditional) */}
-              {showMergeButton && onMergePlots && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onMergePlots}
-                  disabled={selectedCount < 2}
-                  disabledHint={t("plots.mergeDisabledHint")}
-                >
-                  <GitMerge className="w-4 h-4 mr-2" />
-                  {t("plots.mergePlots")}
-                </Button>
-              )}
-
-              {/* View Toggle */}
-              <div className="inline-flex rounded-lg bg-muted p-1">
-                <Button
-                  variant={viewMode === "list" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("list")}
-                  className={`h-8 ${
-                    viewMode === "list"
-                      ? "bg-card shadow-sm text-primary"
-                      : "hover:bg-card/50 text-muted-foreground"
-                  }`}
-                >
-                  <List className="w-4 h-4 mr-1.5" />
-                  {t("plots.viewMode.list")}
-                </Button>
-                <Button
-                  variant={viewMode === "map" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setViewMode("map")}
-                  className={`h-8 ${
-                    viewMode === "map"
-                      ? "bg-card shadow-sm text-primary"
-                      : "hover:bg-card/50 text-muted-foreground"
-                  }`}
-                >
-                  <MapIcon className="w-4 h-4 mr-1.5" />
-                  {t("plots.viewMode.map")}
-                </Button>
-              </div>
-
-              {/* Add Plot Button */}
+          {/* Actions */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Merge Plots Button (conditional) */}
+            {showMergeButton && onMergePlots && (
               <Button
-                onClick={onAddPlot}
+                variant="outline"
                 size="sm"
+                onClick={onMergePlots}
+                disabled={selectedCount < 2}
+                disabledHint={t("plots.mergeDisabledHint")}
               >
-                <Plus className="w-4 h-4 mr-2" />
-                {t("plots.addPlot")}
+                <GitMerge className="w-4 h-4 mr-2" />
+                {t("plots.mergePlots")}
+              </Button>
+            )}
+
+            {/* View Toggle */}
+            <div className="inline-flex rounded-lg bg-muted p-1">
+              <Button
+                variant={viewMode === "list" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("list")}
+                className={`h-8 ${
+                  viewMode === "list"
+                    ? "bg-card shadow-sm text-primary"
+                    : "hover:bg-card/50 text-muted-foreground"
+                }`}
+              >
+                <List className="w-4 h-4 mr-1.5" />
+                {t("plots.viewMode.list")}
+              </Button>
+              <Button
+                variant={viewMode === "map" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("map")}
+                className={`h-8 ${
+                  viewMode === "map"
+                    ? "bg-card shadow-sm text-primary"
+                    : "hover:bg-card/50 text-muted-foreground"
+                }`}
+              >
+                <MapIcon className="w-4 h-4 mr-1.5" />
+                {t("plots.viewMode.map")}
               </Button>
             </div>
+
+            {/* Add Plot Button */}
+            <Button
+              onClick={onAddPlot}
+              size="sm"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {t("plots.addPlot")}
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Card variant="filter">
         <CardContent className="px-6 py-4">

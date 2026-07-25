@@ -122,7 +122,8 @@
     "soilTests": "Xét nghiệm đất",
     "home": "Trang chủ",
     "auditLogs": "Nhật ký hệ thống",
-    "toggleSidebar": "Thu gọn/mở rộng điều hướng"
+    "toggleSidebar": "Thu gọn/mở rộng điều hướng",
+    "userGuide": "Hướng dẫn sử dụng"
   },
   "breadcrumb": {
     "contextAriaLabel": "Vị trí hiện tại",

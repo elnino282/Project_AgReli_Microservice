@@ -80,7 +80,7 @@ export function SeasonHeader({
             />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="min-w-0 text-3xl md:text-4xl font-bold tracking-tight text-foreground break-words">{selectedSeason.name}</h1>
+                <h1 className="min-w-0 text-2xl font-bold leading-tight text-foreground break-words">{selectedSeason.name}</h1>
                 <Badge
                   className={`${getStatusColor(selectedSeason.status)}`}
                 >
@@ -152,14 +152,14 @@ export function SeasonHeader({
   }
 
   return (
-    <div className="mb-6 px-6 py-6 bg-background border-b border-border/40">
-      <div className="max-w-[1800px] mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex-shrink-0">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground flex items-center gap-3 tracking-tight">
-            <Calendar className="w-8 h-8 text-emerald-600" />
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 leading-tight">
+            <Calendar className="w-6 h-6 text-emerald-600" />
             {t('seasons.pageTitle')}
           </h1>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-sm text-muted-foreground mt-1">
             {t('seasons.subtitle')}
           </p>
         </div>

@@ -1,7 +1,7 @@
 import {
     Home, MapPin, Calendar, Package,
     ShoppingCart, BarChart3, Settings, Sprout, FileText,
-    Shield, Warehouse, Users, AlertTriangle, Bell, ClipboardList, Clock3, Wallet2, MessageSquare
+    Shield, Warehouse, Users, AlertTriangle, Bell, ClipboardList, Clock3, Wallet2, MessageSquare, BookOpen
 } from 'lucide-react';
 import type { PortalType, PortalConfig } from '../model/types';
 
@@ -31,6 +31,7 @@ export const portalConfig: Record<PortalType, PortalConfig> = {
             { id: 'reports', label: 'Reports', icon: BarChart3 },
             { id: 'documents', label: 'System Docs', icon: FileText },
             { id: 'farm-documents', label: 'Farm Dossiers', icon: FileText },
+            { id: 'user-guide', label: 'User Guide', icon: BookOpen },
         ],
     },
     FARMER: {
@@ -39,17 +40,18 @@ export const portalConfig: Record<PortalType, PortalConfig> = {
         icon: Sprout,
         emoji: '🌾',
         navigation: [
-            { id: 'dashboard', label: 'Dashboard', icon: Home },
-            { id: 'marketplace-workspace', label: 'Marketplace Workspace', icon: ShoppingCart },
-            { id: 'farms', label: 'Farms & Plots', icon: MapPin },
-            { id: 'seasons', label: 'Seasons', icon: Calendar },
-            { id: 'suppliers-supplies', label: 'Suppliers & Supplies', icon: Package },
-            { id: 'product-warehouse', label: 'Product Warehouse', icon: Package },
-            { id: 'documents', label: 'Documents', icon: FileText },
-            { id: 'farm-documents', label: 'VietGAP Documents', icon: FileText },
-            { id: 'ai-assistant', label: 'AI Assistant', icon: Sprout },
-            { id: 'chat', label: 'Chat', icon: MessageSquare },
-            { id: 'notifications', label: 'Notifications', icon: Bell },
+            { id: 'dashboard', label: 'Dashboard', icon: Home, group: 'Quản lý hàng ngày' },
+            { id: 'farms', label: 'Farms & Plots', icon: MapPin, group: 'Quản lý hàng ngày' },
+            { id: 'seasons', label: 'Seasons', icon: Calendar, group: 'Quản lý hàng ngày' },
+            { id: 'suppliers-supplies', label: 'Suppliers & Supplies', icon: Package, group: 'Kho & Thị trường' },
+            { id: 'product-warehouse', label: 'Product Warehouse', icon: Package, group: 'Kho & Thị trường' },
+            { id: 'marketplace-workspace', label: 'Marketplace Workspace', icon: ShoppingCart, group: 'Kho & Thị trường' },
+            { id: 'documents', label: 'Documents', icon: FileText, group: 'Tiện ích & Hỗ trợ' },
+            { id: 'farm-documents', label: 'VietGAP Documents', icon: FileText, group: 'Tiện ích & Hỗ trợ' },
+            { id: 'ai-assistant', label: 'AI Assistant', icon: Sprout, group: 'Tiện ích & Hỗ trợ' },
+            { id: 'chat', label: 'Chat', icon: MessageSquare, group: 'Tiện ích & Hỗ trợ' },
+            { id: 'notifications', label: 'Notifications', icon: Bell, group: 'Tiện ích & Hỗ trợ' },
+            { id: 'user-guide', label: 'User Guide', icon: BookOpen, group: 'Tiện ích & Hỗ trợ' },
         ],
     },
     BUYER: {
@@ -77,6 +79,7 @@ export const portalConfig: Record<PortalType, PortalConfig> = {
             { id: 'progress', label: 'Progress Reports', icon: Clock3 },
             { id: 'payroll', label: 'Payroll', icon: Wallet2 },
             { id: 'chat', label: 'Chat', icon: MessageSquare },
+            { id: 'user-guide', label: 'User Guide', icon: BookOpen },
         ],
     },
 };

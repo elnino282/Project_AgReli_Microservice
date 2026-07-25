@@ -18,7 +18,8 @@ export type AdminView =
   | "farm-documents"
   | "profile"
   | "settings"
-  | "cert-audits";
+  | "cert-audits"
+  | "user-guide";
 
 export type AdminViewConfig = {
   titleKey: string;

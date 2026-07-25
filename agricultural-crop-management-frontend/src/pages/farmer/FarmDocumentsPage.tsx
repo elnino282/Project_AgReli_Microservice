@@ -358,8 +358,8 @@ export default function FarmDocumentsPage() {
   return (
     <PageContainer>
       {/* Upper Navigation/Control Card */}
-      <Card className="mb-6 border-none bg-gradient-to-r from-emerald-50 to-teal-50 shadow-sm rounded-2xl overflow-hidden">
-        <CardContent className="p-6 md:p-8">
+      <div className="mb-6">
+        <div className="p-0">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
               <PageHeader
@@ -410,8 +410,8 @@ export default function FarmDocumentsPage() {
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Warning/Alert Board for Expiring/Expired Documents */}
       {expiringDocs.length > 0 && (

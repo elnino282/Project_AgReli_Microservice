@@ -317,6 +317,10 @@ const EmployeeSettingsPage = lazy(() =>
   }))
 );
 
+const UserGuidePage = lazy(() =>
+  import('@/pages/shared/UserGuidePage').then((m) => ({ default: m.UserGuidePage }))
+);
+
 // ═══════════════════════════════════════════════════════════════
 // SHARED IMPORTS — ErrorBoundary + SeasonProvider (needed eagerly for wrappers)
 // ═══════════════════════════════════════════════════════════════
@@ -562,6 +566,7 @@ export function AppRoutes() {
           <Route path="ai-assistant" element={<AiAssistantPage />} />
           <Route path="profile" element={<FarmerProfile />} />
           <Route path="settings" element={<FarmerPreferences />} />
+          <Route path="user-guide" element={<UserGuidePage />} />
         </Route>
 
         {/* ━━━ Dashboard Layout Branch: Admin ━━━ */}
@@ -599,6 +604,7 @@ export function AppRoutes() {
           </Route>
           <Route path="profile" element={<EmployeeProfilePage />} />
           <Route path="settings" element={<EmployeeSettingsPage />} />
+          <Route path="user-guide" element={<UserGuidePage />} />
         </Route>
 
         {/* ━━━ Root + Catch-all ━━━ */}

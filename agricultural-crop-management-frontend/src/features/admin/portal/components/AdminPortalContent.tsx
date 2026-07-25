@@ -23,6 +23,7 @@ import { CropsVarietiesPage } from "@/pages/admin/CropsVarietiesPage";
 import { FarmsPlotsPage } from "@/pages/admin/FarmsPlotsPage";
 import { UsersRolesPage } from "@/pages/admin/UsersRolesPage";
 import { AdminSearchPage } from "@/pages/admin/AdminSearchPage";
+import { UserGuideContent } from "@/features/shared/user-guide";
 
 import { AdminDocumentsPage } from "@/pages/admin/AdminDocumentsPage";
 import { AdminFarmDocumentsPage } from "@/pages/admin/AdminFarmDocumentsPage";
@@ -73,6 +74,8 @@ export function AdminPortalContent({ currentView }: AdminPortalContentProps) {
       return <AdminProfile />;
     case "settings":
       return <AdminPreferences />;
+    case "user-guide":
+      return <UserGuideContent portalType="ADMIN" />;
     default:
       return <UnderConstruction title={t(getAdminViewTitleKey(currentView))} />;
   }

@@ -12,6 +12,7 @@ const MODULE_LABEL_KEYS: Record<EmployeeView, string> = {
   workspace: 'employee.workspace.title',
   profile: 'userMenu.profile',
   settings: 'userMenu.preferences',
+  'user-guide': 'nav.userGuide',
 };
 
 const WORKSPACE_MODULE_LABEL_KEYS: Record<string, string> = {

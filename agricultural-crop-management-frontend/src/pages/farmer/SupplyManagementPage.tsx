@@ -518,22 +518,19 @@ export function SupplyManagementPage() {
     <PageContainer variant="wide">
       <div className="farmer-supply-management-page">
         <div className="supplies-page">
-        <Card variant="page-header" className="mb-6">
-          <CardContent className="px-6 py-4">
-            <PageHeader
-              className="mb-0"
-              icon={<Package className="w-8 h-8" />}
-              title={t("suppliers.title")}
-              subtitle={t("suppliers.subtitle")}
-              actions={
-                <Button onClick={() => setShowStockInModal(true)} variant="default" className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background">
-                  <Plus className="w-4 h-4 mr-2" />
-                  {t("common.stockIn")}
-                </Button>
-              }
-            />
-          </CardContent>
-        </Card>
+        <div className="mb-6">
+          <PageHeader
+            icon={<Package className="w-8 h-8" />}
+            title={t("suppliers.title")}
+            subtitle={t("suppliers.subtitle")}
+            actions={
+              <Button onClick={() => setShowStockInModal(true)} variant="default" className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background">
+                <Plus className="w-4 h-4 mr-2" />
+                {t("common.stockIn")}
+              </Button>
+            }
+          />
+        </div>
 
         {/* ===== WAREHOUSE CONTROLS (only for inventory tabs) ===== */}
         {isInventoryTab && (

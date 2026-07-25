@@ -39,6 +39,7 @@ const navTranslationKeys: Record<string, string> = {
     'progress': 'nav.progress',
     'payroll': 'nav.payroll',
     'settings': 'nav.settings',
+    'user-guide': 'nav.userGuide',
 };
 
 /**
@@ -76,43 +77,72 @@ export function Sidebar({
         >
             <div className="h-full min-h-0 flex flex-col overflow-hidden min-w-0 w-full">
                 {/* Navigation Items */}
-                <nav className="flex-1 min-h-0 p-3 space-y-1 overflow-y-auto overscroll-contain">
-                    {navigationItems.map((item) => {
-                        const isActive = currentView === item.id;
+                <nav className="flex-1 min-h-0 p-3 space-y-4 overflow-y-auto overscroll-contain">
+                    {(() => {
+                        const groupedItems = navigationItems.reduce((acc, item) => {
+                            const group = item.group || 'default';
+                            if (!acc[group]) acc[group] = [];
+                            acc[group].push(item);
+                            return acc;
+                        }, {} as Record<string, typeof navigationItems>);
 
-                        return (
-                        <TooltipProvider key={item.id}>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <button
-                                        onClick={() => onNavigate(item.id)}
-                                        aria-current={isActive ? 'page' : undefined}
-                                        aria-label={collapsed ? getNavLabel(item) : undefined}
-                                        className="acm-sidebar-nav-item acm-hover-surface relative w-full min-h-12 flex items-center gap-3 px-3 py-2 rounded-lg border border-l-4 transition-colors duration-200"
-                                    >
-                                        <item.icon className="w-5 h-5 shrink-0" />
-                                        {!collapsed && (
-                                            <span className="text-sm font-medium truncate">{getNavLabel(item)}</span>
-                                        )}
-                                        {!collapsed && item.badge && (
-                                            <Badge
-                                                variant="secondary"
-                                                className={`acm-sidebar-nav-badge ml-auto ${isActive ? 'acm-sidebar-nav-badge-active' : ''}`}
-                                            >
-                                                {item.badge}
-                                            </Badge>
-                                        )}
-                                    </button>
-                                </TooltipTrigger>
-                                {collapsed && (
-                                    <TooltipContent side="right">
-                                        <p>{getNavLabel(item)}</p>
-                                    </TooltipContent>
+                        return Object.entries(groupedItems).map(([groupName, items], groupIndex) => (
+                            <div key={groupName} className="space-y-1">
+                                {!collapsed && groupName !== 'default' && (
+                                    <div className="px-3 py-2 mt-2">
+                                        <h4 className="text-xs font-semibold text-[var(--portal-sidebar-fg)] opacity-50 uppercase tracking-wider">
+                                            {groupName}
+                                        </h4>
+                                    </div>
                                 )}
-                            </Tooltip>
-                        </TooltipProvider>
-                        );
-                    })}
+                                {collapsed && groupIndex > 0 && (
+                                    <div className="w-full h-px bg-[var(--portal-sidebar-border)] my-2 opacity-50" />
+                                )}
+                                {items.map((item) => {
+                                    const isActive = currentView === item.id;
+
+                                    return (
+                                        <TooltipProvider key={item.id}>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <button
+                                                        onClick={() => onNavigate(item.id)}
+                                                        aria-current={isActive ? 'page' : undefined}
+                                                        aria-label={collapsed ? getNavLabel(item) : undefined}
+                                                        className="acm-sidebar-nav-item acm-hover-surface relative w-full min-h-12 flex items-center gap-3 px-3 py-2 rounded-lg border border-transparent transition-colors duration-200 data-[active=true]:bg-[var(--portal-sidebar-item-hover-bg)]"
+                                                        data-active={isActive}
+                                                    >
+                                                        {isActive && (
+                                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-current rounded-r-full" />
+                                                        )}
+                                                        <item.icon className={`w-5 h-5 shrink-0 ${isActive ? 'opacity-100' : 'opacity-70'}`} />
+                                                        {!collapsed && (
+                                                            <span className={`text-sm truncate ${isActive ? 'font-semibold' : 'font-medium opacity-80'}`}>
+                                                                {getNavLabel(item)}
+                                                            </span>
+                                                        )}
+                                                        {!collapsed && item.badge && (
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className={`acm-sidebar-nav-badge ml-auto ${isActive ? 'acm-sidebar-nav-badge-active' : ''}`}
+                                                            >
+                                                                {item.badge}
+                                                            </Badge>
+                                                        )}
+                                                    </button>
+                                                </TooltipTrigger>
+                                                {collapsed && (
+                                                    <TooltipContent side="right">
+                                                        <p>{getNavLabel(item)}</p>
+                                                    </TooltipContent>
+                                                )}
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    );
+                                })}
+                            </div>
+                        ));
+                    })()}
                 </nav>
 
                 {/* Collapse Toggle */}

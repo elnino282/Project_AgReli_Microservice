@@ -461,27 +461,24 @@ export function ProductWarehousePage() {
     <PageContainer variant="wide">
       <div className="farmer-product-warehouse-page">
         <div className="product-warehouse-page">
-        <Card variant="page-header" className="mb-6">
-          <CardContent className="px-6 py-4">
-            <PageHeader
-              className="mb-0"
-              icon={<PackageCheck className="w-8 h-8" />}
-              title={t("productWarehouse.title")}
-              subtitle={t("productWarehouse.subtitle")}
-              actions={
-                <Button
-                  size="sm"
-                  variant="default"
-                  type="button"
-                  onClick={openCreateWarehouseDialog}
-                  className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background"
-                >
-                  {t("productWarehouse.actions.addWarehouse")}
-                </Button>
-              }
-            />
-          </CardContent>
-        </Card>
+        <div className="mb-6">
+          <PageHeader
+            icon={<PackageCheck className="w-8 h-8" />}
+            title={t("productWarehouse.title")}
+            subtitle={t("productWarehouse.subtitle")}
+            actions={
+              <Button
+                size="sm"
+                variant="default"
+                type="button"
+                onClick={openCreateWarehouseDialog}
+                className="min-h-[44px] shadow-sm transition duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ring-offset-background"
+              >
+                {t("productWarehouse.actions.addWarehouse")}
+              </Button>
+            }
+          />
+        </div>
 
         <Card variant="content" className="mb-6 bg-card/50 border-muted/60">
           <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between divide-y sm:divide-y-0 sm:divide-x divide-border gap-4 sm:gap-0">

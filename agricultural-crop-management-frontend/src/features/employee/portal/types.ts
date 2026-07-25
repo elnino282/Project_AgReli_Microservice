@@ -1,6 +1,6 @@
 import type { BreadcrumbPath } from "@/features/shared/layout/types";
 
-export type EmployeeView = "tasks" | "progress" | "payroll" | "workspace" | "profile" | "settings";
+export type EmployeeView = "tasks" | "progress" | "payroll" | "workspace" | "profile" | "settings" | "user-guide";
 
 export interface EmployeePortalShellState {
   currentView: EmployeeView;

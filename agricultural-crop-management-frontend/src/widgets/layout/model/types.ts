@@ -16,6 +16,7 @@ export interface NavigationItem {
     icon: ElementType;
     href?: string;
     badge?: number;
+    group?: string; // Used to visually group items in the sidebar
     onClick?: () => void;
 }
 

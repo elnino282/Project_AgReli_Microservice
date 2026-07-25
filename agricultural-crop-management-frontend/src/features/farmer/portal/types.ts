@@ -31,7 +31,8 @@ export type FarmerView =
   | 'crops'
   | 'reports'
   | 'profile'
-  | 'settings';
+  | 'settings'
+  | 'user-guide';
 
 /**
  * Configuration for each farmer view

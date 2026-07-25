@@ -52,34 +52,32 @@ export function FarmToolbar({
 
     return (
         <div className="space-y-6">
-        <Card variant="page-header">
-            <CardContent className="px-6 py-4">
-                {/* Header Row: Title + Actions */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    {/* Title Section */}
-                    <div className="flex-shrink-0">
-                        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 leading-tight">
-                            <Building2 className="w-6 h-6 text-primary" />
-                            {t('farmManagement.title')}
-                        </h1>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            {t('farmManagement.subtitle')}
-                        </p>
-                    </div>
-
-                    {/* Primary Action */}
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                        <Button
-                            className="acm-rounded-sm acm-button-shadow"
-                            onClick={onCreateFarm}
-                        >
-                            <Plus className="w-4 h-4 mr-2" />
-                            {t('farmManagement.createFarm')}
-                        </Button>
-                    </div>
+        <div className="mb-6">
+            {/* Header Row: Title + Actions */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                {/* Title Section */}
+                <div className="flex-shrink-0">
+                    <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 leading-tight">
+                        <Building2 className="w-6 h-6 text-primary" />
+                        {t('farmManagement.title')}
+                    </h1>
+                    <p className="text-sm text-muted-foreground mt-1">
+                        {t('farmManagement.subtitle')}
+                    </p>
                 </div>
-            </CardContent>
-        </Card>
+
+                {/* Primary Action */}
+                <div className="flex items-center gap-3 flex-shrink-0">
+                    <Button
+                        className="acm-rounded-sm acm-button-shadow"
+                        onClick={onCreateFarm}
+                    >
+                        <Plus className="w-4 h-4 mr-2" />
+                        {t('farmManagement.createFarm')}
+                    </Button>
+                </div>
+            </div>
+        </div>
 
         <Card variant="filter">
             <CardContent className="px-6 py-4">

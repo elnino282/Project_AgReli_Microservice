@@ -106,11 +106,13 @@ export function SelfAssessmentPage() {
   if (showResult) {
     return (
       <PageContainer>
-        <PageHeader 
-          title="Kết quả tự đánh giá VietGAP" 
-          subtitle="Báo cáo kết quả tự kiểm tra mức độ tuân thủ tiêu chuẩn."
-          actions={<BackButton onClick={() => setShowResult(false)} label="Làm lại" />}
-        />
+        <div className="mb-6">
+          <PageHeader 
+            title="Kết quả tự đánh giá VietGAP" 
+            subtitle="Báo cáo kết quả tự kiểm tra mức độ tuân thủ tiêu chuẩn."
+            actions={<BackButton onClick={() => setShowResult(false)} label="Làm lại" />}
+          />
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className={`md:col-span-1 border-2 ${isPassed ? 'border-emerald-500 bg-emerald-50/50' : 'border-red-500 bg-red-50/50'}`}>
@@ -180,11 +182,13 @@ export function SelfAssessmentPage() {
 
   return (
     <PageContainer>
-      <PageHeader 
-        title="Tự đánh giá VietGAP" 
-        subtitle="Checklist tự kiểm tra nội bộ trước khi đăng ký đánh giá chính thức."
-        actions={<BackButton onClick={() => navigate(`/farmer/farms/${farmId}/certification`)} />}
-      />
+      <div className="mb-6">
+        <PageHeader 
+          title="Tự đánh giá VietGAP" 
+          subtitle="Checklist tự kiểm tra nội bộ trước khi đăng ký đánh giá chính thức."
+          actions={<BackButton onClick={() => navigate(`/farmer/farms/${farmId}/certification`)} />}
+        />
+      </div>
 
       <div className="bg-blue-50 text-blue-800 p-4 rounded-lg flex gap-3 mb-6 border border-blue-200">
         <Info className="w-5 h-5 shrink-0" />

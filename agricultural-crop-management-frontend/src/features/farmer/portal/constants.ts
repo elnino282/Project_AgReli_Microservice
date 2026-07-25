@@ -173,6 +173,12 @@ export const FARMER_VIEW_CONFIG: Record<FarmerView, FarmerViewTextConfig> = {
     titleKey: "farmerPortal.views.settings.title",
     breadcrumbKey: "farmerPortal.views.settings.breadcrumb",
   },
+  "user-guide": {
+    title: "User Guide",
+    breadcrumbLabel: "User Guide",
+    titleKey: "farmerPortal.views.userGuide.title",
+    breadcrumbKey: "farmerPortal.views.userGuide.breadcrumb",
+  },
 };
 
 function resolveViewConfig(view: FarmerView): FarmerViewTextConfig {

@@ -78,16 +78,13 @@ export function Documents() {
   return (
     <PageContainer variant="default">
       <div>
-        <Card variant="page-header" className="mb-6">
-          <CardContent className="px-6 py-4">
-            <PageHeader
-              className="mb-0"
-              icon={<FileText className="w-8 h-8" />}
-              title={t("documents.title")}
-              subtitle={t("documents.subtitle")}
-            />
-          </CardContent>
-        </Card>
+        <div className="mb-6">
+          <PageHeader
+            icon={<FileText className="w-8 h-8" />}
+            title={t("documents.title")}
+            subtitle={t("documents.subtitle")}
+          />
+        </div>
 
         <div className="mb-6">
           <DocumentFilterBar

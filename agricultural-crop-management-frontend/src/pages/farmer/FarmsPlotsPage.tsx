@@ -106,7 +106,7 @@ export default function FarmsPlotsPage() {
 
     return (
         <PageContainer>
-            <div className="mb-8">
+            <div className="mb-6">
                 <PageHeader
                     className="mb-0"
                     icon={<Map className="w-8 h-8 text-primary" />}

@@ -33,16 +33,13 @@ export function EmployeeWorkspacePage() {
   return (
     <PageContainer>
       <BackButton to="/employee/tasks" className="mb-4 w-fit" />
-      <Card className="mb-6 border border-border rounded-xl shadow-sm">
-        <CardContent className="px-6 py-4">
-          <PageHeader
-            className="mb-0"
-            icon={<CalendarDays className="w-8 h-8" />}
-            title={t("employee.workspace.title")}
-            subtitle={t("employee.workspace.subtitle")}
-          />
-        </CardContent>
-      </Card>
+      <div className="mb-6">
+        <PageHeader
+          icon={<CalendarDays className="w-8 h-8" />}
+          title={t("employee.workspace.title")}
+          subtitle={t("employee.workspace.subtitle")}
+        />
+      </div>
 
       {isLoading ? (
         <Card>

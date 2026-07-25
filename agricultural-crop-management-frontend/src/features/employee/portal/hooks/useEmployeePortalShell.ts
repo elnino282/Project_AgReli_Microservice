@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useEmployeeBreadcrumbs } from "./useEmployeeBreadcrumbs";
 import type { EmployeePortalShellState, EmployeeView } from "../types";
 
-const EMPLOYEE_VIEWS: EmployeeView[] = ["tasks", "progress", "payroll", "workspace", "profile", "settings"];
+const EMPLOYEE_VIEWS: EmployeeView[] = ["tasks", "progress", "payroll", "workspace", "profile", "settings", "user-guide"];
 
 const resolveViewFromPath = (pathname: string): EmployeeView => {
   const pathParts = pathname.split("/").filter(Boolean);

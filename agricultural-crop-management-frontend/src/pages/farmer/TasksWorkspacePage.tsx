@@ -191,22 +191,19 @@ export function TasksWorkspacePage() {
 
   return (
     <PageContainer>
-      <Card className="mb-6 border border-border rounded-xl shadow-sm">
-        <CardContent className="px-6 py-4">
-          <PageHeader
-            className="mb-0"
-            icon={<ClipboardList className="w-8 h-8" />}
-            title={t('tasks.title')}
-            subtitle={t('tasks.subtitle')}
-            actions={
-              <Button className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
-                <Plus className="w-4 h-4 mr-2" />
-                {t('tasks.createButton')}
-              </Button>
-            }
-          />
-        </CardContent>
-      </Card>
+      <div className="mb-6">
+        <PageHeader
+          icon={<ClipboardList className="w-8 h-8" />}
+          title={t('tasks.title')}
+          subtitle={t('tasks.subtitle')}
+          actions={
+            <Button className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background">
+              <Plus className="w-4 h-4 mr-2" />
+              {t('tasks.createButton')}
+            </Button>
+          }
+        />
+      </div>
 
       {/* Filters */}
       <Card className="mb-6">

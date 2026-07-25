@@ -973,27 +973,24 @@ export function DiseaseTrackingPage() {
 
   return (
     <PageContainer>
-      <Card className="mb-6 border border-border rounded-xl shadow-sm">
-        <CardContent className="px-6 py-4">
-          <PageHeader
-            className="mb-0"
-            icon={<Bug className="w-8 h-8" />}
-            title={t("diseaseTracking.title")}
-            subtitle={t("diseaseTracking.subtitle")}
-            actions={(
-              <Button
-                className="min-h-[44px]"
-                onClick={openCreateRecordDialog}
-                disabled={isSeasonWriteLocked}
-                title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                {t("diseaseTracking.actions.addRecord")}
-              </Button>
-            )}
-          />
-        </CardContent>
-      </Card>
+      <div className="mb-6">
+        <PageHeader
+          icon={<Bug className="w-8 h-8" />}
+          title={t("diseaseTracking.title")}
+          subtitle={t("diseaseTracking.subtitle")}
+          actions={(
+            <Button
+              className="min-h-[44px]"
+              onClick={openCreateRecordDialog}
+              disabled={isSeasonWriteLocked}
+              title={isSeasonWriteLocked ? seasonWriteLockReason : undefined}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {t("diseaseTracking.actions.addRecord")}
+            </Button>
+          )}
+        />
+      </div>
 
       <Card className="mb-6 border border-border rounded-xl shadow-sm">
         <CardContent className="px-6 py-4 space-y-4">

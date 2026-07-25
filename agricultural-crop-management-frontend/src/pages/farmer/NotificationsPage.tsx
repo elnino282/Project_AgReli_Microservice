@@ -39,16 +39,13 @@ export function NotificationsPage() {
 
   return (
     <PageContainer>
-      <Card className="mb-6 border border-border rounded-xl shadow-sm">
-        <CardContent className="px-6 py-4">
-          <PageHeader
-            className="mb-0"
-            icon={<Bell className="w-8 h-8" />}
-            title={t('notifications.title')}
-            subtitle={t('notifications.subtitle')}
-          />
-        </CardContent>
-      </Card>
+      <div className="mb-6">
+        <PageHeader
+          icon={<Bell className="w-8 h-8" />}
+          title={t('notifications.title')}
+          subtitle={t('notifications.subtitle')}
+        />
+      </div>
 
       <Card className="border border-border rounded-xl shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
