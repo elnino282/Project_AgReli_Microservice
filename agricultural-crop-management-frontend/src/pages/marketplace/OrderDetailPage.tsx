@@ -15,12 +15,12 @@ import {
 } from "@/features/marketplace/hooks";
 import { formatDateTime, formatVnd } from "@/features/marketplace/lib/format";
 
-const MAX_PAYMENT_PROOF_BYTES = 5 * 1024 * 1024;
+const MAX_PAYMENT_PROOF_BYTES = 10 * 1024 * 1024;
 const PAYMENT_PROOF_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 
 function validatePaymentProof(file: File): string | null {
   if (!PAYMENT_PROOF_TYPES.includes(file.type)) return 'Chỉ hỗ trợ JPG, PNG, WEBP hoặc PDF.';
-  if (file.size > MAX_PAYMENT_PROOF_BYTES) return 'Tệp xác nhận thanh toán không được vượt quá 5MB.';
+  if (file.size > MAX_PAYMENT_PROOF_BYTES) return 'Tệp xác nhận thanh toán không được vượt quá 10MB.';
   return null;
 }
 
@@ -357,7 +357,7 @@ export function OrderDetailPage() {
                     </p>
                   </div>
                   <p className="text-xs text-muted-foreground leading-normal">
-                    Hỗ trợ định dạng JPG, PNG, WEBP hoặc PDF tối đa 5MB.
+                    Hỗ trợ định dạng JPG, PNG, WEBP hoặc PDF tối đa 10MB.
                   </p>
                   <Input
                     aria-label="payment proof"

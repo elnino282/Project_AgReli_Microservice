@@ -62,7 +62,8 @@ class ShippingFeeCalculatorTest {
         when(providerRepository.findByIsActiveTrue()).thenReturn(Collections.emptyList());
 
         CalculateShippingRequest req = new CalculateShippingRequest(
-                "Lâm Đồng", "Hồ Chí Minh", BigDecimal.valueOf(5), false, false
+                "Lâm Đồng", "Hồ Chí Minh", BigDecimal.valueOf(5), false, false,
+                null, null, null, null, false
         );
 
         List<ShippingOption> options = shippingFeeCalculator.calculateOptions(req);
@@ -104,7 +105,8 @@ class ShippingFeeCalculatorTest {
                 .thenReturn(Optional.of(ghnRate));
 
         CalculateShippingRequest req = new CalculateShippingRequest(
-                "Lâm Đồng", "Hồ Chí Minh", BigDecimal.valueOf(5), false, false
+                "Lâm Đồng", "Hồ Chí Minh", BigDecimal.valueOf(5), false, false,
+                null, null, null, null, false
         );
 
         List<ShippingOption> options = shippingFeeCalculator.calculateOptions(req);
@@ -146,7 +148,8 @@ class ShippingFeeCalculatorTest {
                 .thenReturn(Optional.of(coldRate));
 
         CalculateShippingRequest req = new CalculateShippingRequest(
-                "Lâm Đồng", "Hồ Chí Minh", BigDecimal.valueOf(5), true, false
+                "Lâm Đồng", "Hồ Chí Minh", BigDecimal.valueOf(5), true, false,
+                null, null, null, null, false
         );
 
         List<ShippingOption> options = shippingFeeCalculator.calculateOptions(req);
