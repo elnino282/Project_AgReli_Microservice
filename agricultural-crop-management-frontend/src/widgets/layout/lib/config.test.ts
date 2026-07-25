@@ -10,23 +10,24 @@ import { portalConfig } from '../lib/config';
 describe('Farmer Portal Navigation Configuration', () => {
     const farmerNav = portalConfig.FARMER.navigation;
 
-    it('should contain exactly 11 navigation items', () => {
-        expect(farmerNav).toHaveLength(11);
+    it('should contain exactly 12 navigation items', () => {
+        expect(farmerNav).toHaveLength(12);
     });
 
     it('should have items in the exact required order', () => {
         const expectedOrder = [
             'dashboard',
-            'marketplace-workspace',
             'farms',
             'seasons',
             'suppliers-supplies',
             'product-warehouse',
+            'marketplace-workspace',
             'documents',
             'farm-documents',
             'ai-assistant',
             'chat',
             'notifications',
+            'user-guide',
         ];
 
         const actualOrder = farmerNav.map((item) => item.id);
@@ -62,6 +63,7 @@ describe('Farmer Portal Navigation Configuration', () => {
         expect(itemLabels['chat']).toBe('Chat');
         expect(itemLabels['notifications']).toBe('Notifications');
         expect(itemLabels['ai-assistant']).toBe('AI Assistant');
+        expect(itemLabels['user-guide']).toBe('User Guide');
     });
 
     it('should not contain removed items (workspace modules and legacy routes)', () => {

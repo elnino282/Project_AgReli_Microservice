@@ -271,7 +271,9 @@ describe("Floating chat widget", () => {
     await user.click(screen.getByRole("button", { name: /open chat/i }));
     await user.click(await screen.findByRole("button", { name: /expand chat/i }));
 
-    expect(screen.getByTestId("location-path")).toHaveTextContent("/chat");
+    await waitFor(() => {
+      expect(screen.getByTestId("location-path")).toHaveTextContent("/chat");
+    });
   });
 
   it("selects a conversation, sends a trimmed message, and keeps the popup open", async () => {

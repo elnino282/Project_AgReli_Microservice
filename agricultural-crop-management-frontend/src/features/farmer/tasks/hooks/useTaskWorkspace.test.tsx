@@ -49,6 +49,15 @@ vi.mock('sonner', () => ({
   },
 }));
 
+vi.mock('@/shared/api/http', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: [] }),
+    post: vi.fn().mockResolvedValue({ data: {} }),
+    put: vi.fn().mockResolvedValue({ data: {} }),
+    delete: vi.fn().mockResolvedValue({ data: {} }),
+  }
+}));
+
 const apiTaskRows = [
   {
     taskId: 101,
