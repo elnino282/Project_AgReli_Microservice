@@ -5,9 +5,9 @@ import { useMarketplaceFarms } from "@/features/marketplace/hooks";
 
 function FarmCardSkeleton() {
   return (
-    <Card className="overflow-hidden border-earth-200 sm:flex">
-      <div className="aspect-video animate-pulse bg-earth-100 sm:w-2/5 sm:aspect-auto" />
-      <CardContent className="flex-1 p-8">
+    <Card className="flex flex-col h-full overflow-hidden border-earth-200">
+      <div className="aspect-video w-full shrink-0 animate-pulse bg-earth-100 relative" />
+      <CardContent className="flex flex-1 flex-col p-8">
         <div className="space-y-3">
           <div className="h-6 w-48 animate-pulse rounded bg-earth-200" />
           <div className="h-4 w-full animate-pulse rounded bg-earth-200" />
@@ -49,8 +49,8 @@ export function MarketHomeFarms() {
         ) : (
           <div className={`${getGridColsClass(featuredFarms.length, 2)} gap-8`}>
             {featuredFarms.map((farm) => (
-              <Card key={farm.id} className="overflow-hidden border-primary/10 bg-primary/5 shadow-sm transition-all hover:shadow-md sm:flex hover:border-primary/30">
-                <div className="aspect-video w-full shrink-0 sm:w-2/5 sm:aspect-auto relative">
+              <Card key={farm.id} className="flex flex-col h-full overflow-hidden border-primary/10 bg-primary/5 shadow-sm transition-all hover:shadow-md hover:border-primary/30">
+                <div className="aspect-video w-full shrink-0 relative">
                   {farm.coverImageUrl ? (
                     <img
                       src={farm.coverImageUrl}
@@ -62,7 +62,7 @@ export function MarketHomeFarms() {
                     <ImagePlaceholder />
                   )}
                 </div>
-                <CardContent className="flex flex-1 flex-col justify-center p-8">
+                <CardContent className="flex flex-1 flex-col p-8">
                   <div className="flex flex-col gap-2 mb-4">
                     <h3 className="font-heading text-2xl font-bold tracking-tight text-earth-900">{farm.name}</h3>
                     {farm.hasTraceableProducts && (

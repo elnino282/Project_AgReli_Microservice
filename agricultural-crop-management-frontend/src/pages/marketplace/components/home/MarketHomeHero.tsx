@@ -80,7 +80,7 @@ export function MarketHomeHero({ heroImageUrl, totalFarms }: MarketHomeHeroProps
             </ul>
           </div>
 
-          <div className="relative lg:ml-auto lg:w-full lg:max-w-xl">
+          <div className="relative w-full">
             {heroImageUrl && !imageError ? (
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-2xl ring-1 ring-earth-900/10">
                 <img
@@ -108,10 +108,24 @@ export function MarketHomeHero({ heroImageUrl, totalFarms }: MarketHomeHeroProps
             ) : (
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-2xl ring-1 ring-earth-900/10">
                 <img
-                  src="/Dashboard1.png"
+                  src="/hero-farm.png"
                   alt="Nông trại xanh tươi"
                   className="h-full w-full object-cover"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-earth-950/80 via-earth-900/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
+                  <div className="mb-4 flex flex-wrap gap-2">
+                    <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white backdrop-blur-md">
+                      Có truy xuất
+                    </span>
+                    <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white backdrop-blur-md">
+                      Kết nối dữ liệu thật
+                    </span>
+                  </div>
+                  <p className="text-base font-medium text-white/95 sm:text-lg">
+                    Thu hoạch minh bạch, giao dịch trực tiếp từ nông trại địa phương
+                  </p>
+                </div>
               </div>
             )}
           </div>

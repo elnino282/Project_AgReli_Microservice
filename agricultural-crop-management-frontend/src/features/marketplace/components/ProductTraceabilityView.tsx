@@ -188,6 +188,10 @@ export const ProductTraceabilityView: React.FC<TraceabilityProps> = ({
                             alt={event.action} 
                             className="w-full h-40 md:h-56 object-cover hover:scale-105 transition-transform duration-500"
                             loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = "/images.png";
+                            }}
                           />
                         </div>
                       )}
