@@ -262,6 +262,8 @@ export function FarmsListView({
                                         <td className="px-4 py-3.5">
                                             <AddressDisplay
                                                 wardCode={farm.wardId}
+                                                wardName={farm.wardName}
+                                                provinceName={farm.provinceName}
                                                 variant="compact"
                                                 className="text-sm text-muted-foreground"
                                             />

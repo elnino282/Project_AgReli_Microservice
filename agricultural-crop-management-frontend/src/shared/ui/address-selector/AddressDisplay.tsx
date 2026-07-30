@@ -13,6 +13,16 @@ export interface AddressDisplayProps {
      * Ward code to display address for
      */
     wardCode?: number | null;
+
+    /**
+     * Ward name if already available (skips API call if both wardName and provinceName are provided)
+     */
+    wardName?: string | null;
+
+    /**
+     * Province name if already available (skips API call if both wardName and provinceName are provided)
+     */
+    provinceName?: string | null;
     
     /**
      * Fallback text when no address available
@@ -54,23 +64,44 @@ export interface AddressDisplayProps {
  */
 export function AddressDisplay({
     wardCode,
+    wardName,
+    provinceName,
     fallback = '—',
     variant = 'full',
     showIcon = false,
     className = '',
 }: AddressDisplayProps) {
+    const hasPreloadedNames = Boolean(wardName || provinceName);
+    
     const { formattedAddress, isLoading, isError } = useAddressDisplay({
         wardCode,
-        enabled: variant !== 'id-only',
+        enabled: variant !== 'id-only' && !hasPreloadedNames,
     });
     
+    let displayText = '';
+    
+    if (variant === 'id-only') {
+        displayText = `#${wardCode}`;
+    } else if (hasPreloadedNames) {
+        if (variant === 'compact') {
+            displayText = provinceName || wardName || '';
+        } else {
+            const parts = [wardName, provinceName].filter(Boolean);
+            displayText = parts.join(', ');
+        }
+    } else if (formattedAddress) {
+        displayText = variant === 'compact'
+            ? formattedAddress.split(',').slice(-1).join(',').trim()
+            : formattedAddress;
+    }
+    
     // Loading state
-    if (isLoading && variant !== 'id-only') {
+    if (isLoading && !hasPreloadedNames && variant !== 'id-only') {
         return <Skeleton className={`h-4 w-32 ${className}`} />;
     }
     
     // Error or no data - show fallback
-    if ((isError || !formattedAddress) && wardCode) {
+    if (!displayText && wardCode) {
         if (variant === 'id-only') {
             return (
                 <span className={className}>
@@ -90,15 +121,9 @@ export function AddressDisplay({
     }
     
     // No ward code provided
-    if (!wardCode) {
+    if (!displayText && !wardCode) {
         return <span className={`text-gray-400 ${className}`}>{fallback}</span>;
     }
-    
-    // Display formatted address
-    // Note: Backend only has 2 levels (Ward, Province), so compact shows province only
-    const displayText = variant === 'compact' && formattedAddress
-        ? formattedAddress.split(',').slice(-1).join(',').trim() // Show only last part (Province)
-        : formattedAddress;
     
     return (
         <span className={className}>

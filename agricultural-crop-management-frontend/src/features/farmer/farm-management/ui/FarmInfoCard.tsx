@@ -66,7 +66,7 @@ export function FarmInfoCard({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-6 border-t border-border/40">
                 <div>
                     <p className="text-sm font-medium text-muted-foreground mb-1.5">{t('farmDetail.overview.owner')}</p>
-                    <p className="text-base font-medium">@{farm.ownerUsername}</p>
+                    <p className="text-base font-medium">{farm.ownerUsername || t('farmDetail.overview.notSpecified')}</p>
                 </div>
                 <div>
                     <p className="text-sm font-medium text-muted-foreground mb-1.5">{t('farms.form.area')}</p>
@@ -79,6 +79,8 @@ export function FarmInfoCard({
                     <div className="text-base">
                         <AddressDisplay
                             wardCode={farm.wardId}
+                            wardName={farm.wardName}
+                            provinceName={farm.provinceName}
                             variant="full"
                             showIcon={true}
                             fallback={t('farmDetail.overview.notSpecified')}

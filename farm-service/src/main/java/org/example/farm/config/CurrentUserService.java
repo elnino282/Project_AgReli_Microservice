@@ -50,4 +50,20 @@ public class CurrentUserService {
 
         throw new RuntimeException("Unauthenticated access - missing role claim");
     }
+
+    public String getCurrentUserFullName() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null; // Don't throw if not critical
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof Jwt jwt) {
+            Object fullNameClaim = jwt.getClaim("full_name");
+            if (fullNameClaim instanceof String fullName) {
+                return fullName;
+            }
+        }
+        return null;
+    }
 }

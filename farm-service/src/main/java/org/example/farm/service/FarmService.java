@@ -222,6 +222,7 @@ public class FarmService {
                 .id(farm.getId())
                 .farmName(farm.getName())
                 .name(farm.getName())
+                .ownerUsername(currentUserService.getCurrentUserFullName())
                 .provinceId(farm.getProvince() != null ? farm.getProvince().getId() : null)
                 .provinceName(farm.getProvince() != null ? farm.getProvince().getName() : null)
                 .wardId(farm.getWard() != null ? farm.getWard().getId() : null)

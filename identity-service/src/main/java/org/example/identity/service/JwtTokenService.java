@@ -85,6 +85,7 @@ public class JwtTokenService {
                 .jwtID(UUID.randomUUID().toString())
                 .claim("user_id", user.getId())
                 .claim("username", user.getUsername())
+                .claim("full_name", user.getFullName())
                 .claim("email", user.getEmail())
                 .claim("role", primaryRole)
                 .claim("scope", buildScope(user))
