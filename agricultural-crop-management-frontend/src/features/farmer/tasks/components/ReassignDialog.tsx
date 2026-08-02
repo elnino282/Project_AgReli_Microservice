@@ -16,19 +16,17 @@ import {
   DialogTitle,
 } from "@/shared/ui";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
-interface AssigneeOption {
-  userId: number;
-  displayName: string;
-}
-
+import { useEligibleAssignees } from "@/entities/task/api/hooks";
+import { Badge } from "@/shared/ui/badge";
+import { AlertCircle } from "lucide-react";
 interface ReassignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedCount: number;
   onReassign: (assigneeUserId: number) => void;
-  assigneeOptions: AssigneeOption[];
+  seasonId?: number;
   disabled?: boolean;
   disabledReason?: string;
 }
@@ -38,12 +36,19 @@ export function ReassignDialog({
   onOpenChange,
   selectedCount,
   onReassign,
-  assigneeOptions,
+  seasonId = 0,
   disabled = false,
   disabledReason,
 }: ReassignDialogProps) {
   const { t } = useTranslation();
   const [selectedAssigneeId, setSelectedAssigneeId] = useState("");
+
+  const { data: eligibleAssignees = [], isLoading } = useEligibleAssignees(seasonId, undefined, { enabled: open && seasonId > 0 });
+
+  const selectedAssignee = useMemo(
+    () => eligibleAssignees.find((a) => String(a.employeeUserId) === selectedAssigneeId),
+    [eligibleAssignees, selectedAssigneeId]
+  );
 
   useEffect(() => {
     if (!open) {
@@ -79,23 +84,51 @@ export function ReassignDialog({
               {t("tasks.form.assignee")}
             </Label>
             <Select
-              disabled={disabled || assigneeOptions.length === 0}
+              disabled={disabled || isLoading || eligibleAssignees.length === 0}
               value={selectedAssigneeId}
               onValueChange={setSelectedAssigneeId}
             >
               <SelectTrigger id="bulk-reassign-assignee">
-                <SelectValue placeholder={t("tasks.form.selectAssignee")} />
+                <SelectValue placeholder={isLoading ? "Loading..." : t("tasks.form.selectAssignee")} />
               </SelectTrigger>
               <SelectContent>
-                {assigneeOptions.map((assignee) => (
-                  <SelectItem key={assignee.userId} value={String(assignee.userId)}>
-                    {assignee.displayName}
+                {eligibleAssignees.map((assignee) => (
+                  <SelectItem key={assignee.employeeUserId} value={String(assignee.employeeUserId)}>
+                    <div className="flex items-center justify-between w-full pr-4">
+                      <span>
+                        {assignee.employeeName ||
+                          assignee.employeeUsername ||
+                          assignee.employeeEmail ||
+                          `Employee #${assignee.employeeUserId}`}
+                      </span>
+                      {assignee.isTrained ? (
+                        <Badge variant="outline" className="ml-2 text-[10px] h-4 bg-green-50 text-green-700 border-green-200">
+                          Đã đào tạo
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="ml-2 text-[10px] h-4 bg-amber-50 text-amber-700 border-amber-200">
+                          Chưa đào tạo
+                        </Badge>
+                      )}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          {assigneeOptions.length === 0 && (
+          {selectedAssignee && selectedAssignee.isTrained === false && (
+            <div className="flex items-center text-amber-600 text-xs bg-amber-50 p-2 rounded border border-amber-200">
+              <AlertCircle className="w-4 h-4 mr-1" />
+              <span>{t("tasks.dialog.untrainedWarning", "Nhân viên này chưa qua đào tạo. Bạn có chắc chắn muốn giao việc?")}</span>
+            </div>
+          )}
+          {seasonId <= 0 && (
+            <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              <AlertCircle className="w-4 h-4 inline mr-1" />
+              {t("tasks.dialog.noSeason")}
+            </div>
+          )}
+          {seasonId > 0 && !isLoading && eligibleAssignees.length === 0 && (
             <p className="text-xs text-muted-foreground">
               {t("tasks.dialog.noAssignees")}
             </p>

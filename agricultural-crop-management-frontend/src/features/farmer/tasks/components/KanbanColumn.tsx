@@ -11,6 +11,9 @@ interface KanbanColumnProps {
   color: string;
   tasks: Task[];
   onTaskMove: (taskId: string, newStatus: TaskStatus) => void;
+  onEdit?: (taskId: string) => void;
+  onComplete?: (taskId: string) => void;
+  onReassign?: (taskId: string) => void;
   onDelete: (taskId: string) => void;
   disableMutations?: boolean;
 }
@@ -21,6 +24,9 @@ export function KanbanColumn({
   color,
   tasks,
   onTaskMove,
+  onEdit,
+  onComplete,
+  onReassign,
   onDelete,
   disableMutations = false,
 }: KanbanColumnProps) {
@@ -59,6 +65,9 @@ export function KanbanColumn({
             <TaskCard
               key={task.id}
               task={task}
+              onEdit={onEdit}
+              onComplete={onComplete}
+              onReassign={onReassign}
               onDelete={onDelete}
               disableMutations={disableMutations}
             />

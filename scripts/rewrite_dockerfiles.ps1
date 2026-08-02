@@ -66,7 +66,6 @@ foreach ($svc in $services) {
 
     $dockerfile = Join-Path $dir 'Dockerfile'
     $body = @"
-# syntax=docker/dockerfile:1.7
 FROM maven:3.9-eclipse-temurin-23-alpine AS builder
 
 WORKDIR /build

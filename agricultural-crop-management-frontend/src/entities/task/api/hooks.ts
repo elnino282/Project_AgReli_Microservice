@@ -14,6 +14,7 @@ import type {
     TaskCreateRequest,
     TaskUpdateRequest,
     TaskStatusUpdateRequest,
+    EligibleAssignee,
 } from '../model/types';
 
 // Context types for optimistic updates
@@ -77,50 +78,39 @@ export const useTaskById = (
 });
 
 /**
+ * Hook to fetch eligible assignees for a task or team
+ */
+export const useEligibleAssignees = (
+    seasonId: number,
+    params?: { taskId?: number; workTeamId?: number },
+    options?: Omit<UseQueryOptions<EligibleAssignee[], Error>, 'queryKey' | 'queryFn'>
+) => useQuery({
+    queryKey: taskKeys.eligibleAssignees(seasonId, params),
+    queryFn: () => taskApi.getEligibleAssignees(seasonId, params),
+    enabled: seasonId > 0,
+    staleTime: 5 * 60 * 1000,
+    ...options,
+});
+
+/**
  * Hook to create a new task with optimistic updates
  */
 export const useCreateTask = (
     seasonId: number,
-    options?: Omit<UseMutationOptions<Task, Error, TaskCreateRequest, CreateTaskContext>, 'mutationFn'>
+    options?: Omit<UseMutationOptions<Task, Error, TaskCreateRequest, unknown>, 'mutationFn'>
 ) => {
     const queryClient = useQueryClient();
-    return useMutation<Task, Error, TaskCreateRequest, CreateTaskContext>({
+    return useMutation<Task, Error, TaskCreateRequest, unknown>({
         mutationFn: (data) => taskApi.create(seasonId, data),
-        onMutate: async (newTask) => {
-            const listKey = taskKeys.listBySeason(seasonId);
-            await queryClient.cancelQueries({ queryKey: listKey });
-
-            const previousTasks = queryClient.getQueryData<PageResponse<Task>>(listKey);
-
-            if (previousTasks) {
-                queryClient.setQueryData<PageResponse<Task>>(listKey, {
-                    ...previousTasks,
-                    items: [
-                        {
-                            ...newTask,
-                            taskId: Date.now(),
-                            seasonId,
-                            status: 'PENDING',
-                            createdAt: new Date().toISOString(),
-                        } as Task,
-                        ...previousTasks.items,
-                    ],
-                    totalElements: previousTasks.totalElements + 1,
-                });
-            }
-
-            return { previousTasks };
-        },
-        onError: (_err, _newTask, context) => {
-            if (context?.previousTasks) {
-                queryClient.setQueryData(taskKeys.listBySeason(seasonId), context.previousTasks);
-            }
-        },
-        onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: taskKeys.listBySeason(seasonId) });
-            queryClient.invalidateQueries({ queryKey: taskKeys.listWorkspace() });
-        },
         ...options,
+        onSuccess: (...args) => {
+            // Wait for queries to invalidate before calling the caller's onSuccess
+            // This ensures data is refetched BEFORE the UI updates (e.g. closing dialog)
+            queryClient.invalidateQueries({ queryKey: taskKeys.listBySeason(seasonId) }).then(() => {
+                if (options?.onSuccess) options.onSuccess(...args);
+            });
+            queryClient.invalidateQueries({ queryKey: taskKeys.listWorkspace() });
+        }
     });
 };
 

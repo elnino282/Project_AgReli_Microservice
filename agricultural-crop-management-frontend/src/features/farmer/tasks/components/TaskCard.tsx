@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Edit, Trash2, Check, MoreVertical, MapPin, Clock, Paperclip } from 'lucide-react';
 import { useDrag } from 'react-dnd';
 import { Button } from '@/shared/ui/button';
@@ -26,11 +26,14 @@ import { TASK_TYPES } from '../constants';
 
 interface TaskCardProps {
   task: Task;
+  onEdit?: (taskId: string) => void;
+  onComplete?: (taskId: string) => void;
+  onReassign?: (taskId: string) => void;
   onDelete: (taskId: string) => void;
   disableMutations?: boolean;
 }
 
-export function TaskCard({ task, onDelete, disableMutations = false }: TaskCardProps) {
+export function TaskCard({ task, onEdit, onComplete, onReassign, onDelete, disableMutations = false }: TaskCardProps) {
   const { t, locale } = useI18n();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [{ isDragging }, drag] = useDrag({
@@ -70,11 +73,19 @@ export function TaskCard({ task, onDelete, disableMutations = false }: TaskCardP
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="acm-rounded-sm">
-            <DropdownMenuItem className="cursor-pointer" disabled={disableMutations}>
+            <DropdownMenuItem 
+              className="cursor-pointer" 
+              disabled={disableMutations}
+              onClick={() => !disableMutations && onEdit?.(task.id)}
+            >
               <Edit className="w-4 h-4 mr-2" />
               {t('common.edit')}
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer" disabled={disableMutations}>
+            <DropdownMenuItem 
+              className="cursor-pointer" 
+              disabled={disableMutations || task.status === 'completed'}
+              onClick={() => !disableMutations && onComplete?.(task.id)}
+            >
               <Check className="w-4 h-4 mr-2" />
               {t('tasks.actions.complete')}
             </DropdownMenuItem>
@@ -138,7 +149,15 @@ export function TaskCard({ task, onDelete, disableMutations = false }: TaskCardP
         </div>
 
         <div className="flex items-center justify-between pt-2">
-          <Avatar className="h-6 w-6">
+          <Avatar 
+            className={`h-6 w-6 ${disableMutations ? '' : 'cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all'}`}
+            onClick={(e) => {
+              if (disableMutations) return;
+              e.stopPropagation();
+              onReassign?.(task.id);
+            }}
+            title={t('tasks.actions.reassign', 'Reassign')}
+          >
             <AvatarFallback className="text-xs bg-primary/10 text-primary">
               {task.assigneeInitials}
             </AvatarFallback>

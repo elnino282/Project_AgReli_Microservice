@@ -42,35 +42,42 @@ import { Badge } from '@/shared/ui/badge';
 import { formatMoney } from '@/shared/lib';
 import { DataErrorBoundary } from '@/shared/ui/error-boundary/DataErrorBoundary';
 
-// Import Types & Mock Data
-import { Season, FarmingLog, ReportData } from '@/features/farmer/dashboard/types/dashboard-types';
-import { mockSeasons, mockFarmingLogs, mockReportData } from '@/features/farmer/dashboard/mock-data';
+// Import Types & Hook
+import { FarmingLog, ReportData } from '@/features/farmer/dashboard/types/dashboard-types';
 import { FarmingLogsWidget } from '@/features/farmer/dashboard/components/FarmingLogsWidget';
 import { SeasonAnalyticsWidget } from '@/features/farmer/dashboard/components/SeasonAnalyticsWidget';
+import { useSeason } from '@/shared/contexts';
+import { SelectGroup, SelectLabel } from '@/shared/ui/select';
 
 export function FarmerDashboardPage() {
   const { t } = useTranslation();
+  const { seasons, activeSeasons, isLoading, error } = useSeason();
 
   // 1. HEADER / TOP (Active Seasons)
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string>('');
+  const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (mockSeasons.length > 0 && !selectedSeasonId) {
-      setSelectedSeasonId(mockSeasons[0].id);
+    if (!selectedSeasonId && seasons && seasons.length > 0) {
+      if (activeSeasons && activeSeasons.length > 0) {
+        setSelectedSeasonId(activeSeasons[0].id);
+      } else {
+        const completedSeason = seasons.find(s => s.status === 'COMPLETED');
+        if (completedSeason) {
+          setSelectedSeasonId(completedSeason.id);
+        } else {
+          setSelectedSeasonId(seasons[0].id);
+        }
+      }
     }
-  }, [mockSeasons, selectedSeasonId]);
+  }, [seasons, activeSeasons, selectedSeasonId]);
 
-  const activeSeason = mockSeasons.find(s => s.id === selectedSeasonId);
-  const activeSeasons = mockSeasons;
-  
-  // Lọc dữ liệu theo mùa vụ được chọn
-  const logsForSeason = useMemo(() => 
-    mockFarmingLogs.filter(log => log.seasonId === selectedSeasonId),
-  [selectedSeasonId]);
+  const activeSeason = useMemo(() => {
+    return seasons?.find((s: any) => s.id === selectedSeasonId);
+  }, [seasons, selectedSeasonId]);
 
-  const reportData = useMemo(() => 
-    mockReportData[selectedSeasonId],
-  [selectedSeasonId]);
+  const completedSeasons = useMemo(() => {
+    return seasons?.filter((s: any) => s.status === 'COMPLETED') || [];
+  }, [seasons]);
 
   // Utility for status icon & color
   const getStatusConfig = (status: FarmingLog['status']) => {
@@ -116,16 +123,34 @@ export function FarmerDashboardPage() {
           </div>
 
           <div className="w-full md:w-72">
-            <Select value={selectedSeasonId} onValueChange={setSelectedSeasonId}>
+            <Select 
+              value={selectedSeasonId ? String(selectedSeasonId) : undefined} 
+              onValueChange={(val) => setSelectedSeasonId(Number(val))}
+            >
               <SelectTrigger className="w-full bg-card">
                 <SelectValue placeholder="Chọn mùa vụ..." />
               </SelectTrigger>
               <SelectContent>
-                {mockSeasons.map((season) => (
-                  <SelectItem key={season.id} value={season.id}>
-                    {season.name} ({season.cropName})
-                  </SelectItem>
-                ))}
+                {activeSeasons && activeSeasons.length > 0 && (
+                  <SelectGroup>
+                    <SelectLabel>Đang sản xuất</SelectLabel>
+                    {activeSeasons.map((season: any) => (
+                      <SelectItem key={season.id} value={String(season.id)}>
+                        {season.seasonName} ({season.cropName})
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                )}
+                {completedSeasons && completedSeasons.length > 0 && (
+                  <SelectGroup>
+                    <SelectLabel>Đã thu hoạch</SelectLabel>
+                    {completedSeasons.map((season: any) => (
+                      <SelectItem key={season.id} value={String(season.id)}>
+                        {season.seasonName} ({season.cropName})
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -159,7 +184,7 @@ export function FarmerDashboardPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Bắt đầu</p>
-                  <p className="font-semibold text-foreground">{new Date(activeSeason.startDate).toLocaleDateString('vi-VN')}</p>
+                  <p className="font-semibold text-foreground">{activeSeason.startDate ? new Date(activeSeason.startDate).toLocaleDateString('vi-VN') : '---'}</p>
                 </div>
               </CardContent>
             </Card>
@@ -170,7 +195,7 @@ export function FarmerDashboardPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Dự kiến thu hoạch</p>
-                  <p className="font-semibold text-foreground">{new Date(activeSeason.expectedEndDate).toLocaleDateString('vi-VN')}</p>
+                  <p className="font-semibold text-foreground">{activeSeason.plannedHarvestDate ? new Date(activeSeason.plannedHarvestDate).toLocaleDateString('vi-VN') : '---'}</p>
                 </div>
               </CardContent>
             </Card>

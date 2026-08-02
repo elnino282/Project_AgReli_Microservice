@@ -1405,7 +1405,10 @@
     "noSeason": "No Season",
     "actions": {
       "start": "Start",
-      "complete": "Complete"
+      "complete": "Complete",
+      "reassign": "Reassign",
+      "changeDueDate": "Change Due Date",
+      "selected": "{{count}} selected"
     },
     "progressReports": {
       "title": "Employee progress reports",
@@ -1438,7 +1441,17 @@
       "createDescription": "Add a new task to the workspace",
       "editTitle": "Edit Task",
       "deleteTitle": "Delete Task",
-      "deleteDescription": "Are you sure you want to delete \"{{taskName}}\"? This action cannot be undone."
+      "deleteDescription": "Are you sure you want to delete \"{{taskName}}\"? This action cannot be undone.",
+      "reassignTitle": "Reassign Task",
+      "reassignDescription": "Select a new assignee for {{count}} selected task(s)",
+      "reassignSubmit": "Reassign",
+      "reassignLocked": "Season is locked. Cannot reassign tasks.",
+      "noAssignees": "No employees available in this season. Please add employees first.",
+      "bulkDueDateTitle": "Change Due Date",
+      "bulkDueDateDescription": "Change due date for {{count}} selected task(s)",
+      "bulkDueDateSubmit": "Update Due Date",
+      "bulkDueDateLocked": "Season is locked. Cannot change due date.",
+      "noSeason": "Please select a season before reassigning tasks."
     },
     "form": {
       "completionDate": "Completion Date",

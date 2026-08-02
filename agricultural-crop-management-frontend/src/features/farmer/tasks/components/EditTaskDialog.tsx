@@ -26,21 +26,12 @@ import { useEligibleAssignees } from "@/entities/task/api/hooks";
 import { Badge } from "@/shared/ui/badge";
 import { AlertCircle } from "lucide-react";
 
-interface CreateTaskDialogProps {
+interface EditTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateTask: (data: {
-    title: string;
-    plannedDate: string;
-    dueDate: string;
-    description?: string;
-    seasonId?: number;
-    plotId?: number;
-    taskType?: string;
-    assigneeUserId?: number;
-    workTeamId?: number;
-    estimatedDays?: number;
-  }) => void;
+  taskId: number;
+  initialData?: any; // We'll type this properly if needed
+  onSaveTask: (taskId: number, data: any) => void;
   seasonId?: number;
   hideSeasonSelector?: boolean;
   uniquePlots: string[];
@@ -56,10 +47,12 @@ interface CreateTaskDialogProps {
   disabledReason?: string;
 }
 
-export function CreateTaskDialog({
+export function EditTaskDialog({
   open,
   onOpenChange,
-  onCreateTask,
+  taskId,
+  initialData,
+  onSaveTask,
   seasonId,
   hideSeasonSelector = false,
   uniquePlots,
@@ -67,7 +60,7 @@ export function CreateTaskDialog({
   workTeamOptions,
   isFormDisabled = false,
   disabledReason,
-}: CreateTaskDialogProps) {
+}: EditTaskDialogProps) {
   const { t } = useI18n();
   const { seasons, activeSeasons, selectedSeasonId } = useSeason();
   const { data: plotsData } = usePlots();
@@ -97,27 +90,28 @@ export function CreateTaskDialog({
 
   // Get available plots from API - plotsData is an array directly (PlotArrayResponse)
   const availablePlots = plotsData ?? [];
+  const [status, setStatus] = useState("");
+  const [priority, setPriority] = useState("");
 
-  // Reset form when dialog closes
+  // Reset form when dialog closes or initialData changes
   useEffect(() => {
-    if (!open) {
-      setTitle("");
-      setDueDate("");
-      setNotes("");
-      setSelectedSeason("");
-      setSelectedPlot("");
-      setTaskType("");
-      setAssignee("");
-      setWorkTeam("");
-      setEstimatedDays("");
+    if (open && initialData) {
+      setTitle(initialData.title || "");
+      setDueDate(initialData.dueDate ? initialData.dueDate.split('T')[0] : "");
+      setNotes(initialData.notes || "");
+      setSelectedSeason(initialData.seasonId ? String(initialData.seasonId) : (effectiveSeasonId ? String(effectiveSeasonId) : ""));
+      setSelectedPlot(initialData.plotId ? String(initialData.plotId) : "");
+      setTaskType(initialData.taskType || "");
+      setAssignee(initialData.userId ? String(initialData.userId) : "");
+      setWorkTeam(initialData.workTeamId ? String(initialData.workTeamId) : "");
+      setEstimatedDays(initialData.estimatedDays || "");
+      setStatus(initialData.status || "PENDING");
+      setPriority(initialData.priority || "normal");
       setErrors({});
-    } else {
-      // Pre-select the currently active season if available
-      if (effectiveSeasonId) {
-        setSelectedSeason(String(effectiveSeasonId));
-      }
+    } else if (!open) {
+      setErrors({});
     }
-  }, [open, effectiveSeasonId]);
+  }, [open, initialData, effectiveSeasonId]);
 
   // Validate form before submission
   const validateForm = () => {
@@ -150,7 +144,7 @@ export function CreateTaskDialog({
       ? effectiveSeasonId
       : (selectedSeason ? Number(selectedSeason) : effectiveSeasonId);
 
-    onCreateTask({
+    onSaveTask(taskId, {
       title: title.trim(),
       plannedDate: dueDate,
       dueDate,
@@ -161,6 +155,9 @@ export function CreateTaskDialog({
       assigneeUserId: assignee ? Number(assignee) : undefined,
       workTeamId: workTeam ? Number(workTeam) : undefined,
       estimatedDays: estimatedDays ? Number(estimatedDays) : undefined,
+      status: status || undefined,
+      priority: priority || undefined,
+      notes: notes.trim() || undefined,
     });
   };
 
@@ -199,9 +196,9 @@ export function CreateTaskDialog({
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <BackButton onClick={closeWithConfirm} className="w-fit" />
-          <DialogTitle>{t("tasks.dialog.createTitle", "Create New Task")}</DialogTitle>
+          <DialogTitle>{t("tasks.dialog.editTitle", "Chỉnh sửa công việc")}</DialogTitle>
           <DialogDescription>
-            {t("tasks.dialog.createDescription", "Add a new task to the workspace")}
+            Cập nhật thông tin chi tiết của công việc.
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
@@ -210,6 +207,38 @@ export function CreateTaskDialog({
               {disabledReason || "This season is locked. Task write actions are disabled."}
             </div>
           )}
+          
+          {/* Status */}
+          <div className="space-y-2">
+            <Label htmlFor="task-status">Trạng thái</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger id="task-status">
+                <SelectValue placeholder="Chọn trạng thái" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="PENDING">Chờ xử lý</SelectItem>
+                <SelectItem value="IN_PROGRESS">Đang thực hiện</SelectItem>
+                <SelectItem value="DONE">Hoàn thành</SelectItem>
+                <SelectItem value="OVERDUE">Quá hạn</SelectItem>
+                <SelectItem value="CANCELLED">Đã hủy</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Priority */}
+          <div className="space-y-2">
+            <Label htmlFor="task-priority">Độ ưu tiên</Label>
+            <Select value={priority} onValueChange={setPriority}>
+              <SelectTrigger id="task-priority">
+                <SelectValue placeholder="Chọn độ ưu tiên" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Thấp</SelectItem>
+                <SelectItem value="normal">Trung bình</SelectItem>
+                <SelectItem value="high">Cao</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           {/* Task Title */}
           <div className="sm:col-span-2 space-y-2">
             <Label htmlFor="task-title" required>{t("tasks.form.title", "Task Title")}</Label>
@@ -404,7 +433,7 @@ export function CreateTaskDialog({
             disabled={isFormDisabled}
             title={isFormDisabled ? disabledReason : undefined}
           >
-            {t("tasks.createButton", "Create Task")}
+            {t("common.save", "Lưu thay đổi")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -399,6 +399,17 @@ export function MarketplacePublicLayout() {
   }, [logout, navigate]);
 
   useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
+
+  useEffect(() => {
     document.documentElement.classList.add(MARKETPLACE_DOCUMENT_SCROLL_CLASS);
     document.documentElement.classList.add(BUYER_PORTAL_ACTIVE_CLASS);
     document.body.classList.add(MARKETPLACE_DOCUMENT_SCROLL_CLASS);

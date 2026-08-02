@@ -1,13 +1,18 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReassignDialog } from './ReassignDialog';
+import * as taskHooks from '@/entities/task/api/hooks';
 
 vi.mock('@/shared/lib/hooks/useI18n', () => ({
-  useI18n: () => ({
+  useTranslation: () => ({
     t: (key: string, options?: any) => (typeof options === 'string' ? options : (options?.defaultValue ?? key)),
     isLoading: false,
     locale: 'en-US'
   }),
+}));
+
+vi.mock('@/entities/task/api/hooks', () => ({
+  useEligibleAssignees: vi.fn(),
 }));
 
 const ensurePointerCapturePolyfill = () => {
@@ -45,6 +50,13 @@ describe('ReassignDialog', () => {
 
   it('passes selected assignee user id to callback', async () => {
     const onReassign = vi.fn();
+    vi.mocked(taskHooks.useEligibleAssignees).mockReturnValue({
+      data: [
+        { employeeUserId: 11, employeeName: 'Alice Worker', isTrained: true },
+        { employeeUserId: 22, employeeName: 'Bob Worker', isTrained: false },
+      ],
+      isLoading: false,
+    } as any);
 
     render(
       <ReassignDialog
@@ -52,10 +64,7 @@ describe('ReassignDialog', () => {
         onOpenChange={vi.fn()}
         selectedCount={3}
         onReassign={onReassign}
-        assigneeOptions={[
-          { userId: 11, displayName: 'Alice Worker' },
-          { userId: 22, displayName: 'Bob Worker' },
-        ]}
+        seasonId={1}
       />
     );
 
@@ -65,9 +74,13 @@ describe('ReassignDialog', () => {
       fireEvent.click(trigger);
     }
 
-    const option = await screen.findByRole('option', { name: 'Bob Worker' });
+    const option = await screen.findByRole('option', { name: /Bob Worker/i });
     fireEvent.click(option);
-    fireEvent.click(screen.getByRole('button', { name: /reassign/i }));
+    
+    // Check that warning appears since Bob is untrained
+    expect(screen.getByText(/Nhân viên này chưa qua đào tạo/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /reassignSubmit/i }));
 
     await waitFor(() => {
       expect(onReassign).toHaveBeenCalledWith(22);
@@ -76,6 +89,10 @@ describe('ReassignDialog', () => {
 
   it('keeps reassign action disabled until assignee is selected', () => {
     const onReassign = vi.fn();
+    vi.mocked(taskHooks.useEligibleAssignees).mockReturnValue({
+      data: [{ employeeUserId: 11, employeeName: 'Alice Worker', isTrained: true }],
+      isLoading: false,
+    } as any);
 
     render(
       <ReassignDialog
@@ -83,11 +100,11 @@ describe('ReassignDialog', () => {
         onOpenChange={vi.fn()}
         selectedCount={1}
         onReassign={onReassign}
-        assigneeOptions={[{ userId: 11, displayName: 'Alice Worker' }]}
+        seasonId={1}
       />
     );
 
-    const button = screen.getByRole('button', { name: /reassign/i });
+    const button = screen.getByRole('button', { name: /reassignSubmit/i });
     expect(button).toBeDisabled();
     fireEvent.click(button);
     expect(onReassign).not.toHaveBeenCalled();

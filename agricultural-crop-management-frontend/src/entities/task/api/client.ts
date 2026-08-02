@@ -13,7 +13,10 @@ import type {
     TaskCreateRequest,
     TaskUpdateRequest,
     TaskStatusUpdateRequest,
+    EligibleAssignee,
 } from '../model/types';
+import { EligibleAssigneeSchema } from '../model/schemas';
+import { z } from 'zod';
 
 // ═══════════════════════════════════════════════════════════════
 // TASK API CLIENT
@@ -86,5 +89,14 @@ export const taskApi = {
      */
     delete: async (id: number): Promise<void> => {
         await httpClient.delete(`/api/v1/workspace/tasks/${id}`);
+    },
+
+    /**
+     * Get eligible assignees for a task or team
+     * GET /api/v1/seasons/{seasonId}/eligible-assignees
+     */
+    getEligibleAssignees: async (seasonId: number, params?: { taskId?: number; workTeamId?: number }): Promise<EligibleAssignee[]> => {
+        const response = await httpClient.get(`/api/v1/seasons/${seasonId}/eligible-assignees`, { params });
+        return parseApiResponse(response.data, z.array(EligibleAssigneeSchema));
     },
 };

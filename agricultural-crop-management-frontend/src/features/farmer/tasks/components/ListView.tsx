@@ -1,4 +1,4 @@
-import { Edit, Trash2, Check, MoreVertical, Paperclip } from "lucide-react";
+import { Edit, Trash2, Check, MoreVertical, Paperclip, Users, Calendar } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
 import { Checkbox } from "@/shared/ui/checkbox";
@@ -27,6 +27,10 @@ interface ListViewProps {
   selectedTasks: string[];
   onSelectAll: (checked: boolean) => void;
   onSelectTask: (taskId: string, checked: boolean) => void;
+  onEdit?: (taskId: string) => void;
+  onComplete?: (taskId: string) => void;
+  onReassign?: (taskId: string) => void;
+  onChangeDueDate?: (taskId: string) => void;
   onDelete: (taskId: string) => void;
   disableMutations?: boolean;
 }
@@ -36,6 +40,10 @@ export function ListView({
   selectedTasks,
   onSelectAll,
   onSelectTask,
+  onEdit,
+  onComplete,
+  onReassign,
+  onChangeDueDate,
   onDelete,
   disableMutations = false,
 }: ListViewProps) {
@@ -149,13 +157,37 @@ export function ListView({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="acm-rounded-sm">
-                            <DropdownMenuItem className="cursor-pointer" disabled={disableMutations}>
+                            <DropdownMenuItem 
+                              className="cursor-pointer" 
+                              disabled={disableMutations}
+                              onClick={() => !disableMutations && onEdit?.(task.id)}
+                            >
                               <Edit className="w-4 h-4 mr-2" />
                               {t("common.edit")}
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer" disabled={disableMutations}>
+                            <DropdownMenuItem 
+                              className="cursor-pointer" 
+                              disabled={disableMutations || task.status === 'completed'}
+                              onClick={() => !disableMutations && onComplete?.(task.id)}
+                            >
                               <Check className="w-4 h-4 mr-2" />
                               {t("tasks.actions.complete")}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="cursor-pointer" 
+                              disabled={disableMutations}
+                              onClick={() => !disableMutations && onReassign?.(task.id)}
+                            >
+                              <Users className="w-4 h-4 mr-2" />
+                              {t("tasks.actions.reassign")}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="cursor-pointer" 
+                              disabled={disableMutations}
+                              onClick={() => !disableMutations && onChangeDueDate?.(task.id)}
+                            >
+                              <Calendar className="w-4 h-4 mr-2" />
+                              {t("tasks.actions.changeDueDate")}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="cursor-pointer text-destructive"

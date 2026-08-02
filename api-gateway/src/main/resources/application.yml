@@ -36,6 +36,11 @@ spring:
               uri: ${IDENTITY_SERVICE_URI:http://localhost:8081}
               predicates:
                 - Path=/api/v1/auth/**, /api/v1/users/**, /api/v1/preferences/**, /api/v1/admin/roles/**, /api/v1/firebase/**
+            - id: identity-admin-users-route
+              uri: ${IDENTITY_SERVICE_URI:http://localhost:8081}
+              predicates:
+                - Path=/api/v1/admin/users, /api/v1/admin/users/**
+                - Method=POST,PUT,PATCH,DELETE
             - id: crop-catalog-route
               uri: ${CROP_CATALOG_SERVICE_URI:http://localhost:8082}
               predicates:

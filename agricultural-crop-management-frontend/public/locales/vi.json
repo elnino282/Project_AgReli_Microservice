@@ -1369,7 +1369,10 @@
     "noSeason": "Không có mùa vụ",
     "actions": {
       "start": "Bắt đầu",
-      "complete": "Hoàn thành"
+      "complete": "Hoàn thành",
+      "reassign": "Giao lại",
+      "changeDueDate": "Đổi hạn chót",
+      "selected": "{{count}} đã chọn"
     },
     "progressReports": {
       "title": "Báo cáo tiến độ nhân công",
@@ -1402,7 +1405,17 @@
       "createDescription": "Thêm công việc mới vào không gian làm việc",
       "editTitle": "Chỉnh sửa công việc",
       "deleteTitle": "Xóa công việc",
-      "deleteDescription": "Bạn có chắc chắn muốn xóa \"{{taskName}}\"? Hành động này không thể hoàn tác."
+      "deleteDescription": "Bạn có chắc chắn muốn xóa \"{{taskName}}\"? Hành động này không thể hoàn tác.",
+      "reassignTitle": "Giao lại công việc",
+      "reassignDescription": "Chọn nhân công mới để giao {{count}} công việc đã chọn",
+      "reassignSubmit": "Giao việc",
+      "reassignLocked": "Mùa vụ đã khóa. Không thể giao lại công việc.",
+      "noAssignees": "Chưa có nhân công nào trong mùa vụ này. Vui lòng thêm nhân công trước.",
+      "bulkDueDateTitle": "Đổi hạn chót",
+      "bulkDueDateDescription": "Thay đổi hạn chót cho {{count}} công việc đã chọn",
+      "bulkDueDateSubmit": "Cập nhật hạn chót",
+      "bulkDueDateLocked": "Mùa vụ đã khóa. Không thể thay đổi hạn chót.",
+      "noSeason": "Vui lòng chọn mùa vụ trước khi giao lại công việc."
     },
     "form": {
       "completionDate": "Ngày hoàn thành",

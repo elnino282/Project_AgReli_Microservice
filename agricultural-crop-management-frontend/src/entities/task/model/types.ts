@@ -9,4 +9,5 @@ export type {
     TaskStartRequest,
     TaskDoneRequest,
     SeasonMinimal,
+    EligibleAssignee,
 } from './schemas';

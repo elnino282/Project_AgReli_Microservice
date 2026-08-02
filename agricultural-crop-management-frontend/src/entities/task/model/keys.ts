@@ -13,6 +13,8 @@ export const taskKeys = {
         const base = [...taskKeys.lists(), 'workspace'] as const;
         return params ? [...base, params] as const : base;
     },
+    eligibleAssignees: (seasonId: number, params?: { taskId?: number; workTeamId?: number }) =>
+        [...taskKeys.all, 'eligibleAssignees', seasonId, params] as const,
     details: () => [...taskKeys.all, 'detail'] as const,
     detail: (id: number) => [...taskKeys.details(), id] as const,
 };

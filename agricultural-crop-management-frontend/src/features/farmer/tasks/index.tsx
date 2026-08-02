@@ -12,6 +12,7 @@ import { CreateTaskDialog } from './components/CreateTaskDialog';
 import { ReassignDialog } from './components/ReassignDialog';
 import { BulkActionToolbar } from './components/BulkActionToolbar';
 import { DueDateDialog } from './components/DueDateDialog';
+import { EditTaskDialog } from './components/EditTaskDialog';
 import { TaskProgressReportsPanel } from './components/TaskProgressReportsPanel';
 import { PageContainer } from '@/shared/ui';
 
@@ -49,9 +50,17 @@ export function TaskWorkspace() {
     handleReassign,
     handleBulkDueDateChange,
     handleCreateTask,
+    handleEditTask,
+    handleUpdateTask,
+    handleCompleteTask,
+    editTaskOpen,
+    setEditTaskOpen,
+    editingTaskId,
+    setEditingTaskId,
     seasonId,
     isSeasonWriteLocked,
     seasonWriteLockReason,
+    rawTasks,
   } = useTaskWorkspace();
 
   const qParam = searchParams.get('q') ?? '';
@@ -67,6 +76,11 @@ export function TaskWorkspace() {
     if (!seasonFilter) return filteredTasks;
     return filteredTasks.filter((task) => task.seasonId === seasonFilter);
   }, [filteredTasks, seasonFilter]);
+
+  const editingTaskInitialData = useMemo(() => {
+    if (!editingTaskId || !rawTasks) return null;
+    return rawTasks.find(t => String(t.taskId) === editingTaskId) || null;
+  }, [editingTaskId, rawTasks]);
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -93,6 +107,9 @@ export function TaskWorkspace() {
             <BoardView
               tasks={scopedTasks}
               onTaskMove={handleTaskMove}
+              onEdit={handleEditTask}
+              onComplete={handleCompleteTask}
+              onReassign={(id) => { setEditingTaskId(id); setReassignOpen(true); }}
               onDelete={handleDeleteTask}
               disableMutations={isSeasonWriteLocked}
             />
@@ -103,6 +120,10 @@ export function TaskWorkspace() {
               selectedTasks={selectedTasks}
               onSelectAll={handleSelectAll}
               onSelectTask={handleSelectTask}
+              onEdit={handleEditTask}
+              onComplete={handleCompleteTask}
+              onReassign={(id) => { setEditingTaskId(id); setReassignOpen(true); }}
+              onChangeDueDate={(id) => { setEditingTaskId(id); setDueDateOpen(true); }}
               onDelete={handleDeleteTask}
               disableMutations={isSeasonWriteLocked}
             />
@@ -144,20 +165,55 @@ export function TaskWorkspace() {
 
         <ReassignDialog
           open={reassignOpen}
-          onOpenChange={setReassignOpen}
-          selectedCount={selectedTasks.length}
-          onReassign={handleReassign}
-          assigneeOptions={assigneeOptions}
+          onOpenChange={(open) => {
+            setReassignOpen(open);
+            if (!open) setEditingTaskId(null);
+          }}
+          selectedCount={editingTaskId ? 1 : selectedTasks.length}
+          onReassign={(userId) => {
+            if (editingTaskId) {
+              handleUpdateTask(editingTaskId, { assigneeUserId: userId });
+              setReassignOpen(false);
+            } else {
+              handleReassign(userId);
+            }
+          }}
+          seasonId={seasonFilter ?? undefined}
           disabled={isSeasonWriteLocked}
           disabledReason={seasonWriteLockReason}
         />
 
         <DueDateDialog
           open={dueDateOpen}
-          onOpenChange={setDueDateOpen}
-          selectedCount={selectedTasks.length}
-          onChangeDueDate={handleBulkDueDateChange}
+          onOpenChange={(open) => {
+            setDueDateOpen(open);
+            if (!open) setEditingTaskId(null);
+          }}
+          selectedCount={editingTaskId ? 1 : selectedTasks.length}
+          onChangeDueDate={(dueDate) => {
+            if (editingTaskId) {
+              handleUpdateTask(editingTaskId, { dueDate });
+              setDueDateOpen(false);
+            } else {
+              handleBulkDueDateChange(dueDate);
+            }
+          }}
           disabled={isSeasonWriteLocked}
+          disabledReason={seasonWriteLockReason}
+        />
+
+        <EditTaskDialog
+          open={editTaskOpen}
+          onOpenChange={setEditTaskOpen}
+          taskId={Number(editingTaskId)}
+          initialData={editingTaskInitialData}
+          onSaveTask={handleUpdateTask}
+          seasonId={seasonFilter ?? undefined}
+          hideSeasonSelector={false}
+          uniquePlots={uniquePlots}
+          assigneeOptions={assigneeOptions}
+          workTeamOptions={workTeamOptions}
+          isFormDisabled={isSeasonWriteLocked}
           disabledReason={seasonWriteLockReason}
         />
       </PageContainer>

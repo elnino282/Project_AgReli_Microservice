@@ -142,3 +142,24 @@ export const SeasonMinimalSchema = z.object({
 });
 
 export type SeasonMinimal = z.infer<typeof SeasonMinimalSchema>;
+
+// ═══════════════════════════════════════════════════════════════
+// ELIGIBLE ASSIGNEE (for task assignment)
+// ═══════════════════════════════════════════════════════════════
+
+export const EligibleAssigneeSchema = z.object({
+    id: z.number().int(),
+    seasonId: z.number().int().optional().nullable(),
+    seasonName: z.string().optional().nullable(),
+    employeeUserId: z.number().int(),
+    employeeUsername: z.string().optional().nullable(),
+    employeeName: z.string().optional().nullable(),
+    employeeEmail: z.string().optional().nullable(),
+    wagePerTask: z.number().optional().nullable(),
+    active: z.boolean().optional().nullable(),
+    isTrained: z.boolean().optional().nullable(),
+    trainedAt: z.string().optional().nullable(),
+    trainingNotes: z.string().optional().nullable(),
+});
+
+export type EligibleAssignee = z.infer<typeof EligibleAssigneeSchema>;

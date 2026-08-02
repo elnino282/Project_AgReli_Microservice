@@ -122,15 +122,18 @@ const isValidDateInput = (value: string) => {
 const buildTaskUpdatePayload = (
   task: ApiTask,
   overrides: Partial<Pick<TaskUpdateRequest, 'assigneeUserId' | 'dueDate'>>
-): TaskUpdateRequest => ({
-  title: task.title,
-  description: task.description ?? undefined,
-  seasonId: task.seasonId ?? undefined,
-  plannedDate: task.plannedDate ?? undefined,
-  dueDate: overrides.dueDate ?? task.dueDate ?? undefined,
-  notes: task.notes ?? undefined,
-  assigneeUserId: overrides.assigneeUserId ?? task.userId ?? undefined,
-});
+): TaskUpdateRequest => {
+  const assigneeUserId = overrides.assigneeUserId ?? task.userId ?? undefined;
+  return {
+    title: task.title || `Task #${task.taskId}`,
+    description: task.description ?? undefined,
+    seasonId: task.seasonId ?? undefined,
+    plannedDate: task.plannedDate ?? undefined,
+    dueDate: overrides.dueDate ?? task.dueDate ?? undefined,
+    notes: task.notes ?? undefined,
+    assigneeUserId: assigneeUserId && assigneeUserId > 0 ? assigneeUserId : undefined,
+  };
+};
 
 const buildStatusUpdatePayload = (status: TaskStatus): TaskStatusUpdateRequest => {
   if (status === 'completed') {
@@ -190,6 +193,8 @@ export function useTaskWorkspace() {
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const [reassignOpen, setReassignOpen] = useState(false);
   const [dueDateOpen, setDueDateOpen] = useState(false);
+  const [editTaskOpen, setEditTaskOpen] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [isBulkApplying, setIsBulkApplying] = useState(false);
 
   const { data: seasonEmployeesData } = useSeasonEmployees(
@@ -428,6 +433,64 @@ export function useTaskWorkspace() {
 
   const handleSelectAll = useCallback((checked: boolean) => setSelectedTasks(checked ? filteredTasks.map(t => t.id) : []), [filteredTasks]);
   const handleSelectTask = useCallback((taskId: string, checked: boolean) => setSelectedTasks(prev => checked ? [...prev, taskId] : prev.filter(id => id !== taskId)), []);
+  
+  const handleEditTask = useCallback((taskId: string) => {
+    setEditingTaskId(taskId);
+    setEditTaskOpen(true);
+  }, []);
+
+  const handleUpdateTask = useCallback(async (taskId: string | number, data: any) => {
+    if (isSeasonWriteLocked) {
+      toast.error(seasonWriteLockReason);
+      return;
+    }
+    const id = typeof taskId === 'string' ? parseInt(taskId, 10) : taskId;
+    if (Number.isNaN(id) || id <= 0) return;
+
+    try {
+      await updateTaskMutation.mutateAsync({
+        id,
+        data: {
+          title: data.title,
+          description: data.description,
+          seasonId: data.seasonId,
+          plannedDate: data.plannedDate,
+          dueDate: data.dueDate,
+          notes: data.notes,
+          assigneeUserId: data.assigneeUserId,
+        }
+      });
+      if (data.status) {
+        await updateStatusMutation.mutateAsync({
+          id,
+          data: buildStatusUpdatePayload(mapApiStatusToFeature(data.status))
+        });
+      }
+      toast.success('Task updated successfully');
+      setEditTaskOpen(false);
+      setEditingTaskId(null);
+    } catch (err: any) {
+      toast.error('Failed to update task', { description: err.message });
+    }
+  }, [isSeasonWriteLocked, seasonWriteLockReason, updateTaskMutation, updateStatusMutation]);
+
+  const handleCompleteTask = useCallback((taskId: string) => {
+    if (isSeasonWriteLocked) {
+      toast.error(seasonWriteLockReason);
+      return;
+    }
+    const id = parseInt(taskId, 10);
+    if (Number.isNaN(id) || id <= 0) return;
+
+    updateStatusMutation.mutate({
+      id,
+      data: buildStatusUpdatePayload('completed')
+    }, {
+      onSuccess: () => toast.success('Task marked as complete'),
+      onError: (err) => toast.error('Failed to complete task', { description: err.message })
+    });
+  }, [isSeasonWriteLocked, seasonWriteLockReason, updateStatusMutation]);
+
   const handleReassign = useCallback(async (assigneeUserId: number) => {
     if (!Number.isFinite(assigneeUserId) || assigneeUserId <= 0) {
       toast.error('Select a valid assignee');
@@ -525,12 +588,13 @@ export function useTaskWorkspace() {
     viewMode, setViewMode, calendarMode, setCalendarMode, currentDate, setCurrentDate,
     searchQuery, setSearchQuery, filters, setFilters, activeFilterCount,
     selectedTasks, setSelectedTasks,
-    filterDrawerOpen, setFilterDrawerOpen, createTaskOpen, setCreateTaskOpen, reassignOpen, setReassignOpen, dueDateOpen, setDueDateOpen,
+    filterDrawerOpen, setFilterDrawerOpen, createTaskOpen, setCreateTaskOpen, reassignOpen, setReassignOpen, dueDateOpen, setDueDateOpen, editTaskOpen, setEditTaskOpen, editingTaskId, setEditingTaskId,
     tasks, filteredTasks, uniqueAssignees, uniquePlots, assigneeOptions, workTeamOptions: workTeams,
     isLoading, error: error ?? null, refetch,
-    handleTaskMove, handleBulkComplete, handleDeleteTask, handleSelectAll, handleSelectTask, handleReassign, handleBulkDueDateChange, handleCreateTask,
+    handleTaskMove, handleBulkComplete, handleDeleteTask, handleSelectAll, handleSelectTask, handleReassign, handleBulkDueDateChange, handleCreateTask, handleEditTask, handleUpdateTask, handleCompleteTask,
     isCreating: createMutation.isPending,
     isUpdating: updateStatusMutation.isPending || updateTaskMutation.isPending || isBulkApplying,
     isDeleting: deleteMutation.isPending,
+    rawTasks: apiTasksData?.items || [],
   };
 }

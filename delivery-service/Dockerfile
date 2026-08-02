@@ -1,5 +1,4 @@
-﻿# syntax=docker/dockerfile:1.7
-FROM maven:3.9-eclipse-temurin-23-alpine AS builder
+﻿FROM maven:3.9-eclipse-temurin-23-alpine AS builder
 
 WORKDIR /build
 
@@ -8,10 +7,10 @@ WORKDIR /build
 # source of truth so the build no longer depends on a flaky mirror.
 COPY settings.xml /root/.m2/settings.xml
 
-# Cache dependencies in a BuildKit cache mount. The cache is keyed by the
-# image name so different services share their pom.xml layer but keep their
-# own /root/.m2/repository, so the second service to build only has to fetch
-# the deps the first one didn't already have.
+# Pre-warm a BuildKit cache mount with every runtime + provided dependency
+# the service needs. The cache survives across docker compose build
+# invocations and is shared between services that share Spring Boot deps,
+# so the second service to build only fetches what the first one didn't.
 COPY pom.xml ./
 RUN --mount=type=cache,target=/root/.m2/repository \
     mvn -B -s /root/.m2/settings.xml -T 1C -Dmaven.artifact.threads=12 \
@@ -19,8 +18,8 @@ RUN --mount=type=cache,target=/root/.m2/repository \
 
 COPY src src
 
-# Build the fat jar. Mounted cache layer means even on a fresh Docker daemon
-# only the missing artifacts are pulled.
+# Build the fat jar from the same cache. Only the missing artifacts are
+# pulled, and they're pulled in parallel via Maven Wagon's 12-thread pool.
 RUN --mount=type=cache,target=/root/.m2/repository \
     mvn -B -s /root/.m2/settings.xml -T 1C -Dmaven.artifact.threads=12 \
         package -DskipTests

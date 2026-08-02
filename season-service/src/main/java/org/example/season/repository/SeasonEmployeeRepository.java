@@ -40,4 +40,10 @@ public interface SeasonEmployeeRepository extends JpaRepository<SeasonEmployee, 
     Page<SeasonEmployee> searchBySeasonAndKeyword(@Param("seasonId") Integer seasonId,
             @Param("keyword") String keyword,
             Pageable pageable);
+
+    @Query("SELECT se FROM SeasonEmployee se WHERE se.season.id = :seasonId AND se.active = true ORDER BY se.isTrained DESC, se.employeeFullName ASC")
+    List<SeasonEmployee> findEligibleAssigneesBySeasonId(@Param("seasonId") Integer seasonId);
+
+    @Query("SELECT se FROM SeasonEmployee se WHERE se.season.id = :seasonId AND se.active = true AND se.employeeUserId IN :userIds ORDER BY se.isTrained DESC, se.employeeFullName ASC")
+    List<SeasonEmployee> findEligibleAssigneesBySeasonIdAndUserIds(@Param("seasonId") Integer seasonId, @Param("userIds") List<Long> userIds);
 }

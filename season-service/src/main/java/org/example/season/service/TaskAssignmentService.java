@@ -7,6 +7,10 @@ import org.example.season.dto.TaskDetailDto;
 import org.example.season.entity.Task;
 import org.example.season.repository.TaskRepository;
 import org.example.season.repository.WorkTeamMemberRepository;
+import org.example.season.repository.SeasonEmployeeRepository;
+import org.example.season.entity.SeasonEmployee;
+import org.example.season.entity.WorkTeamMember;
+import org.example.season.dto.response.SeasonEmployeeResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +27,7 @@ public class TaskAssignmentService {
     private final TaskRepository taskRepository;
     private final WorkTeamMemberRepository workTeamMemberRepository;
     private final FarmServiceClient farmServiceClient;
+    private final SeasonEmployeeRepository seasonEmployeeRepository;
 
     @Transactional
     public Task assignTaskToTeamAndPlot(Integer taskId, Long workTeamId, Long plotId) {
@@ -82,5 +87,50 @@ public class TaskAssignmentService {
     @Transactional(readOnly = true)
     public List<org.example.season.dto.TeamProgressSummaryResponse> getTeamProgressSummary(Long seasonId) {
         return taskRepository.getTeamProgressSummary(seasonId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SeasonEmployeeResponse> getEligibleAssignees(Integer seasonId, Integer taskId, Long workTeamId) {
+        Long finalWorkTeamId = workTeamId;
+        if (finalWorkTeamId == null && taskId != null) {
+            Task task = taskRepository.findById(taskId).orElse(null);
+            if (task != null) {
+                finalWorkTeamId = task.getWorkTeamId();
+            }
+        }
+
+        List<SeasonEmployee> employees;
+        if (finalWorkTeamId != null) {
+            List<WorkTeamMember> members = workTeamMemberRepository.findByWorkTeamIdIn(List.of(finalWorkTeamId));
+            List<Long> userIds = members.stream()
+                    .map(WorkTeamMember::getEmployeeUserId)
+                    .distinct()
+                    .collect(Collectors.toList());
+            if (userIds.isEmpty()) {
+                employees = List.of();
+            } else {
+                employees = seasonEmployeeRepository.findEligibleAssigneesBySeasonIdAndUserIds(seasonId, userIds);
+            }
+        } else {
+            employees = seasonEmployeeRepository.findEligibleAssigneesBySeasonId(seasonId);
+        }
+
+        return employees.stream()
+                .map(emp -> SeasonEmployeeResponse.builder()
+                        .id(emp.getId())
+                        .seasonId(emp.getSeason() != null ? emp.getSeason().getId() : null)
+                        .seasonName(emp.getSeason() != null ? emp.getSeason().getSeasonName() : null)
+                        .employeeUserId(emp.getEmployeeUserId())
+                        .employeeUsername(emp.getEmployeeUsername())
+                        .employeeName(emp.getEmployeeFullName())
+                        .employeeEmail(emp.getEmployeeEmail())
+                        .wagePerTask(emp.getWagePerTask())
+                        .active(emp.getActive())
+                        .isTrained(emp.getIsTrained())
+                        .trainedAt(emp.getTrainedAt())
+                        .trainingNotes(emp.getTrainingNotes())
+                        .createdAt(emp.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

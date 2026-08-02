@@ -10,6 +10,9 @@ import org.example.identity.constant.PredefinedRole;
 import org.example.identity.enums.UserStatus;
 import org.example.identity.exception.AppException;
 import org.example.identity.exception.ErrorCode;
+import org.example.identity.dto.request.AdminUserCreateRequest;
+import org.example.identity.dto.request.AdminUserStatusUpdateRequest;
+import org.example.identity.dto.request.AdminUserUpdateRequest;
 import org.example.identity.dto.request.ChangePasswordRequest;
 import org.example.identity.dto.request.FarmerCreationRequest;
 import org.example.identity.dto.request.ResetPasswordRequest;
@@ -186,6 +189,111 @@ public class UserService {
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+    }
+
+    public FarmerResponse adminCreateUser(AdminUserCreateRequest request) {
+        if (request.getUsername() == null || request.getUsername().isBlank()) {
+            throw new AppException(ErrorCode.USERNAME_BLANK);
+        }
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
+
+        User user = new User();
+        user.setUsername(request.getUsername().trim());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            if (userRepository.existsByEmailIgnoreCase(request.getEmail())) {
+                throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
+            }
+            user.setEmail(request.getEmail().trim());
+        }
+        
+        if (request.getFullName() != null && !request.getFullName().isBlank()) {
+            user.setFullName(request.getFullName().trim());
+        }
+        
+        if (request.getPhone() != null && !request.getPhone().isBlank()) {
+            user.setPhone(request.getPhone().trim());
+        }
+
+        HashSet<Role> roles = new HashSet<>();
+        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+            for (String roleCode : request.getRoles()) {
+                roleRepository.findByCode(roleCode.toUpperCase()).ifPresent(roles::add);
+            }
+        }
+        if (roles.isEmpty()) {
+            roleRepository.findByCode(PredefinedRole.EMPLOYEE_ROLE).ifPresent(roles::add);
+        }
+        
+        user.setRoles(roles);
+        user.setStatus(UserStatus.ACTIVE);
+        user.setJoinedDate(LocalDateTime.now());
+        
+        try {
+            user = userRepository.save(user);
+            domainEventPublisher.publish(new org.example.identity.event.UserChangedEvent(user, org.example.identity.event.UserChangedEvent.Action.CREATED));
+        } catch (DataIntegrityViolationException exception) {
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
+        
+        return farmerMapper.toFarmerResponse(user);
+    }
+
+    public FarmerResponse adminUpdateUser(Long id, AdminUserUpdateRequest request) {
+        User user = userRepository.findByIdWithRoles(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                
+        if (request.getEmail() != null && !request.getEmail().isBlank() 
+                && !request.getEmail().equalsIgnoreCase(user.getEmail())) {
+            if (userRepository.existsByEmailIgnoreCase(request.getEmail())) {
+                throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
+            }
+            user.setEmail(request.getEmail().trim());
+        }
+        
+        if (request.getFullName() != null && !request.getFullName().isBlank()) {
+            user.setFullName(request.getFullName().trim());
+        }
+        
+        if (request.getPhone() != null && !request.getPhone().isBlank()) {
+            user.setPhone(request.getPhone().trim());
+        }
+
+        if (request.getRoles() != null) {
+            HashSet<Role> newRoles = new HashSet<>();
+            for (String roleCode : request.getRoles()) {
+                roleRepository.findByCode(roleCode.toUpperCase()).ifPresent(newRoles::add);
+            }
+            if (!newRoles.isEmpty()) {
+                user.setRoles(newRoles);
+            }
+        }
+        
+        user = userRepository.save(user);
+        domainEventPublisher.publish(new org.example.identity.event.UserChangedEvent(user, org.example.identity.event.UserChangedEvent.Action.UPDATED));
+        return farmerMapper.toFarmerResponse(user);
+    }
+
+    public void adminUpdateStatus(Long id, AdminUserStatusUpdateRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        user.setStatus(request.getStatus());
+        user = userRepository.save(user);
+        domainEventPublisher.publish(new org.example.identity.event.UserChangedEvent(user, org.example.identity.event.UserChangedEvent.Action.UPDATED));
+    }
+
+    public void adminDeleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        try {
+            userRepository.delete(user);
+            domainEventPublisher.publish(new org.example.identity.event.UserChangedEvent(user, org.example.identity.event.UserChangedEvent.Action.DELETED));
+        } catch (DataIntegrityViolationException e) {
+            throw new AppException(ErrorCode.BAD_REQUEST);
+        }
     }
 
     private User resolveCurrentUser() {

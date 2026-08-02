@@ -15,6 +15,7 @@ import org.example.season.dto.request.UpdateTaskRequest;
 import org.example.season.dto.request.UpdateTaskStatusRequest;
 import org.example.season.dto.response.TaskResponse;
 import org.example.season.service.SeasonTaskService;
+import org.example.season.service.TaskAssignmentService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -36,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TaskController {
 
     SeasonTaskService seasonTaskService;
+    TaskAssignmentService taskAssignmentService;
 
     @Operation(summary = "List tasks of a season", description = "List tasks for a given season of the current farmer")
     @ApiResponses({
@@ -134,5 +136,18 @@ public class TaskController {
     public ApiResponse<Void> deleteTask(@PathVariable Integer id) {
         seasonTaskService.deleteTask(id);
         return ApiResponse.success(null);
+    }
+
+    @Operation(summary = "Get eligible assignees", description = "Get eligible assignees for a season, optionally filtered by task or team")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Success"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Season not found")
+    })
+    @GetMapping("/seasons/{seasonId}/eligible-assignees")
+    public ApiResponse<java.util.List<org.example.season.dto.response.SeasonEmployeeResponse>> getEligibleAssignees(
+            @PathVariable Integer seasonId,
+            @RequestParam(required = false) Integer taskId,
+            @RequestParam(required = false) Long workTeamId) {
+        return ApiResponse.success(taskAssignmentService.getEligibleAssignees(seasonId, taskId, workTeamId));
     }
 }
