@@ -10,9 +10,6 @@ import {
     ExpenseTaskAnalyticsSchema,
     ExpenseVendorAnalyticsSchema,
     ExpenseTimeSeriesSchema,
-    ExpenseCostInsightsSummarySchema,
-    ExpenseCostAiSuggestionSchema,
-    ExpenseCostSuggestionRequestSchema,
 } from '../model/schemas';
 import type {
     ExpenseListParams,
@@ -24,9 +21,6 @@ import type {
     ExpenseTaskAnalytics,
     ExpenseVendorAnalytics,
     ExpenseTimeSeries,
-    ExpenseCostInsightsSummary,
-    ExpenseCostAiSuggestion,
-    ExpenseCostSuggestionRequest,
 } from '../model/types';
 
 const normalizeExpenseListParams = (params?: ExpenseListParams) => {
@@ -134,22 +128,5 @@ export const expenseApi = {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         return parseApiResponse(response.data, ExpenseSchema);
-    },
-
-    getCostInsightsSummary: async (seasonId: number): Promise<ExpenseCostInsightsSummary> => {
-        const response = await httpClient.get(`/api/v1/seasons/${seasonId}/cost-optimization/summary`);
-        return parseApiResponse(response.data, ExpenseCostInsightsSummarySchema);
-    },
-
-    getCostAiSuggestion: async (
-        seasonId: number,
-        request?: ExpenseCostSuggestionRequest
-    ): Promise<ExpenseCostAiSuggestion> => {
-        const payload = ExpenseCostSuggestionRequestSchema.parse(request) ?? {};
-        const response = await httpClient.post(
-            `/api/v1/seasons/${seasonId}/cost-optimization/ai-suggestion`,
-            payload
-        );
-        return parseApiResponse(response.data, ExpenseCostAiSuggestionSchema);
     },
 };

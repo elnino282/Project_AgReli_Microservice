@@ -2,7 +2,7 @@ import { z } from "zod";
 import { DateSchema } from "@/shared/api/types";
 
 export const DiseaseSeverityEnum = z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]);
-export const DiseaseStatusEnum = z.enum(["OPEN", "UNDER_TREATMENT", "MONITORING", "RESOLVED", "CLOSED"]);
+export const DiseaseStatusEnum = z.enum(["OPEN", "UNDER_TREATMENT", "MONITORING", "RESOLVED", "CLOSED", "TREATED"]);
 export const TreatmentEffectivenessEnum = z.enum(["UNKNOWN", "POOR", "FAIR", "GOOD", "EXCELLENT"]);
 export const DiseaseActorTypeEnum = z.enum(["FARMER", "EMPLOYEE", "UNKNOWN"]);
 

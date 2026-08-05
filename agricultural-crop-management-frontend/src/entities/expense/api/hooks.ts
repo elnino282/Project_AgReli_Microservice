@@ -18,9 +18,6 @@ import type {
     ExpenseTaskAnalytics,
     ExpenseVendorAnalytics,
     ExpenseTimeSeries,
-    ExpenseCostInsightsSummary,
-    ExpenseCostAiSuggestion,
-    ExpenseCostSuggestionRequest,
 } from '../model/types';
 
 type CreateExpenseVariables = {
@@ -131,32 +128,6 @@ export const useExpenseAnalyticsTimeSeries = (
     ...options,
 });
 
-export const useExpenseCostInsightsSummary = (
-    seasonId: number,
-    options?: Omit<UseQueryOptions<ExpenseCostInsightsSummary, Error>, 'queryKey' | 'queryFn'>
-) => useQuery({
-    queryKey: expenseKeys.costInsightsSummary(seasonId),
-    queryFn: () => expenseApi.getCostInsightsSummary(seasonId),
-    enabled: seasonId > 0,
-    staleTime: 5 * 60 * 1000,
-    ...options,
-});
-
-export const useExpenseCostAiSuggestion = (
-    seasonId: number,
-    options?: Omit<
-    UseMutationOptions<ExpenseCostAiSuggestion, Error, ExpenseCostSuggestionRequest | undefined>,
-    'mutationFn'
-    >
-) => useMutation({
-    mutationFn: async (request) => {
-        if (seasonId <= 0) {
-            throw new Error('Season is required for AI suggestions.');
-        }
-        return expenseApi.getCostAiSuggestion(seasonId, request);
-    },
-    ...options,
-});
 
 /**
  * Hook to create a new expense
@@ -172,9 +143,6 @@ export const useCreateExpense = (
             await queryClient.invalidateQueries({ queryKey: expenseKeys.lists() });
             await queryClient.invalidateQueries({ queryKey: expenseKeys.analytics() });
             await queryClient.invalidateQueries({ queryKey: expenseKeys.tracker(variables.seasonId) });
-            await queryClient.invalidateQueries({
-                queryKey: expenseKeys.costInsightsSummary(variables.seasonId),
-            });
             await options?.onSuccess?.(_data, variables, _context, _mutationContext);
         },
     });
@@ -198,9 +166,6 @@ export const useUpdateExpense = (
             const seasonId = variables.data.seasonId;
             if (seasonId && seasonId > 0) {
                 await queryClient.invalidateQueries({ queryKey: expenseKeys.tracker(seasonId) });
-                await queryClient.invalidateQueries({
-                    queryKey: expenseKeys.costInsightsSummary(seasonId),
-                });
             }
 
             await options?.onSuccess?.(_data, variables, _context, _mutationContext);
@@ -222,9 +187,6 @@ export const useDeleteExpense = (
             await queryClient.invalidateQueries({ queryKey: expenseKeys.lists() });
             await queryClient.invalidateQueries({ queryKey: expenseKeys.analytics() });
             await queryClient.invalidateQueries({ queryKey: expenseKeys.tracker(variables.seasonId) });
-            await queryClient.invalidateQueries({
-                queryKey: expenseKeys.costInsightsSummary(variables.seasonId),
-            });
             await options?.onSuccess?.(_data, variables, _context, _mutationContext);
         },
     });

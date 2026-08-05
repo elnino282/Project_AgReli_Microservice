@@ -2,8 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { AIOptimizationTips } from "./AIOptimizationTips";
 
-const mockSummaryHook = vi.fn();
-const mockAiMutationHook = vi.fn();
+
 
 vi.mock("@/shared/contexts", () => ({
     usePreferences: () => ({
@@ -52,28 +51,9 @@ vi.mock("@/shared/lib/hooks/useI18n", () => ({
     }),
 }));
 
-vi.mock("@/entities/expense", () => ({
-    useExpenseCostInsightsSummary: (...args: unknown[]) => mockSummaryHook(...args),
-    useExpenseCostAiSuggestion: (...args: unknown[]) => mockAiMutationHook(...args),
-}));
-
 describe("AIOptimizationTips", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mockSummaryHook.mockReturnValue({
-            data: null,
-            isLoading: false,
-            isError: false,
-            error: null,
-            refetch: vi.fn(),
-        });
-        mockAiMutationHook.mockReturnValue({
-            data: null,
-            isPending: false,
-            isError: false,
-            error: null,
-            mutate: vi.fn(),
-        });
     });
 
     it("renders deterministic cost insights from real expense rows", () => {

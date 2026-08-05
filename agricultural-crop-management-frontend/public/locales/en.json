@@ -1852,7 +1852,8 @@
       "UNDER_TREATMENT": "Under treatment",
       "MONITORING": "Monitoring",
       "RESOLVED": "Stabilized",
-      "CLOSED": "Closed record"
+      "CLOSED": "Closed record",
+      "TREATED": "Treated"
     },
     "severityOptions": {
       "LOW": "Low",

@@ -1,10 +1,9 @@
 import { Card, CardContent, PageContainer, Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
-import { Wheat, DollarSign, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Wheat, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useReports } from "./hooks/useReports";
 import { HeaderBar } from "./components/HeaderBar";
 import { KPICards } from "./components/KPICards";
 import { YieldTab } from "./components/YieldTab";
-import { CostTab } from "./components/CostTab";
 import { PerformanceTab } from "./components/PerformanceTab";
 import { PesticideTab } from "./components/PesticideTab";
 import { FilterDrawer } from "./components/FilterDrawer";
@@ -37,10 +36,6 @@ export function Reports({
         handleExport, handleApplyFilters, handleClearFilters,
         getYieldChartData, getPesticideStatusBadge, isLoading, hasError, kpiData,
         taskPerformance, pesticideRecords,
-        costOptimizationSummary, costOptimizationSummaryLoading,
-        costOptimizationSummaryError, refetchCostOptimizationSummary,
-        costOptimizationAiSuggestion, costOptimizationAiLoading,
-        costOptimizationAiError, handleAnalyzeCostOptimizationWithAi,
     } = useReports({
         seasonId: workspaceSeasonId,
         initialSeasonValue: workspaceSeasonId ? String(workspaceSeasonId) : undefined,
@@ -55,7 +50,6 @@ export function Reports({
 
     const tabConfig = [
         { value: "yield", icon: Wheat, label: t("reports.tabs.yield") },
-        { value: "cost", icon: DollarSign, label: t("reports.tabs.cost") },
         { value: "performance", icon: CheckCircle2, label: t("reports.tabs.tasks") },
         { value: "pesticide", icon: AlertTriangle, label: t("reports.tabs.pesticide") },
     ];
@@ -115,18 +109,6 @@ export function Reports({
                                     ) : (
                                         <YieldTab yieldViewMode={yieldViewMode} onViewModeChange={setYieldViewMode} chartData={getYieldChartData()} />
                                     )}
-                                </TabsContent>
-                                <TabsContent value="cost" className="mt-0">
-                                    <CostTab
-                                        summary={costOptimizationSummary}
-                                        summaryLoading={costOptimizationSummaryLoading}
-                                        summaryError={costOptimizationSummaryError}
-                                        onRetrySummary={refetchCostOptimizationSummary}
-                                        aiSuggestion={costOptimizationAiSuggestion}
-                                        aiLoading={costOptimizationAiLoading}
-                                        aiError={costOptimizationAiError}
-                                        onAnalyzeWithAi={handleAnalyzeCostOptimizationWithAi}
-                                    />
                                 </TabsContent>
                                 <TabsContent value="performance" className="mt-0">
                                     <PerformanceTab data={taskPerformance} />

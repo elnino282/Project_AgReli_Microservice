@@ -182,7 +182,7 @@ export function useTaskWorkspace() {
   });
 
   // View state
-  const [viewMode, setViewMode] = useState<ViewMode>('board');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [calendarMode, setCalendarMode] = useState<'month' | 'week'>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState('');

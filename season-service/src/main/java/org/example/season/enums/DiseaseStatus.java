@@ -5,7 +5,8 @@ public enum DiseaseStatus {
     UNDER_TREATMENT,
     MONITORING,
     RESOLVED,
-    CLOSED;
+    CLOSED,
+    TREATED;
 
     public static DiseaseStatus fromCode(String code) {
         if (code == null) {

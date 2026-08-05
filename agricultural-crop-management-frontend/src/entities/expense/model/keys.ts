@@ -20,7 +20,4 @@ export const expenseKeys = {
         [...expenseKeys.analytics(), 'byVendor', params] as const,
     analyticsTimeSeries: (params?: ExpenseListParams & { granularity?: 'DAY' | 'WEEK' | 'MONTH' }) =>
         [...expenseKeys.analytics(), 'timeSeries', params] as const,
-    costInsights: () => [...expenseKeys.all, 'costInsights'] as const,
-    costInsightsSummary: (seasonId: number) =>
-        [...expenseKeys.costInsights(), 'summary', seasonId] as const,
 };

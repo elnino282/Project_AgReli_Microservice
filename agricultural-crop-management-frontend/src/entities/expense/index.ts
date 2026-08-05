@@ -1,5 +1,3 @@
-// Expense Entity - Public API
-
 export type {
     ExpenseListParams,
     Expense,
@@ -11,11 +9,6 @@ export type {
     ExpenseTaskAnalytics,
     ExpenseVendorAnalytics,
     ExpenseTimeSeries,
-    ExpenseCostCategoryBreakdown,
-    ExpenseInventoryUsageSummary,
-    ExpenseCostInsightsSummary,
-    ExpenseCostAiSuggestion,
-    ExpenseCostSuggestionRequest,
 } from './model/types';
 
 export {
@@ -29,11 +22,6 @@ export {
     ExpenseTaskAnalyticsSchema,
     ExpenseVendorAnalyticsSchema,
     ExpenseTimeSeriesSchema,
-    ExpenseCostCategoryBreakdownSchema,
-    ExpenseInventoryUsageSummarySchema,
-    ExpenseCostInsightsSummarySchema,
-    ExpenseCostAiSuggestionSchema,
-    ExpenseCostSuggestionRequestSchema,
 } from './model/schemas';
 
 export { expenseKeys } from './model/keys';
@@ -48,8 +36,6 @@ export {
     useExpenseAnalyticsByTask,
     useExpenseAnalyticsByVendor,
     useExpenseAnalyticsTimeSeries,
-    useExpenseCostInsightsSummary,
-    useExpenseCostAiSuggestion,
     useCreateExpense,
     useUpdateExpense,
     useDeleteExpense,

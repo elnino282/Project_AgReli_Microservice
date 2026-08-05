@@ -1,16 +1,10 @@
 import { useMemo } from "react";
-import { AlertTriangle, BarChart3, RefreshCcw, Sparkles, TrendingUp } from "lucide-react";
-import { Button } from "@/shared/ui/button";
+import { AlertTriangle, BarChart3, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { usePreferences } from "@/shared/contexts";
 import { convertToDisplayCurrency, formatMoney } from "@/shared/lib";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
-import {
-    useExpenseCostAiSuggestion,
-    useExpenseCostInsightsSummary,
-    type ExpenseCostCategoryBreakdown,
-} from "@/entities/expense";
 import type { Expense } from "../types";
 
 interface CostInsightsPanelProps {
@@ -28,11 +22,6 @@ interface InsightRow {
 
 const getSafeAmount = (value: number | null | undefined) =>
     typeof value === "number" && Number.isFinite(value) ? value : 0;
-
-const getTopCategory = (rows: ExpenseCostCategoryBreakdown[]) =>
-    rows
-        .filter((row) => row.category && typeof row.amount === "number")
-        .sort((left, right) => getSafeAmount(right.amount) - getSafeAmount(left.amount))[0];
 
 const buildExpenseRows = (
     expenses: Expense[],
@@ -140,15 +129,6 @@ export function AIOptimizationTips({ seasonId, expenses }: CostInsightsPanelProp
     const { preferences } = usePreferences();
     const { t } = useI18n();
     const hasSeason = typeof seasonId === "number" && seasonId > 0;
-    const {
-        data: summary,
-        isLoading: isSummaryLoading,
-        isError: isSummaryError,
-        error: summaryError,
-        refetch: refetchSummary,
-    } = useExpenseCostInsightsSummary(seasonId ?? 0, { enabled: hasSeason });
-
-    const aiSuggestionMutation = useExpenseCostAiSuggestion(seasonId ?? 0);
 
     const formatCurrency = (value: number) =>
         formatMoney(
@@ -157,43 +137,7 @@ export function AIOptimizationTips({ seasonId, expenses }: CostInsightsPanelProp
             preferences.locale
         );
 
-    const summaryRows = useMemo<InsightRow[]>(() => {
-        if (!summary) {
-            return [];
-        }
-        const rows: InsightRow[] = [];
-
-        const topCategory = getTopCategory(summary.topCostCategories);
-        if (topCategory?.category) {
-            rows.push({
-                id: "summary-top-category",
-                kind: "info",
-                title: t("expenses.insights.summary.topCategory.title"),
-                description: t("expenses.insights.summary.topCategory.description", {
-                    category: topCategory.category,
-                }),
-                amount: getSafeAmount(topCategory.amount),
-            });
-        }
-
-        for (const [index, warning] of summary.warnings.entries()) {
-            rows.push({
-                id: `summary-warning-${index}`,
-                kind: "warning",
-                title: t("expenses.insights.summary.warningTitle"),
-                description: warning,
-            });
-        }
-
-        return rows;
-    }, [summary, t]);
-
-    const localRows = useMemo(() => buildExpenseRows(expenses, t), [expenses, t]);
-    const insightRows = summaryRows.length > 0 ? summaryRows : localRows;
-    const aiSuggestion = aiSuggestionMutation.data?.aiSuggestionText;
-    const disclaimer = aiSuggestionMutation.data?.disclaimer
-        ?? summary?.disclaimer
-        ?? t("expenses.insights.fallbackDisclaimer");
+    const insightRows = useMemo(() => buildExpenseRows(expenses, t), [expenses, t]);
 
     if (!hasSeason) {
         return (
@@ -223,27 +167,7 @@ export function AIOptimizationTips({ seasonId, expenses }: CostInsightsPanelProp
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-                {isSummaryLoading && insightRows.length === 0 && (
-                    <div className="rounded-xl border border-border bg-card p-3 text-xs text-muted-foreground">
-                        {t("expenses.insights.loading")}
-                    </div>
-                )}
-
-                {isSummaryError && insightRows.length === 0 && (
-                    <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive space-y-2">
-                        <div>
-                            {t("expenses.insights.summaryLoadError", {
-                                error: summaryError?.message ?? t("expenses.insights.unknownError"),
-                            })}
-                        </div>
-                        <Button size="sm" variant="outline" onClick={() => refetchSummary()}>
-                            <RefreshCcw className="w-3.5 h-3.5 mr-2" />
-                            {t("common.retry")}
-                        </Button>
-                    </div>
-                )}
-
-                {insightRows.length === 0 && !isSummaryLoading && (
+                {insightRows.length === 0 && (
                     <div className="rounded-xl border border-border bg-card p-3 text-xs text-muted-foreground">
                         {t("expenses.insights.empty")}
                     </div>
@@ -281,36 +205,9 @@ export function AIOptimizationTips({ seasonId, expenses }: CostInsightsPanelProp
                     </div>
                 ))}
 
-                <div className="pt-2 space-y-2">
-                    <Button
-                        variant="outline"
-                        className="w-full rounded-xl border-secondary text-secondary hover:bg-secondary/10"
-                        onClick={() => aiSuggestionMutation.mutate({ includeInventory: true })}
-                        disabled={aiSuggestionMutation.isPending}
-                    >
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        {aiSuggestionMutation.isPending
-                            ? t("expenses.insights.aiAnalyzing")
-                            : t("expenses.insights.aiAnalyze")}
-                    </Button>
-
-                    {aiSuggestionMutation.isError && (
-                        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
-                            {aiSuggestionMutation.error?.message ?? t("expenses.insights.aiError")}
-                        </div>
-                    )}
-
-                    {aiSuggestion && (
-                        <div className="rounded-xl border border-border bg-card p-3">
-                            <p className="text-xs text-muted-foreground mb-2">{t("expenses.insights.aiSuggestion")}</p>
-                            <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">{aiSuggestion}</p>
-                        </div>
-                    )}
-
-                    <p className="text-[11px] text-muted-foreground">
-                        <strong>{t("expenses.insights.disclaimerLabel")}</strong> {disclaimer}
-                    </p>
-                </div>
+                <p className="text-[11px] text-muted-foreground">
+                    <strong>{t("expenses.insights.disclaimerLabel")}</strong> {t("expenses.insights.fallbackDisclaimer")}
+                </p>
             </CardContent>
         </Card>
     );

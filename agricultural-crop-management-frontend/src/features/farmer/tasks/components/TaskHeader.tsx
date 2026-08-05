@@ -37,66 +37,48 @@ export function TaskHeader({
 
         <div className="flex items-center gap-3 flex-shrink-0">
           {/* View Switch */}
-          <div className="flex items-center gap-1 bg-muted p-1 rounded-xl">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={viewMode === 'board' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => onViewModeChange('board')}
-                    className={`acm-rounded-sm ${
-                      viewMode === 'board'
-                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                        : 'hover:bg-muted/50'
-                    }`}
-                  >
-                    <Columns3 className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('tasks.views.board')}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+          <div className="flex items-center gap-1 bg-muted p-1 rounded-xl overflow-hidden">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => onViewModeChange('list')}
+              className={`acm-rounded-sm px-3 ${
+                viewMode === 'list'
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  : 'hover:bg-muted/50'
+              }`}
+            >
+              <List className="w-4 h-4 mr-2" />
+              {t('tasks.views.list')}
+            </Button>
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => onViewModeChange('list')}
-                    className={`acm-rounded-sm ${
-                      viewMode === 'list'
-                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                        : 'hover:bg-muted/50'
-                    }`}
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('tasks.views.list')}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Button
+              variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => onViewModeChange('calendar')}
+              className={`acm-rounded-sm px-3 ${
+                viewMode === 'calendar'
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  : 'hover:bg-muted/50'
+              }`}
+            >
+              <CalendarDays className="w-4 h-4 mr-2" />
+              {t('tasks.views.calendar')}
+            </Button>
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={viewMode === 'calendar' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => onViewModeChange('calendar')}
-                    className={`acm-rounded-sm ${
-                      viewMode === 'calendar'
-                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                        : 'hover:bg-muted/50'
-                    }`}
-                  >
-                    <CalendarDays className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('tasks.views.calendar')}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Button
+              variant={viewMode === 'board' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => onViewModeChange('board')}
+              className={`acm-rounded-sm px-3 ${
+                viewMode === 'board'
+                  ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  : 'hover:bg-muted/50'
+              }`}
+            >
+              <Columns3 className="w-4 h-4 mr-2" />
+              {t('tasks.views.board')}
+            </Button>
           </div>
 
           {/* Create Task Button */}

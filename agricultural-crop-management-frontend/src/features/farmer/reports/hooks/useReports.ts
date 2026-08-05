@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { toast } from "sonner";
 import type {
@@ -8,7 +8,6 @@ import type {
   PesticideStatus,
   PesticideRecord,
   ReportSection,
-  CostOptimizationAiSuggestion,
   TaskPerformance,
   YieldByCrop,
   YieldByPlot,
@@ -89,11 +88,6 @@ export function useReports(options: UseReportsOptions = {}) {
   const [includeCharts, setIncludeCharts] = useState(true);
   const [includeNotes, setIncludeNotes] = useState(false);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
-  const [costOptimizationAiSuggestion, setCostOptimizationAiSuggestion] =
-    useState<CostOptimizationAiSuggestion | null>(null);
-  const [costOptimizationAiError, setCostOptimizationAiError] = useState<
-    string | null
-  >(null);
 
   useEffect(() => {
     if (!initialSeasonValue) return;
@@ -102,11 +96,6 @@ export function useReports(options: UseReportsOptions = {}) {
   }, [initialSeasonValue, selectedSeason]);
 
   const queryEnabled = resolvedSeasonId !== null;
-
-  useEffect(() => {
-    setCostOptimizationAiSuggestion(null);
-    setCostOptimizationAiError(null);
-  }, [resolvedSeasonId, locale]);
 
   const {
     data: yieldReport,
@@ -185,39 +174,7 @@ export function useReports(options: UseReportsOptions = {}) {
     staleTime: 1000 * 60 * 5,
   });
 
-  const {
-    data: costOptimizationSummary,
-    isLoading: costOptimizationSummaryLoading,
-    error: costOptimizationSummaryError,
-    refetch: refetchCostOptimizationSummary,
-  } = useQuery({
-    queryKey: ["farmerReports", "costOptimization", "summary", resolvedSeasonId, locale],
-    queryFn: () =>
-      farmerReportsApi.getCostOptimizationSummary(resolvedSeasonId as number, locale),
-    enabled: queryEnabled,
-    staleTime: 1000 * 60 * 5,
-  });
 
-  const costOptimizationAiMutation = useMutation({
-    mutationFn: async () => {
-      if (!resolvedSeasonId) {
-        throw new Error(t("reports.cost.seasonRequired"));
-      }
-      return farmerReportsApi.getCostOptimizationAiSuggestion(resolvedSeasonId, {
-        includeInventory: true,
-        locale,
-      }, locale);
-    },
-    onSuccess: (data) => {
-      setCostOptimizationAiSuggestion(data);
-      setCostOptimizationAiError(null);
-    },
-    onError: (error) => {
-      setCostOptimizationAiError(
-        toReadableApiError(error, t("reports.apiErrors.aiAnalysisFailed"), t)
-      );
-    },
-  });
 
   const yieldBySeason: YieldBySeason[] = useMemo(() => {
     if (!yieldReport) return [];
@@ -438,15 +395,6 @@ export function useReports(options: UseReportsOptions = {}) {
     return statusConfig[status];
   };
 
-  const handleAnalyzeCostOptimizationWithAi = () => {
-    if (!resolvedSeasonId) {
-      setCostOptimizationAiError(t("reports.cost.selectSeasonForAi"));
-      return;
-    }
-    setCostOptimizationAiError(null);
-    costOptimizationAiMutation.mutate();
-  };
-
   return {
     activeSection,
     selectedSeason,
@@ -467,19 +415,6 @@ export function useReports(options: UseReportsOptions = {}) {
     kpiData,
     isLoading,
     hasError,
-    costOptimizationSummary: costOptimizationSummary ?? null,
-    costOptimizationSummaryLoading,
-    costOptimizationSummaryError: costOptimizationSummaryError
-      ? toReadableApiError(
-        costOptimizationSummaryError,
-        t("reports.apiErrors.costOptimizationFailed"),
-        t
-      )
-      : null,
-    refetchCostOptimizationSummary,
-    costOptimizationAiSuggestion,
-    costOptimizationAiLoading: costOptimizationAiMutation.isPending,
-    costOptimizationAiError,
     setActiveSection,
     setSelectedSeason,
     setYieldViewMode,
@@ -494,6 +429,5 @@ export function useReports(options: UseReportsOptions = {}) {
     handleClearFilters,
     getYieldChartData,
     getPesticideStatusBadge,
-    handleAnalyzeCostOptimizationWithAi,
   };
 }
