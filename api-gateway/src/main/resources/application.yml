@@ -58,6 +58,7 @@ spring:
                 - Path=/api/v1/farms, /api/v1/farms/**, /api/v1/plots, /api/v1/plots/**, /api/v1/addresses, /api/v1/addresses/**, /api/v1/locations, /api/v1/locations/**
             - id: finance-route
               uri: ${FINANCE_SERVICE_URI:http://localhost:8087}
+              order: 1
               predicates:
                 - Path=/api/v1/expenses, /api/v1/expenses/**, /api/v1/public/lookup/expenses, /api/v1/public/lookup/expenses/**, /api/v1/seasons/*/expenses, /api/v1/seasons/*/expenses/**
             - id: incident-route
@@ -66,10 +67,12 @@ spring:
                 - Path=/api/v1/incidents, /api/v1/incidents/**, /api/v1/notifications, /api/v1/notifications/**, /api/v1/farmer/notifications, /api/v1/farmer/notifications/**, /api/v1/public/lookup/incidents, /api/v1/public/lookup/incidents/**, /api/v1/admin/alerts, /api/v1/admin/alerts/**
             - id: sustainability-route
               uri: ${SUSTAINABILITY_SERVICE_URI:http://localhost:8089}
+              order: 1
               predicates:
                 - Path=/api/v1/dashboard, /api/v1/dashboard/**, /api/v1/soil-tests, /api/v1/soil-tests/**, /api/v1/nutrient-inputs, /api/v1/nutrient-inputs/**, /api/v1/irrigation-water-analyses, /api/v1/irrigation-water-analyses/**, /api/v1/fields, /api/v1/fields/**, /api/v1/farmer/reports, /api/v1/farmer/reports/**, /api/v1/seasons/*/soil-tests, /api/v1/seasons/*/soil-tests/**, /api/v1/seasons/*/nutrient-inputs, /api/v1/seasons/*/nutrient-inputs/**, /api/v1/seasons/*/irrigation-water-analyses, /api/v1/seasons/*/irrigation-water-analyses/**
             - id: season-route
               uri: ${SEASON_SERVICE_URI:http://localhost:8085}
+              order: 2
               predicates:
                 - Path=/api/v1/seasons, /api/v1/seasons/**, /api/v1/tasks, /api/v1/tasks/**, /api/v1/workspace/tasks, /api/v1/workspace/tasks/**, /api/v1/harvests, /api/v1/harvests/**, /api/v1/field-logs, /api/v1/field-logs/**, /api/v1/disease-records, /api/v1/disease-records/**, /api/v1/disease-treatments, /api/v1/disease-treatments/**, /api/v1/farmer/labor, /api/v1/farmer/labor/**, /api/v1/employee, /api/v1/employee/**, /api/v1/farmer/seasons/**, /api/v1/farmer/tasks/**, /api/v1/farmer/dashboard/**
             - id: inventory-route

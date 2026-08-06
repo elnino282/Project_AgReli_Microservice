@@ -98,6 +98,9 @@ export const useCreateSeason = (options?: any): UseMutationResult<SeasonDetail, 
     });
     return {
         ...mutation,
+        mutate: (data: SeasonCreateRequest, options?: any) => {
+            mutation.mutate({ data: data as any }, options);
+        },
         mutateAsync: async (data: SeasonCreateRequest) => {
             const res = await mutation.mutateAsync({ data: data as any });
             return res.data?.result as unknown as SeasonDetail;
@@ -176,6 +179,9 @@ export const useDeleteSeason = (options?: any): UseMutationResult<void, Error, n
     });
     return {
         ...mutation,
+        mutate: (id: number, options?: any) => {
+            mutation.mutate({ id }, options);
+        },
         mutateAsync: async (id: number) => {
             await mutation.mutateAsync({ id });
         }
@@ -202,6 +208,9 @@ export const useArchiveSeason = (options?: any): UseMutationResult<Season, Error
     });
     return {
         ...mutation,
+        mutate: (id: number, options?: any) => {
+            mutation.mutate({ id }, options);
+        },
         mutateAsync: async (id: number) => {
             const res = await mutation.mutateAsync({ id });
             return res.data?.result as unknown as Season;

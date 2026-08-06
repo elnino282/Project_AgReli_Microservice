@@ -59,24 +59,24 @@ const MODULE_CARDS = [
     icon: Users,
     path: "labor-management",
   },
-  {
-    titleKey: "seasonWorkspaceOverview.modules.nutrient.title",
-    descriptionKey: "seasonWorkspaceOverview.modules.nutrient.description",
-    icon: Beaker,
-    path: "nutrient-inputs",
-  },
-  {
-    titleKey: "seasonWorkspaceOverview.modules.irrigation.title",
-    descriptionKey: "seasonWorkspaceOverview.modules.irrigation.description",
-    icon: Droplets,
-    path: "irrigation-water-analyses",
-  },
-  {
-    titleKey: "seasonWorkspaceOverview.modules.soil.title",
-    descriptionKey: "seasonWorkspaceOverview.modules.soil.description",
-    icon: TestTubeDiagonal,
-    path: "soil-tests",
-  },
+  // {
+  //   titleKey: "seasonWorkspaceOverview.modules.nutrient.title",
+  //   descriptionKey: "seasonWorkspaceOverview.modules.nutrient.description",
+  //   icon: Beaker,
+  //   path: "nutrient-inputs",
+  // },
+  // {
+  //   titleKey: "seasonWorkspaceOverview.modules.irrigation.title",
+  //   descriptionKey: "seasonWorkspaceOverview.modules.irrigation.description",
+  //   icon: Droplets,
+  //   path: "irrigation-water-analyses",
+  // },
+  // {
+  //   titleKey: "seasonWorkspaceOverview.modules.soil.title",
+  //   descriptionKey: "seasonWorkspaceOverview.modules.soil.description",
+  //   icon: TestTubeDiagonal,
+  //   path: "soil-tests",
+  // },
   {
     titleKey: "seasonWorkspaceOverview.modules.reports.title",
     descriptionKey: "seasonWorkspaceOverview.modules.reports.description",
