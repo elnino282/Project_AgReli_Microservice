@@ -24,7 +24,11 @@ import { usePlots } from "@/entities/plot";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useEligibleAssignees } from "@/entities/task/api/hooks";
 import { Badge } from "@/shared/ui/badge";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ChevronDown } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { ScrollArea } from "@/shared/ui/scroll-area";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -37,8 +41,8 @@ interface CreateTaskDialogProps {
     seasonId?: number;
     plotId?: number;
     taskType?: string;
-    assigneeUserId?: number;
-    workTeamId?: number;
+    assigneeUserIds?: number[];
+    workTeamIds?: number[];
     estimatedDays?: number;
   }) => void;
   seasonId?: number;
@@ -78,21 +82,22 @@ export function CreateTaskDialog({
   const [selectedSeason, setSelectedSeason] = useState<string>("");
   const [selectedPlot, setSelectedPlot] = useState<string>("");
   const [taskType, setTaskType] = useState("");
-  const [assignee, setAssignee] = useState("");
-  const [workTeam, setWorkTeam] = useState("");
+  const [assigneeType, setAssigneeType] = useState<"employee" | "team">("employee");
+  const [assignees, setAssignees] = useState<string[]>([]);
+  const [workTeams, setWorkTeams] = useState<string[]>([]);
   const [estimatedDays, setEstimatedDays] = useState<number | "">("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const effectiveSeasonId = seasonId ?? selectedSeasonId ?? null;
 
   const { data: eligibleAssignees = [], isLoading } = useEligibleAssignees(
     effectiveSeasonId ?? 0,
-    { workTeamId: workTeam ? Number(workTeam) : undefined },
-    { enabled: open && !!effectiveSeasonId }
+    { workTeamId: undefined },
+    { enabled: open && !!effectiveSeasonId && assigneeType === "employee" }
   );
 
-  const selectedAssignee = useMemo(
-    () => eligibleAssignees.find((a) => String(a.employeeUserId) === assignee),
-    [eligibleAssignees, assignee]
+  const hasUntrainedSelected = useMemo(
+    () => eligibleAssignees.some((a) => assignees.includes(String(a.employeeUserId)) && a.isTrained === false),
+    [eligibleAssignees, assignees]
   );
 
   // Get available plots from API - plotsData is an array directly (PlotArrayResponse)
@@ -107,8 +112,9 @@ export function CreateTaskDialog({
       setSelectedSeason("");
       setSelectedPlot("");
       setTaskType("");
-      setAssignee("");
-      setWorkTeam("");
+      setAssigneeType("employee");
+      setAssignees([]);
+      setWorkTeams([]);
       setEstimatedDays("");
       setErrors({});
     } else {
@@ -158,8 +164,8 @@ export function CreateTaskDialog({
       seasonId: seasonIdForSubmit ?? undefined,
       plotId: selectedPlot ? Number(selectedPlot) : undefined,
       taskType: taskType || undefined,
-      assigneeUserId: assignee ? Number(assignee) : undefined,
-      workTeamId: workTeam ? Number(workTeam) : undefined,
+      assigneeUserIds: assigneeType === "employee" && assignees.length > 0 ? assignees.map(Number) : undefined,
+      workTeamIds: assigneeType === "team" && workTeams.length > 0 ? workTeams.map(Number) : undefined,
       estimatedDays: estimatedDays ? Number(estimatedDays) : undefined,
     });
   };
@@ -173,7 +179,8 @@ export function CreateTaskDialog({
     notes.trim().length > 0 ||
     selectedPlot.length > 0 ||
     taskType.length > 0 ||
-    assignee.length > 0 ||
+    assignees.length > 0 ||
+    workTeams.length > 0 ||
     (!hideSeasonSelector && selectedSeason.length > 0);
   const confirmMessage = t(
     "common.unsavedChangesConfirm",
@@ -290,65 +297,132 @@ export function CreateTaskDialog({
             </Select>
           </div>
 
-          {/* Assignee */}
-          <div className="space-y-2">
-            <Label htmlFor="task-assignee">{t("tasks.table.assignee", "Assignee")}</Label>
-            <Select value={assignee} onValueChange={setAssignee} disabled={isLoading || eligibleAssignees.length === 0}>
-              <SelectTrigger id="task-assignee">
-                <SelectValue placeholder={isLoading ? "Loading..." : t("tasks.form.selectAssignee", "Select assignee")} />
-              </SelectTrigger>
-              <SelectContent>
-                {eligibleAssignees.map((employee) => (
-                  <SelectItem key={employee.employeeUserId} value={String(employee.employeeUserId)}>
-                    <div className="flex items-center justify-between w-full pr-4">
-                      <span>
-                        {employee.employeeName ||
-                          employee.employeeUsername ||
-                          employee.employeeEmail ||
-                          `Employee #${employee.employeeUserId}`}
+          {/* Assignee Selection */}
+          <div className="sm:col-span-2 space-y-4">
+            <Label>{t("tasks.table.assignee", "Người thực hiện")}</Label>
+            
+            <RadioGroup 
+              value={assigneeType} 
+              onValueChange={(val) => setAssigneeType(val as "employee" | "team")}
+              className="flex items-center gap-6"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="employee" id="type-employee" />
+                <Label htmlFor="type-employee" className="font-normal cursor-pointer">Cá nhân (không theo đội nhóm)</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="team" id="type-team" />
+                <Label htmlFor="type-team" className="font-normal cursor-pointer">Đội nhóm (Work Team)</Label>
+              </div>
+            </RadioGroup>
+
+            {assigneeType === "employee" && (
+              <div className="space-y-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" role="combobox" className="w-full justify-between bg-background font-normal border-input h-10">
+                      <span className="truncate">
+                        {isLoading ? "Loading..." : assignees.length > 0 ? `Đã chọn ${assignees.length} nhân sự` : t("tasks.form.selectAssignee", "Chọn người thực hiện")}
                       </span>
-                      {employee.isTrained ? (
-                        <Badge variant="outline" className="ml-2 text-[10px] h-4 bg-green-50 text-green-700 border-green-200">
-                          Đã đào tạo
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="ml-2 text-[10px] h-4 bg-amber-50 text-amber-700 border-amber-200">
-                          Chưa đào tạo
-                        </Badge>
-                      )}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedAssignee && selectedAssignee.isTrained === false && (
-              <div className="flex items-center text-amber-600 text-xs bg-amber-50 p-2 rounded border border-amber-200 mt-2">
-                <AlertCircle className="w-4 h-4 mr-1" />
-                <span>Nhân viên này chưa qua đào tạo. Bạn có chắc chắn muốn giao việc?</span>
+                      <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                    <ScrollArea className="h-64 rounded-md">
+                      <div className="p-2 flex flex-col gap-1">
+                        {eligibleAssignees.map((employee) => {
+                          const id = String(employee.employeeUserId);
+                          const isChecked = assignees.includes(id);
+                          return (
+                            <div 
+                              key={id} 
+                              className="flex items-center justify-between space-x-2 p-2 hover:bg-muted/50 rounded-sm cursor-pointer"
+                              onClick={() => {
+                                setAssignees(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]);
+                              }}
+                            >
+                              <div className="flex items-center space-x-3 truncate">
+                                <Checkbox checked={isChecked} onCheckedChange={(c) => {
+                                  setAssignees(prev => c ? [...prev, id] : prev.filter(a => a !== id));
+                                }} />
+                                <span className="truncate text-sm">
+                                  {employee.employeeName || employee.employeeUsername || employee.employeeEmail || `Employee #${id}`}
+                                </span>
+                              </div>
+                              {employee.isTrained ? (
+                                <Badge variant="outline" className="text-[10px] h-4 bg-green-50 text-green-700 border-green-200 shrink-0">
+                                  Đã đào tạo
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-[10px] h-4 bg-amber-50 text-amber-700 border-amber-200 shrink-0">
+                                  Chưa đào tạo
+                                </Badge>
+                              )}
+                            </div>
+                          );
+                        })}
+                        {!isLoading && eligibleAssignees.length === 0 && (
+                          <div className="p-2 text-sm text-muted-foreground text-center">
+                            {t("tasks.dialog.noAssignees", "No assignees available.")}
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </PopoverContent>
+                </Popover>
+
+                {hasUntrainedSelected && (
+                  <div className="flex items-center text-amber-600 text-xs bg-amber-50 p-2 rounded border border-amber-200 mt-2">
+                    <AlertCircle className="w-4 h-4 mr-1 shrink-0" />
+                    <span>Có nhân viên chưa qua đào tạo được chọn. Bạn có chắc chắn muốn giao việc?</span>
+                  </div>
+                )}
               </div>
             )}
-            {!isLoading && eligibleAssignees.length === 0 && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {t("tasks.dialog.noAssignees", "No assignees available.")}
-              </p>
-            )}
-          </div>
 
-          {/* Work Team */}
-          <div className="space-y-2">
-            <Label htmlFor="task-work-team">{t("tasks.table.workTeam", "Work Team")}</Label>
-            <Select value={workTeam} onValueChange={setWorkTeam}>
-              <SelectTrigger id="task-work-team">
-                <SelectValue placeholder={t("tasks.form.selectWorkTeam", "Select Work Team")} />
-              </SelectTrigger>
-              <SelectContent>
-                {workTeamOptions?.map((team) => (
-                  <SelectItem key={team.id} value={String(team.id)}>
-                    {team.teamName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {assigneeType === "team" && (
+              <div className="space-y-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" role="combobox" className="w-full justify-between bg-background font-normal border-input h-10">
+                      <span className="truncate">
+                        {workTeams.length > 0 ? `Đã chọn ${workTeams.length} đội nhóm` : t("tasks.form.selectWorkTeam", "Select Work Team")}
+                      </span>
+                      <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                    <ScrollArea className="max-h-64 rounded-md">
+                      <div className="p-2 flex flex-col gap-1">
+                        {workTeamOptions?.map((team) => {
+                          const id = String(team.id);
+                          const isChecked = workTeams.includes(id);
+                          return (
+                            <div 
+                              key={id} 
+                              className="flex items-center space-x-3 p-2 hover:bg-muted/50 rounded-sm cursor-pointer"
+                              onClick={() => {
+                                setWorkTeams(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
+                              }}
+                            >
+                              <Checkbox checked={isChecked} onCheckedChange={(c) => {
+                                setWorkTeams(prev => c ? [...prev, id] : prev.filter(t => t !== id));
+                              }} />
+                              <span className="truncate text-sm">{team.teamName}</span>
+                            </div>
+                          );
+                        })}
+                        {(!workTeamOptions || workTeamOptions.length === 0) && (
+                          <div className="p-2 text-sm text-muted-foreground text-center">
+                            Không có đội nhóm nào.
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
           </div>
 
           {/* Estimated Days */}

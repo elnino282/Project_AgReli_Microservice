@@ -18,9 +18,24 @@ public class FarmerTeamController {
     @PostMapping("/seasons/{seasonId}/teams")
     public ResponseEntity<?> createTeam(@PathVariable Long seasonId, 
                                         @RequestParam String teamName,
-                                        @RequestParam Long leaderId,
+                                        @RequestParam(required = false) Long leaderId,
                                         @RequestBody List<Long> memberIds) {
         return ResponseEntity.ok(teamManagementService.createWorkTeam(seasonId, teamName, leaderId, memberIds));
+    }
+
+    @PutMapping("/seasons/{seasonId}/teams/{teamId}")
+    public ResponseEntity<?> updateTeam(@PathVariable Long seasonId,
+                                        @PathVariable Long teamId,
+                                        @RequestParam String teamName,
+                                        @RequestParam(required = false) Long leaderId,
+                                        @RequestBody List<Long> memberIds) {
+        return ResponseEntity.ok(teamManagementService.updateWorkTeam(seasonId, teamId, teamName, leaderId, memberIds));
+    }
+
+    @DeleteMapping("/seasons/{seasonId}/teams/{teamId}")
+    public ResponseEntity<?> deleteTeam(@PathVariable Long seasonId, @PathVariable Long teamId) {
+        teamManagementService.deleteWorkTeam(seasonId, teamId);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/seasons/{seasonId}/teams")

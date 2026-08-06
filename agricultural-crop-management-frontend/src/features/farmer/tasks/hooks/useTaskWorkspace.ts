@@ -519,7 +519,7 @@ export function useTaskWorkspace() {
     }
   }, [executeBulkTaskUpdate]);
 
-  const handleCreateTask = useCallback((data: {
+  const handleCreateTask = useCallback(async (data: {
     title: string;
     plannedDate: string;
     dueDate: string;
@@ -527,8 +527,8 @@ export function useTaskWorkspace() {
     seasonId?: number;
     plotId?: number;
     taskType?: string;
-    assigneeUserId?: number;
-    workTeamId?: number;
+    assigneeUserIds?: number[];
+    workTeamIds?: number[];
     estimatedDays?: number;
   }) => {
     // Always use pinned season from workspace context
@@ -551,16 +551,26 @@ export function useTaskWorkspace() {
       return;
     }
     const plannedDate = data.plannedDate || data.dueDate;
-    createMutation.mutate({
+    const basePayload = {
       title: data.title,
       plannedDate,
       dueDate: data.dueDate,
       description: data.description,
-      assigneeUserId: data.assigneeUserId,
       plotId: data.plotId,
-      workTeamId: data.workTeamId,
       estimatedDays: data.estimatedDays,
-    });
+    };
+
+    if (data.assigneeUserIds && data.assigneeUserIds.length > 0) {
+      for (const id of data.assigneeUserIds) {
+        await createMutation.mutateAsync({ ...basePayload, assigneeUserId: id });
+      }
+    } else if (data.workTeamIds && data.workTeamIds.length > 0) {
+      for (const id of data.workTeamIds) {
+        await createMutation.mutateAsync({ ...basePayload, workTeamId: id });
+      }
+    } else {
+      createMutation.mutate(basePayload);
+    }
   }, [isSeasonWriteLocked, seasonId, seasonWriteLockReason, createMutation]);
 
   const uniqueAssignees = useMemo(() => [...new Set(tasks.map(t => t.assignee))], [tasks]);

@@ -112,6 +112,8 @@ public interface TaskRepository extends JpaRepository<Task, Integer>,
         @Query("SELECT t FROM Task t WHERE t.userId = :userId OR (t.workTeamId IS NOT NULL AND t.workTeamId IN :teamIds)")
         List<Task> findTasksForEmployee(@Param("userId") Long userId, @Param("teamIds") List<Long> teamIds);
 
+        boolean existsByWorkTeamId(Long workTeamId);
+
         @Query("SELECT new org.example.season.dto.TeamProgressSummaryResponse(" +
                "t.workTeamId, wt.teamName, t.plotId, COUNT(t), " +
                "SUM(CASE WHEN t.status = 'DONE' THEN 1 ELSE 0 END), " +

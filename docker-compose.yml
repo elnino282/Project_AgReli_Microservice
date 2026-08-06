@@ -238,6 +238,7 @@ services:
       APP_CROP_CATALOG_SERVICE_URL: http://crop-catalog-service:8082
       APP_IDENTITY_SERVICE_URL: http://identity-service:8081
       APP_INVENTORY_SERVICE_URL: http://inventory-service:8086
+      APP_MONOLITH_SERVICE_URL: http://api-gateway:8080
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbituser}

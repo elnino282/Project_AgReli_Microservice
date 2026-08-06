@@ -25,7 +25,7 @@ public class WorkTeam {
     @Column(name = "team_name", nullable = false)
     private String teamName;
 
-    @Column(name = "team_leader_user_id", nullable = false)
+    @Column(name = "team_leader_user_id", nullable = true)
     private Long teamLeaderUserId;
 
     @OneToMany(mappedBy = "workTeam", cascade = CascadeType.ALL, orphanRemoval = true)

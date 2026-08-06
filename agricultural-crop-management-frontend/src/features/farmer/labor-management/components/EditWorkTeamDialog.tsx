@@ -22,13 +22,14 @@ import { toast } from "sonner";
 import httpClient from "@/shared/api/http";
 import { useTranslation } from "react-i18next";
 import { useEmployeeDirectory, useSeasonEmployees } from "@/entities/labor";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
 import { ConfirmDialog } from "@/shared/ui";
 
-interface CreateWorkTeamDialogProps {
+interface EditWorkTeamDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   seasonId: number;
+  team: any;
   onSuccess: () => void;
 }
 
@@ -38,7 +39,7 @@ interface Employee {
   isTrained: boolean;
 }
 
-export function CreateWorkTeamDialog({ open, onOpenChange, seasonId, onSuccess }: CreateWorkTeamDialogProps) {
+export function EditWorkTeamDialog({ open, onOpenChange, seasonId, team, onSuccess }: EditWorkTeamDialogProps) {
   const { t } = useTranslation();
   const [teamName, setTeamName] = useState("");
   const [leaderId, setLeaderId] = useState("");
@@ -58,6 +59,15 @@ export function CreateWorkTeamDialog({ open, onOpenChange, seasonId, onSuccess }
     { page: 0, size: 200 },
     { enabled: open }
   );
+
+  useEffect(() => {
+    if (open && team) {
+      setTeamName(team.teamName || "");
+      setLeaderId(String(team.teamLeaderUserId || ""));
+      const members = team.members ? team.members.map((m: any) => m.employeeUserId).filter((id: number) => id !== team.teamLeaderUserId) : [];
+      setMemberIds(members);
+    }
+  }, [open, team]);
 
   useEffect(() => {
     if (employeeDirectoryData?.items) {
@@ -84,7 +94,7 @@ export function CreateWorkTeamDialog({ open, onOpenChange, seasonId, onSuccess }
 
   const hasUntrainedMembers = () => {
     const selectedIds = [...memberIds];
-    if (leaderId && leaderId !== "none") {
+    if (leaderId && leaderId !== "none" && leaderId !== "null") {
       selectedIds.push(Number(leaderId));
     }
     return selectedIds.some(id => {
@@ -110,30 +120,23 @@ export function CreateWorkTeamDialog({ open, onOpenChange, seasonId, onSuccess }
     setIsSubmitting(true);
     try {
       const selectedIds = new Set(memberIds);
-      if (leaderId && leaderId !== "none") {
-        selectedIds.add(Number(leaderId));
-      }
-      const finalMemberIds = Array.from(selectedIds);
-
       const params: any = { teamName };
-      if (leaderId && leaderId !== "none") {
+      
+      if (leaderId && leaderId !== "none" && leaderId !== "null") {
+        selectedIds.add(Number(leaderId));
         params.leaderId = Number(leaderId);
       }
+      const finalMemberIds = Array.from(selectedIds);
       
-      await httpClient.post(`/api/v1/farmer/seasons/${seasonId}/teams`, finalMemberIds, {
+      await httpClient.put(`/api/v1/farmer/seasons/${seasonId}/teams/${team.id}`, finalMemberIds, {
         params
       });
-      toast.success(t("workTeams.createSuccess", "Tạo đội nhóm thành công!"));
+      toast.success(t("workTeams.updateSuccess", "Cập nhật đội nhóm thành công!"));
       onSuccess();
       onOpenChange(false);
       setShowUntrainedWarning(false);
-      
-      // Reset form
-      setTeamName("");
-      setLeaderId("");
-      setMemberIds([]);
     } catch (error) {
-      toast.error(t("workTeams.createError", "Lỗi khi tạo đội nhóm"));
+      toast.error(t("workTeams.updateError", "Lỗi khi cập nhật đội nhóm"));
     } finally {
       setIsSubmitting(false);
     }
@@ -145,6 +148,10 @@ export function CreateWorkTeamDialog({ open, onOpenChange, seasonId, onSuccess }
     );
   };
 
+  const removeMember = (userId: number) => {
+    setMemberIds(prev => prev.filter(id => id !== userId));
+  };
+
   const isUntrainedWarningVisible = hasUntrainedMembers();
 
   return (
@@ -152,9 +159,9 @@ export function CreateWorkTeamDialog({ open, onOpenChange, seasonId, onSuccess }
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{t("workTeams.dialog.title", "Tạo Đội Nhóm Mới")}</DialogTitle>
+            <DialogTitle>{t("workTeams.dialog.editTitle", "Sửa Đội Nhóm")}</DialogTitle>
             <DialogDescription>
-              {t("workTeams.dialog.description", "Nhập thông tin để tạo đội và phân công nhân sự.")}
+              {t("workTeams.dialog.editDescription", "Chỉnh sửa tên đội, đội trưởng và thành viên.")}
             </DialogDescription>
           </DialogHeader>
           
@@ -171,7 +178,7 @@ export function CreateWorkTeamDialog({ open, onOpenChange, seasonId, onSuccess }
 
             <div className="space-y-2">
               <Label htmlFor="leader">{t("workTeams.form.leader", "Đội Trưởng")}</Label>
-              <Select value={leaderId} onValueChange={setLeaderId}>
+              <Select value={leaderId || "none"} onValueChange={setLeaderId}>
                 <SelectTrigger id="leader">
                   <SelectValue placeholder={t("workTeams.form.selectLeader", "Chọn Đội Trưởng")} />
                 </SelectTrigger>
@@ -202,33 +209,58 @@ export function CreateWorkTeamDialog({ open, onOpenChange, seasonId, onSuccess }
 
             <div className="space-y-2">
               <Label>{t("workTeams.form.members", "Thành Viên (Tùy chọn)")}</Label>
+              
+              {/* Added section to visually show selected members with a remove button */}
+              {memberIds.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {memberIds.map(id => {
+                    const emp = employees.find(e => e.userId === id);
+                    if (!emp) return null;
+                    return (
+                      <Badge key={`selected-${id}`} variant="outline" className="flex items-center gap-1 py-1">
+                        {emp.displayName}
+                        <X 
+                          className="w-3 h-3 cursor-pointer hover:text-destructive transition-colors" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeMember(id);
+                          }}
+                        />
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
+
               <div className="border border-border rounded-md p-2 h-[150px] overflow-y-auto space-y-1 bg-muted/20">
                 {employees.filter(emp => String(emp.userId) !== leaderId).map(emp => (
                   <div 
                     key={`member-${emp.userId}`} 
-                    className={`flex items-center px-3 py-2 rounded-md cursor-pointer text-sm transition-colors ${
+                    className={`flex items-center justify-between px-3 py-2 rounded-md cursor-pointer text-sm transition-colors ${
                       memberIds.includes(emp.userId) ? 'bg-primary/10 text-primary font-medium border border-primary/20' : 'hover:bg-muted'
                     }`}
                     onClick={() => toggleMember(emp.userId)}
                   >
-                    <input 
-                      type="checkbox" 
-                      checked={memberIds.includes(emp.userId)} 
-                      readOnly 
-                      className="mr-3"
-                    />
-                    <div className="flex items-center gap-2">
-                      <span>{emp.displayName}</span>
-                      {!emp.isTrained && (
-                        <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700 border-amber-200">
-                          {t("laborWorkspace.status.untrained", "Chưa Train")}
-                        </Badge>
-                      )}
-                      {emp.isTrained && (
-                        <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200">
-                          {t("laborWorkspace.status.trained", "Đã Train")}
-                        </Badge>
-                      )}
+                    <div className="flex items-center">
+                      <input 
+                        type="checkbox" 
+                        checked={memberIds.includes(emp.userId)} 
+                        readOnly 
+                        className="mr-3"
+                      />
+                      <div className="flex items-center gap-2">
+                        <span>{emp.displayName}</span>
+                        {!emp.isTrained && (
+                          <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700 border-amber-200">
+                            {t("laborWorkspace.status.untrained", "Chưa Train")}
+                          </Badge>
+                        )}
+                        {emp.isTrained && (
+                          <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200">
+                            {t("laborWorkspace.status.trained", "Đã Train")}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -251,7 +283,7 @@ export function CreateWorkTeamDialog({ open, onOpenChange, seasonId, onSuccess }
               {t("common.cancel", "Hủy")}
             </Button>
             <Button onClick={handlePreSubmit} disabled={isSubmitting}>
-              {isSubmitting ? t("common.saving", "Đang lưu...") : t("common.save", "Tạo Đội")}
+              {isSubmitting ? t("common.saving", "Đang lưu...") : t("common.save", "Cập Nhật")}
             </Button>
           </DialogFooter>
         </DialogContent>

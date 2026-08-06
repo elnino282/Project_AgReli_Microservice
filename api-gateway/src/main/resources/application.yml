@@ -60,11 +60,11 @@ spring:
               uri: ${FINANCE_SERVICE_URI:http://localhost:8087}
               order: 1
               predicates:
-                - Path=/api/v1/expenses, /api/v1/expenses/**, /api/v1/public/lookup/expenses, /api/v1/public/lookup/expenses/**, /api/v1/seasons/*/expenses, /api/v1/seasons/*/expenses/**
+                - Path=/api/v1/expenses, /api/v1/expenses/**, /api/v1/public/lookup/expenses, /api/v1/public/lookup/expenses/**, /api/v1/public/expenses, /api/v1/public/expenses/**, /api/v1/seasons/*/expenses, /api/v1/seasons/*/expenses/**
             - id: incident-route
               uri: ${INCIDENT_SERVICE_URI:http://localhost:8088}
               predicates:
-                - Path=/api/v1/incidents, /api/v1/incidents/**, /api/v1/notifications, /api/v1/notifications/**, /api/v1/farmer/notifications, /api/v1/farmer/notifications/**, /api/v1/public/lookup/incidents, /api/v1/public/lookup/incidents/**, /api/v1/admin/alerts, /api/v1/admin/alerts/**
+                - Path=/api/v1/incidents, /api/v1/incidents/**, /api/v1/notifications, /api/v1/notifications/**, /api/v1/farmer/notifications, /api/v1/farmer/notifications/**, /api/v1/public/lookup/incidents, /api/v1/public/lookup/incidents/**, /api/v1/public/lookup/notifications, /api/v1/admin/alerts, /api/v1/admin/alerts/**
             - id: sustainability-route
               uri: ${SUSTAINABILITY_SERVICE_URI:http://localhost:8089}
               order: 1
