@@ -23,6 +23,9 @@ export const SeasonEmployeeSchema = z.object({
   employeeEmail: z.string().nullable().optional(),
   wagePerTask: z.number().nullable().optional(),
   active: z.boolean().nullable().optional(),
+  isTrained: z.boolean().nullable().optional(),
+  trainedAt: DateTimeSchema,
+  trainingNotes: z.string().nullable().optional(),
   createdAt: DateTimeSchema,
 });
 
@@ -79,6 +82,9 @@ export type BulkAssignSeasonEmployeesRequest = z.infer<typeof BulkAssignSeasonEm
 export const UpdateSeasonEmployeeRequestSchema = z.object({
   wagePerTask: z.number().min(0).optional(),
   active: z.boolean().optional(),
+  isTrained: z.boolean().optional(),
+  trainedAt: z.string().optional(),
+  trainingNotes: z.string().optional(),
 });
 
 export type UpdateSeasonEmployeeRequest = z.infer<typeof UpdateSeasonEmployeeRequestSchema>;

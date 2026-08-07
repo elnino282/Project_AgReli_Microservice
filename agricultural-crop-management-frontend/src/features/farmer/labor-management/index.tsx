@@ -247,8 +247,8 @@ export function LaborManagementPage() {
 
   const seasonEmployeesAll = seasonEmployeesData?.items ?? [];
   const seasonEmployees = useMemo(() => {
-    if (trainingFilter === "trained") return seasonEmployeesAll.filter(e => (e as any).isTrained);
-    if (trainingFilter === "untrained") return seasonEmployeesAll.filter(e => !(e as any).isTrained);
+    if (trainingFilter === "trained") return seasonEmployeesAll.filter(e => e.isTrained);
+    if (trainingFilter === "untrained") return seasonEmployeesAll.filter(e => !e.isTrained);
     return seasonEmployeesAll;
   }, [seasonEmployeesAll, trainingFilter]);
 
@@ -700,7 +700,7 @@ export function LaborManagementPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {(employee as any).isTrained && (employee as any).trainingNotes ? (
+                          {employee.isTrained && employee.trainingNotes ? (
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -711,19 +711,19 @@ export function LaborManagementPage() {
                                   </Badge>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  <p className="max-w-[200px] text-sm break-words whitespace-pre-wrap">{(employee as any).trainingNotes}</p>
+                                  <p className="max-w-[200px] text-sm break-words whitespace-pre-wrap">{employee.trainingNotes}</p>
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
                           ) : (
                             <Badge
                               className={
-                                (employee as any).isTrained
+                                employee.isTrained
                                   ? "bg-emerald-100 text-emerald-700 border-emerald-200"
                                   : "bg-muted text-muted-foreground border-border"
                               }
                             >
-                              {(employee as any).isTrained ? t("laborWorkspace.status.trained", "Đã Train") : t("laborWorkspace.status.untrained", "Chưa Train")}
+                              {employee.isTrained ? t("laborWorkspace.status.trained", "Đã Train") : t("laborWorkspace.status.untrained", "Chưa Train")}
                             </Badge>
                           )}
                         </TableCell>

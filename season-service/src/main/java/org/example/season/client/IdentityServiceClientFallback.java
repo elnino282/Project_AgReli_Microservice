@@ -28,4 +28,10 @@ public class IdentityServiceClientFallback implements IdentityServiceClient {
         log.error("Fallback triggered: Failed to validate employee {}", userId);
         return false;
     }
+
+    @Override
+    public java.util.List<UserInternalDto> validateEmployeesBatch(java.util.List<Long> userIds) {
+        log.error("Fallback triggered: Failed to validate employees batch {}", userIds);
+        return java.util.Collections.emptyList();
+    }
 }

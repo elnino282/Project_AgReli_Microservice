@@ -19,6 +19,7 @@ import type {
   PayrollRecordUpdateRequest,
   SeasonEmployee,
   TaskProgressLog,
+  UpdateSeasonEmployeeRequest,
 } from "../model/types";
 import type { Task } from "@/entities/task";
 
@@ -169,7 +170,7 @@ export const useUpdateSeasonEmployee = (
   options?: UseMutationOptions<
     SeasonEmployee,
     Error,
-    { employeeUserId: number; data: { wagePerTask?: number; active?: boolean } }
+    { employeeUserId: number; data: UpdateSeasonEmployeeRequest }
   >
 ) => {
   const queryClient = useQueryClient();

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -147,8 +148,12 @@ public class LaborManagementService {
         Set<Long> uniqueEmployeeIds = new HashSet<>(request.getEmployeeUserIds());
         List<SeasonEmployeeResponse> responses = new ArrayList<>();
 
-        for (Long employeeUserId : uniqueEmployeeIds) {
-            ExternalServiceClient.UserInternalDto employee = resolveActiveEmployee(employeeUserId);
+        List<ExternalServiceClient.UserInternalDto> activeEmployees = externalServiceClient.validateEmployeesBatch(new ArrayList<>(uniqueEmployeeIds));
+        if (activeEmployees.size() != uniqueEmployeeIds.size()) {
+            throw new AppException(ErrorCode.EMPLOYEE_ROLE_REQUIRED);
+        }
+
+        for (ExternalServiceClient.UserInternalDto employee : activeEmployees) {
             if (seasonEmployeeRepository.existsBySeasonIdAndEmployeeUserId(season.getId(), employee.getId())) {
                 continue;
             }
@@ -774,7 +779,13 @@ public class LaborManagementService {
         if (userId == null) {
             return;
         }
-        externalServiceClient.createNotification(userId, title, message, link);
+        CompletableFuture.runAsync(() -> {
+            try {
+                externalServiceClient.createNotification(userId, title, message, link);
+            } catch (Exception e) {
+                log.error("Failed to send notification to user {}: {}", userId, e.getMessage());
+            }
+        });
     }
 
     private String resolveAuditActor() {

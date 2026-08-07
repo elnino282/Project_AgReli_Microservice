@@ -128,8 +128,10 @@ async function refreshAccessToken(): Promise<string | null> {
             setStoredAuth(updated);
 
             return token;
-        } catch {
-            clearStoredAuth();
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response?.status === 401) {
+                clearStoredAuth();
+            }
             return null;
         } finally {
             isRefreshing = false;
@@ -182,9 +184,8 @@ httpClient.interceptors.response.use(
                 return httpClient(originalRequest);
             }
 
-            // If refresh failed, optionally redirect to sign-in
-            clearStoredAuth();
-            if (window.location.pathname !== '/sign-in') {
+            // If refresh failed and auth was cleared (due to 401), redirect to sign-in
+            if (!getStoredAuth() && window.location.pathname !== '/sign-in') {
                 window.location.href = '/sign-in';
             }
         }

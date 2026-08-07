@@ -97,4 +97,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
                         "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
                         "OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
         Page<User> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+        @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE u.id IN :userIds AND r.code = 'EMPLOYEE' AND u.status = 'ACTIVE'")
+        List<User> findActiveEmployeesByIds(@Param("userIds") List<Long> userIds);
 }

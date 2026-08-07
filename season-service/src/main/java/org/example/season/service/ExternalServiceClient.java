@@ -138,6 +138,10 @@ public class ExternalServiceClient {
         return identityServiceClient.validateEmployee(userId);
     }
 
+    public List<UserInternalDto> validateEmployeesBatch(List<Long> userIds) {
+        return identityServiceClient.validateEmployeesBatch(userIds);
+    }
+
     @Data
     @Builder
     @NoArgsConstructor
