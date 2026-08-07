@@ -100,8 +100,13 @@ export function useTasksToday() {
     }, []);
 
     const handleCompleteTask = useCallback((taskId: string) => {
+        const numericId = parseInt(taskId, 10);
+        const task = tasksData?.items?.find(t => t.taskId === numericId);
+        const actualStartDate = task?.actualStartDate || new Date().toISOString().split('T')[0];
+        const actualEndDate = new Date().toISOString().split('T')[0];
+
         updateTaskStatus.mutate(
-            { id: parseInt(taskId, 10), data: { status: 'DONE' } },
+            { id: numericId, data: { status: 'DONE', actualStartDate, actualEndDate } },
             {
                 onSuccess: () => {
                     toast.success('Task completed successfully');
@@ -111,7 +116,7 @@ export function useTasksToday() {
                 },
             }
         );
-    }, [updateTaskStatus]);
+    }, [updateTaskStatus, tasksData]);
 
     const handleSelectAll = useCallback((checked: boolean) => {
         if (checked) {
@@ -131,9 +136,17 @@ export function useTasksToday() {
 
     const handleMarkSelectedDone = useCallback(() => {
         // Batch update - mark all selected as done
-        const promises = selectedTasks.map(taskId =>
-            updateTaskStatus.mutateAsync({ id: parseInt(taskId, 10), data: { status: 'DONE' } })
-        );
+        const promises = selectedTasks.map(taskId => {
+            const numericId = parseInt(taskId, 10);
+            const task = tasksData?.items?.find(t => t.taskId === numericId);
+            const actualStartDate = task?.actualStartDate || new Date().toISOString().split('T')[0];
+            const actualEndDate = new Date().toISOString().split('T')[0];
+
+            return updateTaskStatus.mutateAsync({ 
+                id: numericId, 
+                data: { status: 'DONE', actualStartDate, actualEndDate } 
+            });
+        });
 
         Promise.all(promises)
             .then(() => {
@@ -143,7 +156,7 @@ export function useTasksToday() {
             .catch(() => {
                 toast.error('Failed to mark some tasks as done');
             });
-    }, [selectedTasks, updateTaskStatus]);
+    }, [selectedTasks, updateTaskStatus, tasksData]);
 
     const handleShiftSelected = useCallback(() => {
         // Placeholder - API would need to support date updates

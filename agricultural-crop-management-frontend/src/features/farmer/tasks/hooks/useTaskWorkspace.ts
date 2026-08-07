@@ -135,15 +135,19 @@ const buildTaskUpdatePayload = (
   };
 };
 
-const buildStatusUpdatePayload = (status: TaskStatus): TaskStatusUpdateRequest => {
+const buildStatusUpdatePayload = (status: TaskStatus, task?: ApiTask): TaskStatusUpdateRequest => {
   if (status === 'completed') {
     return {
       status: 'DONE',
-      actualStartDate: today,
+      actualStartDate: task?.actualStartDate || today,
       actualEndDate: today,
     };
   }
-  return { status: mapFeatureStatusToApi(status) };
+  const payload: TaskStatusUpdateRequest = { status: mapFeatureStatusToApi(status) };
+  if (status === 'in-progress') {
+    payload.actualStartDate = task?.actualStartDate || today;
+  }
+  return payload;
 };
 
 export function useTaskWorkspace() {
@@ -356,8 +360,9 @@ export function useTaskWorkspace() {
       toast.error('Invalid task ID');
       return;
     }
+    const task = apiTasksData?.items?.find((t) => t.taskId === id);
     updateStatusMutation.mutate(
-      { id, data: buildStatusUpdatePayload(newStatus) },
+      { id, data: buildStatusUpdatePayload(newStatus, task) },
       {
         onSuccess: () => toast.success('Task status updated'),
         onError: (err) => toast.error('Failed to update', { description: err.message }),
@@ -386,12 +391,13 @@ export function useTaskWorkspace() {
     setIsBulkApplying(true);
     try {
       const results = await Promise.allSettled(
-        selectedIds.map((id) =>
-          updateStatusMutation.mutateAsync({
+        selectedIds.map((id) => {
+          const task = apiTasksData?.items?.find(t => t.taskId === id);
+          return updateStatusMutation.mutateAsync({
             id,
-            data: buildStatusUpdatePayload('completed'),
-          })
-        )
+            data: buildStatusUpdatePayload('completed', task),
+          });
+        })
       );
 
       const failedTaskIds: string[] = [];
@@ -461,9 +467,10 @@ export function useTaskWorkspace() {
         }
       });
       if (data.status) {
+        const task = apiTasksData?.items?.find((t) => t.taskId === id);
         await updateStatusMutation.mutateAsync({
           id,
-          data: buildStatusUpdatePayload(mapApiStatusToFeature(data.status))
+          data: buildStatusUpdatePayload(mapApiStatusToFeature(data.status), task)
         });
       }
       toast.success('Task updated successfully');
@@ -482,9 +489,11 @@ export function useTaskWorkspace() {
     const id = parseInt(taskId, 10);
     if (Number.isNaN(id) || id <= 0) return;
 
+    const task = apiTasksData?.items?.find((t) => t.taskId === id);
+
     updateStatusMutation.mutate({
       id,
-      data: buildStatusUpdatePayload('completed')
+      data: buildStatusUpdatePayload('completed', task)
     }, {
       onSuccess: () => toast.success('Task marked as complete'),
       onError: (err) => toast.error('Failed to complete task', { description: err.message })

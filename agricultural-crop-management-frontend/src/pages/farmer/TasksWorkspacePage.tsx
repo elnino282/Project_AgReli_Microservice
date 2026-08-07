@@ -80,7 +80,10 @@ export function TasksWorkspacePage() {
 
   // Start task mutation
   const startTaskMutation = useMutation({
-    mutationFn: (id: number) => taskApi.updateStatus(id, { status: 'IN_PROGRESS' }),
+    mutationFn: (id: number) => taskApi.updateStatus(id, { 
+      status: 'IN_PROGRESS', 
+      actualStartDate: new Date().toISOString().split('T')[0] 
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.listWorkspace() });
       toast.success(t('tasks.toast.startSuccess'));
@@ -94,8 +97,12 @@ export function TasksWorkspacePage() {
 
   // Complete task mutation
   const completeTaskMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: { actualEndDate?: string } }) =>
-      taskApi.updateStatus(id, { status: 'DONE', actualEndDate: data.actualEndDate }),
+    mutationFn: ({ id, data }: { id: number; data: { actualEndDate?: string; actualStartDate?: string } }) =>
+      taskApi.updateStatus(id, { 
+        status: 'DONE', 
+        actualEndDate: data.actualEndDate,
+        actualStartDate: data.actualStartDate
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.listWorkspace() });
       toast.success(t('tasks.toast.completeSuccess'));
@@ -143,9 +150,14 @@ export function TasksWorkspacePage() {
 
   const handleCompleteTask = () => {
     if (selectedTaskId && completionDate) {
+      const task = items.find((t) => t.taskId === selectedTaskId);
+      const actualStartDate = task?.actualStartDate || new Date().toISOString().split('T')[0];
       completeTaskMutation.mutate({
         id: selectedTaskId,
-        data: { actualEndDate: completionDate },
+        data: { 
+          actualEndDate: completionDate,
+          actualStartDate
+        },
       });
     }
   };
