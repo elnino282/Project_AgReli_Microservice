@@ -43,6 +43,11 @@ public class PublicInternalLookupController {
         return productWarehouseBridgeService.getSupplyItemName(id);
     }
 
+    @GetMapping("/supplies/available-names")
+    public List<String> getAvailableSupplyNames(@RequestParam List<Integer> farmIds) {
+        return productWarehouseBridgeService.getAvailableSupplyNames(farmIds);
+    }
+
     @GetMapping("/supplies/lots/{id}/batch-code")
     public String getSupplyLotBatchCode(@PathVariable Integer id) {
         return productWarehouseBridgeService.getSupplyLotBatchCode(id);

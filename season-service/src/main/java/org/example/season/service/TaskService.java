@@ -100,6 +100,7 @@ public class TaskService {
                 .actualEndDate(task.getActualEndDate())
                 .notes(task.getNotes())
                 .userId(task.getUserId())
+                .baseWage(task.getBaseWage())
                 .createdAt(task.getCreatedAt())
                 .build();
     }

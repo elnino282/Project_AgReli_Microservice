@@ -293,6 +293,36 @@ public class ProductWarehouseBridgeService {
                         && balance.getQuantity().compareTo(BigDecimal.ZERO) > 0);
     }
 
+    @Transactional(readOnly = true)
+    public List<String> getAvailableSupplyNames(List<Integer> farmIds) {
+        if (farmIds == null || farmIds.isEmpty()) {
+            return List.of();
+        }
+        List<Integer> warehouseIds = warehouseRepository.findByFarmIdIn(farmIds).stream()
+                .map(Warehouse::getId)
+                .toList();
+        if (warehouseIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<Integer> availableItemIds = inventoryBalanceRepository.findAll().stream()
+                .filter(balance -> warehouseIds.contains(balance.getWarehouseId())
+                        && balance.getQuantity() != null
+                        && balance.getQuantity().compareTo(BigDecimal.ZERO) > 0)
+                .map(balance -> {
+                    var lot = supplyLotRepository.findById(balance.getSupplyLotId()).orElse(null);
+                    return lot != null ? lot.getSupplyItemId() : null;
+                })
+                .filter(id -> id != null)
+                .distinct()
+                .toList();
+
+        return availableItemIds.stream()
+                .map(id -> supplyItemRepository.findById(id).map(item -> item.getName()).orElse(null))
+                .filter(name -> name != null)
+                .toList();
+    }
+
     private Warehouse resolveWarehouseForHarvestReceipt(ReceiveHarvestRequest request) {
         if (request.getWarehouseId() != null) {
             Warehouse warehouse = warehouseRepository.findById(request.getWarehouseId())

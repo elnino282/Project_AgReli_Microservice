@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { sendAiChatMessage, type AiChatSource } from '@/entities/ai/api/aiChatService';
+import { type AiChatSource } from '@/entities/ai/api/aiChatService';
+import { aiApi } from '@/entities/ai/api/client';
 import type { AiChatMessage, AiChatRole } from './useAiChatSession';
 
 type BuyerAiChatSessionOptions = {
@@ -25,21 +26,7 @@ const createMessage = (
     ...(sources?.length ? { sources } : {}),
 });
 
-function buildContextualMessage(userMessage: string, buyerContext?: string | null) {
-    const trimmedContext = buyerContext?.trim();
-
-    if (!trimmedContext) {
-        return userMessage;
-    }
-
-    return [
-        'Boi canh san pham/nguoi mua:',
-        trimmedContext,
-        '',
-        'Cau hoi:',
-        userMessage,
-    ].join('\n');
-}
+// Context builder removed as the new API takes userMessage and buyerContext separately.
 
 export function useBuyerAiChatSession(options: BuyerAiChatSessionOptions = {}) {
     const welcomeMessage = options.welcomeMessage ?? DEFAULT_WELCOME_MESSAGE;
@@ -64,9 +51,12 @@ export function useBuyerAiChatSession(options: BuyerAiChatSessionOptions = {}) {
         setIsSending(true);
 
         try {
-            const response = await sendAiChatMessage(buildContextualMessage(trimmedMessage, buyerContext));
-            const assistantText = response.answer?.trim() || fallbackMessage;
-            const assistantMessage = createMessage('assistant', assistantText, response.sources);
+            const response = await aiApi.buyerChat({
+                userMessage: trimmedMessage,
+                buyerContext: buyerContext ?? undefined
+            });
+            const assistantText = response.assistantMessage?.trim() || fallbackMessage;
+            const assistantMessage = createMessage('assistant', assistantText, []);
             setMessages((prev) => [...prev, assistantMessage]);
             return assistantMessage;
         } catch {

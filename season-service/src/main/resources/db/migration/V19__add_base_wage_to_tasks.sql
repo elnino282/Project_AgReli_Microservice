@@ -1,0 +1,1 @@
+ALTER TABLE tasks ADD COLUMN base_wage DECIMAL(19,2) NULL;

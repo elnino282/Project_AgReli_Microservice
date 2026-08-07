@@ -265,6 +265,7 @@ services:
       APP_IDENTITY_SERVICE_URL: http://identity-service:8081
       APP_INVENTORY_SERVICE_URL: http://inventory-service:8086
       APP_MONOLITH_SERVICE_URL: http://api-gateway:8080
+      APP_AI_SERVICE_URL: http://ai-service:8083
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbituser}
@@ -285,6 +286,8 @@ services:
         condition: service_healthy
       farm-service:
         condition: service_started
+      ai-service:
+        condition: service_healthy
 
   inventory-service:
     build:

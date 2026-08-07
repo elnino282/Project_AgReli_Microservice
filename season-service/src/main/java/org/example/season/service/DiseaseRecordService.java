@@ -55,6 +55,7 @@ public class DiseaseRecordService {
     ExternalServiceClient externalServiceClient;
     AuditLogService auditLogService;
     DiseaseRecordMapper diseaseRecordMapper;
+    org.example.season.client.AiServiceClient aiServiceClient;
 
     public PageResponse<DiseaseRecordResponse> listDiseaseRecordsBySeason(
             Integer seasonId,
@@ -528,6 +529,64 @@ public class DiseaseRecordService {
         ensureSeasonOpenForDiseaseWrite(season, false);
         diseaseTreatmentRepository.delete(treatment);
         logTreatmentAudit("DISEASE_TREATMENT_DELETED", treatment);
+    }
+
+    public org.example.season.dto.response.DiseaseSuggestionResponse generateAiSuggestion(Integer id, org.example.season.dto.request.DiseaseSuggestionRequest request) {
+        DiseaseRecord diseaseRecord = diseaseRecordRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.DISEASE_RECORD_NOT_FOUND));
+        Season season = resolveSeasonOfRecord(diseaseRecord);
+        seasonWorkspaceAccessService.assertCurrentUserCanAccessSeason(season);
+        return generateAiSuggestionInternal(diseaseRecord, season, request);
+    }
+
+    public org.example.season.dto.response.DiseaseSuggestionResponse generateAiSuggestionForAssignedEmployee(Integer id, org.example.season.dto.request.DiseaseSuggestionRequest request) {
+        DiseaseRecord diseaseRecord = diseaseRecordRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.DISEASE_RECORD_NOT_FOUND));
+        Season season = resolveSeasonOfRecord(diseaseRecord);
+        seasonWorkspaceAccessService.requireActiveEmployeeAssignment(season);
+        return generateAiSuggestionInternal(diseaseRecord, season, request);
+    }
+
+    private org.example.season.dto.response.DiseaseSuggestionResponse generateAiSuggestionInternal(DiseaseRecord diseaseRecord, Season season, org.example.season.dto.request.DiseaseSuggestionRequest request) {
+        ExternalServiceClient.CropInternalDto crop = externalServiceClient.getCrop(season.getCropId());
+        String cropName = crop != null ? crop.getCropName() : null;
+
+        List<String> availableSupplies = null;
+        if (Boolean.TRUE.equals(request.getIncludeInventory())) {
+            Integer farmId = seasonWorkspaceAccessService.resolveSeasonFarmId(season);
+            try {
+                availableSupplies = externalServiceClient.getAvailableSupplyNames(String.valueOf(farmId));
+            } catch (Exception e) {
+                // Ignore inventory fetch error
+            }
+        }
+
+        org.example.season.client.AiServiceClient.InternalDiseaseSuggestionRequest aiRequest = org.example.season.client.AiServiceClient.InternalDiseaseSuggestionRequest.builder()
+                .cropName(cropName)
+                .diseaseName(diseaseRecord.getDiseaseName())
+                .severity(diseaseRecord.getSeverity() != null ? diseaseRecord.getSeverity().name() : null)
+                .notes(diseaseRecord.getNotes())
+                .availableSupplies(availableSupplies)
+                .additionalNote(request.getAdditionalNote())
+                .question(request.getQuestion())
+                .build();
+
+        org.example.season.dto.common.ApiResponse<String> aiResponse = aiServiceClient.generateDiseaseTreatmentSuggestion(aiRequest);
+        
+        Map<String, Object> contextSummary = new LinkedHashMap<>();
+        contextSummary.put("cropName", cropName);
+        contextSummary.put("diseaseName", diseaseRecord.getDiseaseName());
+        contextSummary.put("includeInventory", request.getIncludeInventory());
+        if (availableSupplies != null) {
+            contextSummary.put("inventorySuppliesCount", availableSupplies.size());
+        }
+
+        return org.example.season.dto.response.DiseaseSuggestionResponse.builder()
+                .diseaseRecordId(diseaseRecord.getId())
+                .suggestionText(aiResponse.getData())
+                .usedContextSummary(contextSummary)
+                .generatedAt(java.time.Instant.now())
+                .build();
     }
 
     private Specification<DiseaseRecord> buildRecordSpecification(

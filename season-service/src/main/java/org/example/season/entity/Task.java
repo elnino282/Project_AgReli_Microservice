@@ -98,6 +98,9 @@ public class Task {
     @Column(name = "estimated_days")
     Integer estimatedDays;
 
+    @Column(name = "base_wage")
+    BigDecimal baseWage;
+
     @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     LocalDateTime createdAt;
 

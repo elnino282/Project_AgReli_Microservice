@@ -175,7 +175,7 @@ export function ListView({
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               className="cursor-pointer" 
-                              disabled={disableMutations}
+                              disabled={disableMutations || task.status === 'completed'}
                               onClick={() => !disableMutations && onReassign?.(task.id)}
                             >
                               <Users className="w-4 h-4 mr-2" />
@@ -183,7 +183,7 @@ export function ListView({
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               className="cursor-pointer" 
-                              disabled={disableMutations}
+                              disabled={disableMutations || task.status === 'completed'}
                               onClick={() => !disableMutations && onChangeDueDate?.(task.id)}
                             >
                               <Calendar className="w-4 h-4 mr-2" />

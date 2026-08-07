@@ -2,6 +2,7 @@ package org.example.season.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -61,4 +62,9 @@ public class CreateTaskRequest {
      * Optional estimated number of days to complete the task.
      */
     Integer estimatedDays;
+
+    /**
+     * Optional base wage for the task.
+     */
+    BigDecimal baseWage;
 }

@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { sendAiChatMessage, type AiChatSource } from '@/entities/ai/api/aiChatService';
+import { type AiChatSource } from '@/entities/ai/api/aiChatService';
+import { aiApi } from '@/entities/ai/api/client';
 
 export type AiChatRole = 'assistant' | 'user';
 
@@ -34,21 +35,7 @@ const createMessage = (
     ...(sources?.length ? { sources } : {}),
 });
 
-function buildContextualMessage(userMessage: string, cropContext?: string | null) {
-    const trimmedContext = cropContext?.trim();
-
-    if (!trimmedContext) {
-        return userMessage;
-    }
-
-    return [
-        'Boi canh mua vu/cay trong:',
-        trimmedContext,
-        '',
-        'Cau hoi:',
-        userMessage,
-    ].join('\n');
-}
+// Context builder removed as the new API takes userMessage and cropContext separately.
 
 export function useAiChatSession(options: AiChatSessionOptions = {}) {
     const welcomeMessage = options.welcomeMessage ?? DEFAULT_WELCOME_MESSAGE;
@@ -73,9 +60,12 @@ export function useAiChatSession(options: AiChatSessionOptions = {}) {
         setIsSending(true);
 
         try {
-            const response = await sendAiChatMessage(buildContextualMessage(trimmedMessage, cropContext));
-            const assistantText = response.answer?.trim() || fallbackMessage;
-            const assistantMessage = createMessage('assistant', assistantText, response.sources);
+            const response = await aiApi.chat({
+                userMessage: trimmedMessage,
+                cropContext: cropContext ?? undefined
+            });
+            const assistantText = response.assistantMessage?.trim() || fallbackMessage;
+            const assistantMessage = createMessage('assistant', assistantText, []);
             setMessages((prev) => [...prev, assistantMessage]);
             return assistantMessage;
         } catch {

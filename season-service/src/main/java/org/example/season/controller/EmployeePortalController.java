@@ -117,4 +117,11 @@ public class EmployeePortalController {
             @RequestParam(value = "size", defaultValue = "20") int size) {
         return ApiResponse.success(diseaseRecordService.listDiseaseRecordsByAssignedEmployeeSeason(seasonId, status, severity, q, fromDetectedAt, toDetectedAt, page, size));
     }
+
+    @PostMapping("/disease-records/{id}/ai-suggestion")
+    public ApiResponse<org.example.season.dto.response.DiseaseSuggestionResponse> generateAiSuggestionForAssignedEmployee(
+            @PathVariable Integer id,
+            @RequestBody org.example.season.dto.request.DiseaseSuggestionRequest request) {
+        return ApiResponse.success(diseaseRecordService.generateAiSuggestionForAssignedEmployee(id, request));
+    }
 }

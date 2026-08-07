@@ -453,17 +453,19 @@ export function useTaskWorkspace() {
     const id = typeof taskId === 'string' ? parseInt(taskId, 10) : taskId;
     if (Number.isNaN(id) || id <= 0) return;
 
+    const existingTask = apiTasksData?.items?.find((t) => t.taskId === id);
+
     try {
       await updateTaskMutation.mutateAsync({
         id,
         data: {
-          title: data.title,
-          description: data.description,
-          seasonId: data.seasonId,
-          plannedDate: data.plannedDate,
-          dueDate: data.dueDate,
-          notes: data.notes,
-          assigneeUserId: data.assigneeUserId,
+          title: data.title ?? existingTask?.title ?? '',
+          description: data.description !== undefined ? data.description : existingTask?.description,
+          seasonId: data.seasonId !== undefined ? data.seasonId : existingTask?.seasonId,
+          plannedDate: data.plannedDate !== undefined ? data.plannedDate : existingTask?.plannedDate,
+          dueDate: data.dueDate !== undefined ? data.dueDate : existingTask?.dueDate,
+          notes: data.notes !== undefined ? data.notes : existingTask?.notes,
+          assigneeUserId: data.assigneeUserId !== undefined ? data.assigneeUserId : existingTask?.userId,
         }
       });
       if (data.status) {
@@ -539,6 +541,7 @@ export function useTaskWorkspace() {
     assigneeUserIds?: number[];
     workTeamIds?: number[];
     estimatedDays?: number;
+    baseWage?: number;
   }) => {
     // Always use pinned season from workspace context
     const effectiveSeasonId = seasonId;
@@ -567,6 +570,7 @@ export function useTaskWorkspace() {
       description: data.description,
       plotId: data.plotId,
       estimatedDays: data.estimatedDays,
+      baseWage: data.baseWage,
     };
 
     if (data.assigneeUserIds && data.assigneeUserIds.length > 0) {

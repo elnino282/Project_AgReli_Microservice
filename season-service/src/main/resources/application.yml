@@ -78,5 +78,4 @@ app:
   monolith-service-url: ${APP_MONOLITH_SERVICE_URL:http://localhost:8080}
   inventory-service-url: ${APP_INVENTORY_SERVICE_URL:http://localhost:8086}
   sustainability-service-url: ${APP_SUSTAINABILITY_SERVICE_URL:http://localhost:8088}
-
-
+  ai-service-url: ${APP_AI_SERVICE_URL:http://localhost:8083}

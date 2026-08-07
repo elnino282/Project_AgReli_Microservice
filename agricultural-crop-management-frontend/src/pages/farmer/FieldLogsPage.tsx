@@ -454,7 +454,7 @@ export function FieldLogsPage() {
             {selectedSeasonId && (
                 <>
                     {/* Summary Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <Card>
                             <CardContent className="px-6 py-4">
                                 <div className="text-2xl font-bold text-primary">{summaryStats.total}</div>

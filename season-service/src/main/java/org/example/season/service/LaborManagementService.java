@@ -717,7 +717,16 @@ public class LaborManagementService {
         BigDecimal wagePerTask = seasonEmployee.getWagePerTask() != null
                 ? seasonEmployee.getWagePerTask()
                 : DEFAULT_WAGE_PER_TASK;
-        BigDecimal totalAmount = wagePerTask.multiply(BigDecimal.valueOf(totalCompleted));
+
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        for (Task task : periodTasks) {
+            if (task.getStatus() == TaskStatus.DONE) {
+                BigDecimal taskWage = task.getBaseWage() != null 
+                        ? task.getBaseWage() 
+                        : wagePerTask;
+                totalAmount = totalAmount.add(taskWage);
+            }
+        }
 
         PayrollRecord payrollRecord = payrollRecordRepository
                 .findByEmployeeUserIdAndSeasonIdAndPeriodStartAndPeriodEnd(
@@ -928,6 +937,7 @@ public class LaborManagementService {
                 .estimatedCompletionDate(task.getEstimatedCompletionDate())
                 .plotName(task.getPlotName())
                 .plotArea(task.getPlotArea())
+                .baseWage(task.getBaseWage())
                 .createdAt(task.getCreatedAt())
                 .build();
     }

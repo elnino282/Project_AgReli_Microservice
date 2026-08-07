@@ -451,6 +451,7 @@ public class TaskWorkspaceService {
                 .seasonName(task.getSeason() != null ? task.getSeason().getSeasonName() : null)
                 .userId(task.getUserId())
                 .userName(username)
+                .baseWage(task.getBaseWage())
                 .createdAt(task.getCreatedAt())
                 .build();
     }

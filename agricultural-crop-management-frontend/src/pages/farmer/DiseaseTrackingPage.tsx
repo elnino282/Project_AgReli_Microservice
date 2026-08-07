@@ -79,6 +79,7 @@ import { isAxiosError } from "axios";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
 
 interface LocalizedOption {
   value: string;
@@ -1328,9 +1329,11 @@ export function DiseaseTrackingPage() {
                                     {t("diseaseTracking.detail.ai.generatedAt")}:{" "}
                                     {formatDateTime(aiSuggestionForActiveRecord.generatedAt, locale)}
                                   </p>
-                                  <p className="text-sm whitespace-pre-wrap leading-6">
-                                    {aiSuggestionForActiveRecord.suggestionText}
-                                  </p>
+                                  <div className="text-sm prose prose-sm dark:prose-invert max-w-none leading-6">
+                                    <ReactMarkdown>
+                                      {aiSuggestionForActiveRecord.suggestionText}
+                                    </ReactMarkdown>
+                                  </div>
                                   <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
                                     {aiSuggestionForActiveRecord.warning ?? aiDisclaimerText}
                                   </div>

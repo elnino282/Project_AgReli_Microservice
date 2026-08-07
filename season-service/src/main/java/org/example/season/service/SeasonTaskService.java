@@ -133,6 +133,7 @@ public class SeasonTaskService {
                 .plotId(request.getPlotId())
                 .workTeamId(request.getWorkTeamId())
                 .estimatedDays(request.getEstimatedDays())
+                .baseWage(request.getBaseWage())
                 .build();
 
         Task saved = taskRepository.save(task);
@@ -393,6 +394,7 @@ public class SeasonTaskService {
                 .plotId(task.getPlotId())
                 .workTeamId(task.getWorkTeamId())
                 .estimatedDays(task.getEstimatedDays())
+                .baseWage(task.getBaseWage())
                 .createdAt(task.getCreatedAt())
                 .build();
     }

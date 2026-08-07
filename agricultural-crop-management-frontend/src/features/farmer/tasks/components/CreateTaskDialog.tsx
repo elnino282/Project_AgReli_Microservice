@@ -44,6 +44,7 @@ interface CreateTaskDialogProps {
     assigneeUserIds?: number[];
     workTeamIds?: number[];
     estimatedDays?: number;
+    baseWage?: number;
   }) => void;
   seasonId?: number;
   hideSeasonSelector?: boolean;
@@ -86,6 +87,7 @@ export function CreateTaskDialog({
   const [assignees, setAssignees] = useState<string[]>([]);
   const [workTeams, setWorkTeams] = useState<string[]>([]);
   const [estimatedDays, setEstimatedDays] = useState<number | "">("");
+  const [baseWage, setBaseWage] = useState<number | "">("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const effectiveSeasonId = seasonId ?? selectedSeasonId ?? null;
 
@@ -116,6 +118,7 @@ export function CreateTaskDialog({
       setAssignees([]);
       setWorkTeams([]);
       setEstimatedDays("");
+      setBaseWage("");
       setErrors({});
     } else {
       // Pre-select the currently active season if available
@@ -167,6 +170,7 @@ export function CreateTaskDialog({
       assigneeUserIds: assigneeType === "employee" && assignees.length > 0 ? assignees.map(Number) : undefined,
       workTeamIds: assigneeType === "team" && workTeams.length > 0 ? workTeams.map(Number) : undefined,
       estimatedDays: estimatedDays ? Number(estimatedDays) : undefined,
+      baseWage: baseWage ? Number(baseWage) : undefined,
     });
   };
 
@@ -435,6 +439,19 @@ export function CreateTaskDialog({
               value={estimatedDays}
               onChange={(e) => setEstimatedDays(e.target.value ? Number(e.target.value) : "")}
               placeholder="e.g., 2"
+            />
+          </div>
+
+          {/* Base Wage */}
+          <div className="space-y-2">
+            <Label htmlFor="task-base-wage">Tiền công (VND)</Label>
+            <Input
+              id="task-base-wage"
+              type="number"
+              min={0}
+              value={baseWage}
+              onChange={(e) => setBaseWage(e.target.value ? Number(e.target.value) : "")}
+              placeholder="Nhập tiền công (tùy chọn)"
             />
           </div>
 

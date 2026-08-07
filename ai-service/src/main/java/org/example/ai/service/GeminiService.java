@@ -42,8 +42,10 @@ public class GeminiService {
     private static final String API_VERSION = "v1beta";
     private static final String SYSTEM_PROMPT_RESOURCE = "prompts/system_prompt.txt";
     private static final String BUYER_SYSTEM_PROMPT_RESOURCE = "prompts/system_prompt_buyer.txt";
+    private static final String DISEASE_TREATMENT_PROMPT_RESOURCE = "prompts/disease_treatment_prompt.txt";
     private static final String SYSTEM_PROMPT = loadSystemPrompt(SYSTEM_PROMPT_RESOURCE);
     private static final String BUYER_SYSTEM_PROMPT = loadSystemPrompt(BUYER_SYSTEM_PROMPT_RESOURCE);
+    private static final String DISEASE_TREATMENT_PROMPT = loadSystemPrompt(DISEASE_TREATMENT_PROMPT_RESOURCE);
     private static final String[] API_KEY_ENV_KEYS = new String[] {
             "APP_AI_API_KEY",
             "GEMINI_API_KEY",
@@ -289,6 +291,42 @@ public class GeminiService {
         } catch (Exception ex) {
             logUnexpectedException(requestId, ex);
             throw new IllegalStateException("Gemini API error during harvest prediction", ex);
+        }
+    }
+
+    public String generateDiseaseTreatmentSuggestion(org.example.ai.dto.request.InternalDiseaseSuggestionRequest request) {
+        String requestId = UUID.randomUUID().toString();
+        if (!aiEnabled) {
+            log.warn("Gemini disease suggestion skipped because AI is disabled (requestId={}).", requestId);
+            throw new IllegalStateException("Gemini AI is disabled");
+        }
+
+        String prompt = DISEASE_TREATMENT_PROMPT
+                .replace("{{cropName}}", request.getCropName() != null ? request.getCropName() : "Không có")
+                .replace("{{diseaseName}}", request.getDiseaseName() != null ? request.getDiseaseName() : "Không có")
+                .replace("{{severity}}", request.getSeverity() != null ? request.getSeverity() : "Không có")
+                .replace("{{notes}}", request.getNotes() != null && !request.getNotes().isBlank() ? request.getNotes() : "Không có")
+                .replace("{{additionalNote}}", request.getAdditionalNote() != null && !request.getAdditionalNote().isBlank() ? request.getAdditionalNote() : "Không có")
+                .replace("{{question}}", request.getQuestion() != null && !request.getQuestion().isBlank() ? request.getQuestion() : "Không có")
+                .replace("{{availableSupplies}}", request.getAvailableSupplies() != null && !request.getAvailableSupplies().isEmpty() ? String.join(", ", request.getAvailableSupplies()) : "Không có");
+
+        GenerateContentConfig config = GenerateContentConfig.builder()
+                .temperature(0.3F)
+                .maxOutputTokens(1024)
+                .build();
+                
+        Content content = Content.fromParts(Part.fromText(prompt));
+
+        try {
+            GenerateContentResponse response = client.models.generateContent(model, content, config);
+            String text = response.text();
+            if (text == null || text.isBlank()) {
+                throw new IllegalStateException("Empty response from Gemini");
+            }
+            return text;
+        } catch (Exception ex) {
+            logUnexpectedException(requestId, ex);
+            throw new IllegalStateException("Gemini API error during disease suggestion", ex);
         }
     }
 

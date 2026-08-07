@@ -150,9 +150,9 @@ export function TaskCard({ task, onEdit, onComplete, onReassign, onDelete, disab
 
         <div className="flex items-center justify-between pt-2">
           <Avatar 
-            className={`h-6 w-6 ${disableMutations ? '' : 'cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all'}`}
+            className={`h-6 w-6 ${disableMutations || task.status === 'completed' ? '' : 'cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all'}`}
             onClick={(e) => {
-              if (disableMutations) return;
+              if (disableMutations || task.status === 'completed') return;
               e.stopPropagation();
               onReassign?.(task.id);
             }}

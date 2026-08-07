@@ -31,6 +31,12 @@ public class InventoryServiceClientFallback implements InventoryServiceClient {
     }
 
     @Override
+    public java.util.List<String> getAvailableSupplyNames(String farmIdsCsv) {
+        log.error("Fallback triggered: Failed to get available supply names for farms {}", farmIdsCsv);
+        return java.util.Collections.emptyList();
+    }
+
+    @Override
     public String getSupplyLotBatchCode(Integer lotId) {
         log.error("Fallback triggered: Failed to get supply lot batch code {}", lotId);
         return null;

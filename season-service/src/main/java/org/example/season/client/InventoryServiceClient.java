@@ -26,6 +26,9 @@ public interface InventoryServiceClient {
     @GetMapping("/api/v1/public/lookup/supplies/validate-item")
     ValidationResultDto validateSupplyItem(@RequestParam("itemId") Integer itemId, @RequestParam("farmIds") String farmIdsCsv);
 
+    @GetMapping("/api/v1/public/lookup/supplies/available-names")
+    List<String> getAvailableSupplyNames(@RequestParam("farmIds") String farmIdsCsv);
+
     @GetMapping("/api/v1/public/lookup/supplies/items/{itemId}/name")
     String getSupplyItemName(@PathVariable("itemId") Integer itemId);
 

@@ -60,6 +60,12 @@ public class AiController {
         return ApiResponse.success(result);
     }
 
+    @PostMapping("/internal/ai/disease-suggestion")
+    public ApiResponse<String> diseaseSuggestion(@RequestBody org.example.ai.dto.request.InternalDiseaseSuggestionRequest request) {
+        String result = geminiService.generateDiseaseTreatmentSuggestion(request);
+        return ApiResponse.success(result);
+    }
+
     @PreAuthorize("hasRole('FARMER')")
     @PostMapping("/farmer/ai/diagnose-disease")
     public ApiResponse<String> diagnoseDisease(@RequestBody InternalImageAnalysisRequest request) {

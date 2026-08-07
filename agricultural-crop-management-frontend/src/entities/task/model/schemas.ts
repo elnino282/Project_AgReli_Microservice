@@ -60,6 +60,7 @@ export const TaskSchema = z.object({
     workTeamId: z.number().int().positive().optional().nullable(),
     estimatedDays: z.number().int().positive().optional().nullable(),
     createdAt: z.string().optional().nullable(),  // Accept any datetime string or null from backend
+    baseWage: z.number().optional().nullable(),
 });
 
 export type Task = z.infer<typeof TaskSchema>;
@@ -79,6 +80,7 @@ export const TaskCreateRequestSchema = z.object({
     plotId: z.number().int().positive().optional(),
     workTeamId: z.number().int().positive().optional(),
     estimatedDays: z.number().positive().optional(),
+    baseWage: z.number().min(0).optional(),
 });
 
 export type TaskCreateRequest = z.infer<typeof TaskCreateRequestSchema>;

@@ -109,4 +109,11 @@ public class DiseaseRecordController {
         diseaseRecordService.deleteTreatment(id);
         return ApiResponse.success(null);
     }
+
+    @PostMapping("/disease-records/{id}/ai-suggestion")
+    public ApiResponse<org.example.season.dto.response.DiseaseSuggestionResponse> generateAiSuggestion(
+            @PathVariable Integer id,
+            @RequestBody org.example.season.dto.request.DiseaseSuggestionRequest request) {
+        return ApiResponse.success(diseaseRecordService.generateAiSuggestion(id, request));
+    }
 }

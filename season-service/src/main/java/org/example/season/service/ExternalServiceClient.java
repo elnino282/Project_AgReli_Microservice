@@ -57,6 +57,10 @@ public class ExternalServiceClient {
         return inventoryServiceClient.getSupplyItemName(itemId);
     }
 
+    public List<String> getAvailableSupplyNames(String farmIdsCsv) {
+        return inventoryServiceClient.getAvailableSupplyNames(farmIdsCsv);
+    }
+
     public String getSupplyLotBatchCode(Integer lotId) {
         return inventoryServiceClient.getSupplyLotBatchCode(lotId);
     }

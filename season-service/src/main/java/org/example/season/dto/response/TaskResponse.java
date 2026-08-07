@@ -36,5 +36,6 @@ public class TaskResponse {
     LocalDate estimatedCompletionDate;
     String plotName;
     java.math.BigDecimal plotArea;
+    java.math.BigDecimal baseWage;
     LocalDateTime createdAt;
 }
