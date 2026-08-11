@@ -29,6 +29,19 @@ public interface InventoryServiceClient {
     @GetMapping("/api/v1/public/lookup/supplies/available-names")
     List<String> getAvailableSupplyNames(@RequestParam("farmIds") String farmIdsCsv);
 
+    @GetMapping("/api/v1/public/lookup/supplies/available-details")
+    List<SupplyContextDto> getAvailableSupplyDetails(@RequestParam("farmIds") String farmIdsCsv);
+
+    @lombok.Data
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    class SupplyContextDto {
+        private Integer id;
+        private String name;
+        private String activeIngredient;
+        private Boolean restrictedFlag;
+    }
+
     @GetMapping("/api/v1/public/lookup/supplies/items/{itemId}/name")
     String getSupplyItemName(@PathVariable("itemId") Integer itemId);
 

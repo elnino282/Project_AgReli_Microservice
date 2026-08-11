@@ -68,6 +68,26 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException ex, HttpServletRequest request) {
+        log.warn("Illegal state on request: {} - message: {}", request.getRequestURI(), ex.getMessage());
+
+        boolean aiDisabled = ex.getMessage() != null && ex.getMessage().toLowerCase().contains("disabled");
+        HttpStatus status = aiDisabled ? HttpStatus.SERVICE_UNAVAILABLE : HttpStatus.INTERNAL_SERVER_ERROR;
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(status.value())
+                .error(status.getReasonPhrase())
+                .message(aiDisabled
+                        ? "Dịch vụ AI hiện chưa được cấu hình (thiếu API key). Vui lòng liên hệ quản trị viên."
+                        : "Dịch vụ AI gặp sự cố khi xử lý yêu cầu.")
+                .path(request.getRequestURI())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        return ResponseEntity.status(status).body(errorResponse);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
         log.error("Unhandled exception on request: {}", request.getRequestURI(), ex);

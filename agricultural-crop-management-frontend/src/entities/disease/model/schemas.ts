@@ -97,6 +97,13 @@ export const DiseaseSuggestionResponseSchema = z.object({
   usedContextSummary: z.record(z.unknown()).optional(),
   generatedAt: z.string(),
   warning: z.string().optional(),
+  matchedFromInventory: z.boolean().nullable().optional(),
+  matchedSupplyName: z.string().nullable().optional(),
+  recommendedProductName: z.string().nullable().optional(),
+  recommendedActiveIngredient: z.string().nullable().optional(),
+  summary: z.string().nullable().optional(),
+  safetyNotes: z.string().nullable().optional(),
+  usageInstructions: z.string().nullable().optional(),
 });
 
 export const DiseaseRecordCreateRequestSchema = z.object({

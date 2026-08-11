@@ -25,4 +25,12 @@ public class DiseaseSuggestionResponse {
     Instant generatedAt;
     
     String warning;
+
+    Boolean matchedFromInventory;
+    String matchedSupplyName;
+    String recommendedProductName;
+    String recommendedActiveIngredient;
+    String summary;
+    String safetyNotes;
+    String usageInstructions;
 }

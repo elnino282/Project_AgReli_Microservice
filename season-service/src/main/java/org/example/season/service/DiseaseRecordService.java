@@ -12,6 +12,7 @@ import java.util.Map;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.example.season.dto.common.PageResponse;
 import org.example.season.enums.DiseaseSeverity;
 import org.example.season.enums.DiseaseStatus;
@@ -46,6 +47,7 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Transactional
+@Slf4j
 public class DiseaseRecordService {
 
     DiseaseRecordRepository diseaseRecordRepository;
@@ -56,6 +58,7 @@ public class DiseaseRecordService {
     AuditLogService auditLogService;
     DiseaseRecordMapper diseaseRecordMapper;
     org.example.season.client.AiServiceClient aiServiceClient;
+    com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     public PageResponse<DiseaseRecordResponse> listDiseaseRecordsBySeason(
             Integer seasonId,
@@ -548,16 +551,26 @@ public class DiseaseRecordService {
     }
 
     private org.example.season.dto.response.DiseaseSuggestionResponse generateAiSuggestionInternal(DiseaseRecord diseaseRecord, Season season, org.example.season.dto.request.DiseaseSuggestionRequest request) {
-        ExternalServiceClient.CropInternalDto crop = externalServiceClient.getCrop(season.getCropId());
-        String cropName = crop != null ? crop.getCropName() : null;
+        String cropName = null;
+        try {
+            ExternalServiceClient.CropInternalDto crop = externalServiceClient.getCrop(season.getCropId());
+            cropName = crop != null ? crop.getCropName() : null;
+        } catch (Exception e) {
+            log.warn("Failed to fetch crop info for AI suggestion (seasonId={}, cropId={}): {}",
+                    season.getId(), season.getCropId(), e.getMessage());
+        }
 
         List<String> availableSupplies = null;
         if (Boolean.TRUE.equals(request.getIncludeInventory())) {
             Integer farmId = seasonWorkspaceAccessService.resolveSeasonFarmId(season);
             try {
-                availableSupplies = externalServiceClient.getAvailableSupplyNames(String.valueOf(farmId));
+                availableSupplies = externalServiceClient.getAvailableSupplyDetails(String.valueOf(farmId)).stream()
+                        .map(item -> item.getActiveIngredient() != null && !item.getActiveIngredient().isBlank()
+                                ? item.getName() + " (hoạt chất: " + item.getActiveIngredient() + ")"
+                                : item.getName())
+                        .toList();
             } catch (Exception e) {
-                // Ignore inventory fetch error
+                log.warn("Failed to fetch inventory details for AI suggestion (farmId={}): {}", farmId, e.getMessage());
             }
         }
 
@@ -572,7 +585,8 @@ public class DiseaseRecordService {
                 .build();
 
         org.example.season.dto.common.ApiResponse<String> aiResponse = aiServiceClient.generateDiseaseTreatmentSuggestion(aiRequest);
-        
+        GeminiDiseaseSuggestionPayload payload = parseAiSuggestionJson(aiResponse.getData());
+
         Map<String, Object> contextSummary = new LinkedHashMap<>();
         contextSummary.put("cropName", cropName);
         contextSummary.put("diseaseName", diseaseRecord.getDiseaseName());
@@ -581,9 +595,20 @@ public class DiseaseRecordService {
             contextSummary.put("inventorySuppliesCount", availableSupplies.size());
         }
 
+        String legacyMarkdown = (payload.getSummary() != null ? "**" + payload.getSummary() + "**\n\n" : "")
+                + (payload.getUsageInstructions() != null ? payload.getUsageInstructions() + "\n\n" : "")
+                + (payload.getSafetyNotes() != null ? "**Lưu ý an toàn:** " + payload.getSafetyNotes() : "");
+
         return org.example.season.dto.response.DiseaseSuggestionResponse.builder()
                 .diseaseRecordId(diseaseRecord.getId())
-                .suggestionText(aiResponse.getData())
+                .suggestionText(legacyMarkdown)
+                .matchedFromInventory(payload.getMatchedFromInventory())
+                .matchedSupplyName(payload.getMatchedSupplyName())
+                .recommendedProductName(payload.getRecommendedProductName())
+                .recommendedActiveIngredient(payload.getRecommendedActiveIngredient())
+                .summary(payload.getSummary())
+                .safetyNotes(payload.getSafetyNotes())
+                .usageInstructions(payload.getUsageInstructions())
                 .usedContextSummary(contextSummary)
                 .generatedAt(java.time.Instant.now())
                 .build();
@@ -851,5 +876,35 @@ public class DiseaseRecordService {
     }
 
     private record ResolvedSupplyReference(Integer supplyItemId, Integer supplyLotId) {
+    }
+
+    private GeminiDiseaseSuggestionPayload parseAiSuggestionJson(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return new GeminiDiseaseSuggestionPayload();
+        }
+        String cleaned = raw.trim();
+        if (cleaned.startsWith("```")) {
+            cleaned = cleaned.replaceAll("^```json\\s*", "").replaceAll("^```\\s*", "").replaceAll("```\\s*$", "");
+        }
+        try {
+            return objectMapper.readValue(cleaned, GeminiDiseaseSuggestionPayload.class);
+        } catch (Exception e) {
+            log.warn("Failed to parse AI disease-suggestion JSON, falling back to raw text: {}", e.getMessage());
+            GeminiDiseaseSuggestionPayload fallback = new GeminiDiseaseSuggestionPayload();
+            fallback.setUsageInstructions(raw);
+            fallback.setSummary("Không thể phân tích cấu trúc phản hồi AI — hiển thị nguyên văn.");
+            return fallback;
+        }
+    }
+
+    @lombok.Data
+    private static class GeminiDiseaseSuggestionPayload {
+        private Boolean matchedFromInventory;
+        private String matchedSupplyName;
+        private String recommendedProductName;
+        private String recommendedActiveIngredient;
+        private String usageInstructions;
+        private String safetyNotes;
+        private String summary;
     }
 }

@@ -3,7 +3,6 @@ import {
   useCreateDiseaseTreatment,
   useDeleteDiseaseRecord,
   useDeleteDiseaseTreatment,
-  useDiseaseAiSuggestion,
   useDiseaseRecordDetail,
   useDiseaseRecords,
   useDiseaseTreatments,
@@ -13,7 +12,6 @@ import {
   type DiseaseRecordCreateRequest,
   type DiseaseRecordUpdateRequest,
   type DiseaseStatus,
-  type DiseaseSuggestionResponse,
   type DiseaseTreatment,
   type DiseaseTreatmentCreateRequest,
   type DiseaseTreatmentUpdateRequest,
@@ -80,6 +78,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import { DiseaseAiAdvisorDialog } from "./components/DiseaseAiAdvisorDialog";
 
 interface LocalizedOption {
   value: string;
@@ -290,7 +289,7 @@ const extractApiErrorPayload = (error: unknown): ApiErrorPayload | null => {
   };
 };
 
-const toReadableError = (
+export const toReadableError = (
   error: unknown,
   translate: (key: string, optionsOrDefault?: Record<string, unknown> | string) => string,
   fallbackKey: string,
@@ -399,10 +398,6 @@ export function DiseaseTrackingPage() {
     diseaseRecordId: number;
     treatmentId: number;
   } | null>(null);
-  const [aiAdditionalNote, setAiAdditionalNote] = useState("");
-  const [aiIncludeInventory, setAiIncludeInventory] = useState(true);
-  const [aiSuggestion, setAiSuggestion] = useState<DiseaseSuggestionResponse | null>(null);
-  const [aiSuggestionError, setAiSuggestionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!hasValidSeasonId) return;
@@ -468,13 +463,6 @@ export function DiseaseTrackingPage() {
   } = useDiseaseTreatments(detailRecordId, { page: 0, size: 100 }, {
     enabled: detailRecordId > 0,
   }, workspaceScope);
-
-  useEffect(() => {
-    setAiSuggestion(null);
-    setAiSuggestionError(null);
-    setAiAdditionalNote("");
-    setAiIncludeInventory(true);
-  }, [detailRecordId]);
 
   const { data: farmerSupplyItems = [] } = useAllSupplyItems({
     enabled: !isEmployeeWorkspace,
@@ -595,35 +583,10 @@ export function DiseaseTrackingPage() {
     },
   }, workspaceScope);
 
-  const aiSuggestionMutation = useDiseaseAiSuggestion({
-    onSuccess: (result) => {
-      setAiSuggestion(result);
-      setAiSuggestionError(null);
-    },
-    onError: (error) => {
-      const message = toReadableError(
-        error,
-        t,
-        "diseaseTracking.errors.aiSuggestionFail",
-        "Unable to generate AI suggestion right now.",
-      );
-      setAiSuggestion(null);
-      setAiSuggestionError(message);
-      toast.error(message);
-    },
-  }, workspaceScope);
-
   const records = recordsData?.items ?? [];
   const treatmentTimeline = treatmentListData?.items ?? [];
   const activeRecordDetail = detailData?.record ?? null;
   const totalTreatmentCost = detailData?.totalTreatmentCost ?? null;
-  const aiSuggestionForActiveRecord = aiSuggestion?.diseaseRecordId === detailRecordId
-    ? aiSuggestion
-    : null;
-  const aiDisclaimerText = t(
-    "diseaseTracking.detail.ai.disclaimer",
-    "Suggestions are for reference only and do not replace expert consultation.",
-  );
   const isMutating =
     createRecordMutation.isPending
     || updateRecordMutation.isPending
@@ -812,26 +775,6 @@ export function DiseaseTrackingPage() {
 
   const toggleRecordDetail = (recordId: number) => {
     setExpandedRecordId((previous) => (previous === recordId ? null : recordId));
-  };
-
-  const handleGenerateAiSuggestion = (recordId: number) => {
-    const trimmedAdditionalNote = aiAdditionalNote.trim();
-    if (trimmedAdditionalNote.length > 4000) {
-      const message = t("diseaseTracking.validation.additionalNoteTooLong");
-      setAiSuggestion(null);
-      setAiSuggestionError(message);
-      toast.error(message);
-      return;
-    }
-    setAiSuggestion(null);
-    setAiSuggestionError(null);
-    aiSuggestionMutation.mutate({
-      id: recordId,
-      data: {
-        includeInventory: aiIncludeInventory,
-        additionalNote: trimmedAdditionalNote || undefined,
-      },
-    });
   };
 
   const openCreateTreatmentDialog = (recordId: number) => {
@@ -1151,6 +1094,11 @@ export function DiseaseTrackingPage() {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
+                        <DiseaseAiAdvisorDialog
+                          recordId={record.id}
+                          diseaseName={record.diseaseName}
+                          scope={workspaceScope}
+                        />
                         <Button
                           variant="outline"
                           onClick={() => openCreateTreatmentDialog(record.id)}
@@ -1260,89 +1208,6 @@ export function DiseaseTrackingPage() {
                                 <p className="text-sm">{recordToRender.notes}</p>
                               </div>
                             )}
-
-                            <div className="rounded-lg border border-border bg-card p-3 space-y-3">
-                              <div className="flex flex-wrap items-start justify-between gap-3">
-                                <div>
-                                  <h4 className="text-sm font-semibold flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4" />
-                                    {t("diseaseTracking.detail.ai.title")}
-                                  </h4>
-                                  <p className="text-xs text-muted-foreground mt-1">
-                                    {t("diseaseTracking.detail.ai.description")}
-                                  </p>
-                                </div>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleGenerateAiSuggestion(record.id)}
-                                  disabled={aiSuggestionMutation.isPending}
-                                  className="min-h-[44px] shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
-                                >
-                                  {aiSuggestionMutation.isPending ? (
-                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                                  ) : (
-                                    <Sparkles className="w-4 h-4 mr-1" />
-                                  )}
-                                  {t("diseaseTracking.detail.ai.generate")}
-                                </Button>
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label htmlFor={`ai-note-${record.id}`}>
-                                  {t("diseaseTracking.detail.ai.additionalNoteLabel")}
-                                </Label>
-                                <Textarea
-                                  id={`ai-note-${record.id}`}
-                                  rows={2}
-                                  value={aiAdditionalNote}
-                                  onChange={(event) => setAiAdditionalNote(event.target.value)}
-                                  placeholder={t("diseaseTracking.detail.ai.additionalNotePlaceholder")}
-                                />
-                              </div>
-
-                              <div className="rounded-md border border-border px-3 py-2 flex items-center justify-between gap-3">
-                                <div>
-                                  <p className="text-sm font-medium">
-                                    {t("diseaseTracking.detail.ai.includeInventoryLabel")}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {t("diseaseTracking.detail.ai.includeInventoryDescription")}
-                                  </p>
-                                </div>
-                                <Switch
-                                  checked={aiIncludeInventory}
-                                  onCheckedChange={(checked) => setAiIncludeInventory(Boolean(checked))}
-                                  aria-label={t("diseaseTracking.detail.ai.includeInventoryAriaLabel")}
-                                />
-                              </div>
-
-                              {aiSuggestionError && (
-                                <div className="rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-                                  {t("diseaseTracking.detail.ai.generateErrorPrefix")} {aiSuggestionError}
-                                </div>
-                              )}
-
-                              {aiSuggestionForActiveRecord && (
-                                <div className="rounded-md border border-primary/20 bg-primary/5 p-3 space-y-2">
-                                  <p className="text-xs text-muted-foreground">
-                                    {t("diseaseTracking.detail.ai.generatedAt")}:{" "}
-                                    {formatDateTime(aiSuggestionForActiveRecord.generatedAt, locale)}
-                                  </p>
-                                  <div className="text-sm prose prose-sm dark:prose-invert max-w-none leading-6">
-                                    <ReactMarkdown>
-                                      {aiSuggestionForActiveRecord.suggestionText}
-                                    </ReactMarkdown>
-                                  </div>
-                                  <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-                                    {aiSuggestionForActiveRecord.warning ?? aiDisclaimerText}
-                                  </div>
-                                  <p className="text-xs text-muted-foreground">
-                                    {aiDisclaimerText}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
 
                             <div className="space-y-3">
                               <div className="flex items-center justify-between">

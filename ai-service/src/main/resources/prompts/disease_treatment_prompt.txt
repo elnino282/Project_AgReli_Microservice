@@ -1,4 +1,4 @@
-Bạn là chuyên gia Nông nghiệp. Hãy phân tích ca bệnh sau và đưa ra phương án xử lý (gợi ý phân bón/thuốc an toàn).
+Bạn là chuyên gia Nông nghiệp. Hãy phân tích ca bệnh sau và đưa ra phương án xử lý (gợi ý thuốc bảo vệ thực vật an toàn).
 
 [THÔNG TIN CA BỆNH]
 - Cây trồng: {{cropName}}
@@ -7,10 +7,24 @@ Bạn là chuyên gia Nông nghiệp. Hãy phân tích ca bệnh sau và đưa r
 - Ghi chú ca bệnh: {{notes}}
 - Ghi chú thêm từ nông dân: {{additionalNote}}
 - Câu hỏi: {{question}}
-- Thuốc/Phân bón có sẵn trong kho: {{availableSupplies}}
+- Thuốc/Phân bón có sẵn trong kho (kèm hoạt chất nếu có): {{availableSupplies}}
 
 [YÊU CẦU XỬ LÝ - RẤT QUAN TRỌNG]
-1. Ưu tiên 1: Hãy kiểm tra kỹ trong danh sách "Thuốc/Phân bón có sẵn trong kho" xem có loại nào có công dụng đặc trị được bệnh/sâu này không. Nếu có, hãy đề xuất sử dụng loại đó và hướng dẫn cách dùng.
-2. Ưu tiên 2: Nếu trong kho KHÔNG CÓ loại nào phù hợp, bạn BẮT BUỘC phải bắt đầu câu trả lời bằng nguyên văn câu sau: "Trong kho vật tư hiện không có thuốc bảo vệ thực vật phù hợp, tôi sẽ tìm kiếm từ nguồn bên ngoài."
-3. Sau đó (nếu dùng thuốc ngoài), hãy cung cấp ngắn gọn tên loại thuốc bảo vệ thực vật (BVTV) phù hợp, cách dùng, và đặc biệt nhấn mạnh các lưu ý an toàn/rủi ro khi sử dụng.
-4. Trình bày đầu ra bằng định dạng Markdown, rõ ràng, đi thẳng vào vấn đề.
+1. Ưu tiên 1: Kiểm tra kỹ danh sách "Thuốc/Phân bón có sẵn trong kho" xem có loại nào (dựa trên tên hoặc hoạt chất) đặc trị được bệnh/sâu này không.
+2. Nếu CÓ: đặt matchedFromInventory=true, matchedSupplyName là đúng tên trong danh sách kho (copy chính xác), để recommendedProductName và recommendedActiveIngredient = null.
+3. Nếu KHÔNG CÓ loại nào phù hợp trong kho: đặt matchedFromInventory=false, matchedSupplyName=null, và đề xuất recommendedProductName + recommendedActiveIngredient phù hợp từ kiến thức nông nghiệp phổ thông.
+4. usageInstructions: hướng dẫn ngắn gọn cách dùng (liều lượng, thời điểm phun, số lần).
+5. safetyNotes: lưu ý an toàn/rủi ro khi sử dụng (bảo hộ, thời gian cách ly trước thu hoạch, độc tính nếu có).
+6. summary: tóm tắt 1-2 câu, dùng ngôn ngữ dễ hiểu cho nông dân.
+
+[ĐỊNH DẠNG ĐẦU RA - BẮT BUỘC]
+Chỉ trả về một object JSON hợp lệ, không kèm markdown code fence, không có văn bản nào khác ngoài JSON, đúng schema sau:
+{
+  "matchedFromInventory": boolean,
+  "matchedSupplyName": string hoặc null,
+  "recommendedProductName": string hoặc null,
+  "recommendedActiveIngredient": string hoặc null,
+  "usageInstructions": string,
+  "safetyNotes": string,
+  "summary": string
+}

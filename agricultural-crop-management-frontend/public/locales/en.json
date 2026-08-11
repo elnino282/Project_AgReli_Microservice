@@ -1897,7 +1897,17 @@
         "includeInventoryAriaLabel": "Include inventory context",
         "generateErrorPrefix": "Unable to generate AI suggestion:",
         "generatedAt": "Generated at",
-        "disclaimer": "Suggestions are for reference only and do not replace expert consultation."
+        "disclaimer": "Suggestions are for reference only and do not replace expert consultation.",
+        "quickActionLabel": "Ask AI",
+        "dialogTitle": "AI treatment suggestion",
+        "loading": "Checking inventory and generating a suggestion...",
+        "matchedBadge": "Available in inventory",
+        "externalBadge": "Not in inventory — external suggestion",
+        "matchedSupplyLabel": "Inventory item",
+        "recommendedProductLabel": "Recommended product",
+        "recommendedActiveIngredientLabel": "Active ingredient",
+        "safetyNotesLabel": "Safety notes",
+        "askAgain": "Ask again"
       },
       "timeline": {
         "title": "Treatment timeline",

@@ -160,7 +160,7 @@ export function FarmerDashboardPage() {
           <div className="flex flex-col gap-4">
             <div className="flex justify-end shrink-0">
               <AiHarvestPredictionModal 
-                seasonName={activeSeason.cropName} 
+                seasonName={activeSeason.cropName ?? ""} 
                 plantingDate={activeSeason.startDate} 
                 expectedGrowthDays={75}
               />
@@ -217,7 +217,7 @@ export function FarmerDashboardPage() {
           <CardContent className="p-0 flex-1 overflow-y-auto bg-slate-50/50">
             {selectedSeasonId && (
               <DataErrorBoundary fallbackMessage="Không thể tải nhật ký canh tác lúc này.">
-                <FarmingLogsWidget seasonId={selectedSeasonId} />
+                <FarmingLogsWidget seasonId={String(selectedSeasonId)} />
               </DataErrorBoundary>
             )}
           </CardContent>
@@ -227,7 +227,7 @@ export function FarmerDashboardPage() {
         {selectedSeasonId && (
           <div className="shrink-0">
             <DataErrorBoundary fallbackMessage="Không thể tải báo cáo thống kê lúc này.">
-              <SeasonAnalyticsWidget seasonId={selectedSeasonId} />
+              <SeasonAnalyticsWidget seasonId={String(selectedSeasonId)} />
             </DataErrorBoundary>
           </div>
         )}

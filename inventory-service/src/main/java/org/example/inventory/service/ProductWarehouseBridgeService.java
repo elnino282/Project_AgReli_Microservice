@@ -295,6 +295,27 @@ public class ProductWarehouseBridgeService {
 
     @Transactional(readOnly = true)
     public List<String> getAvailableSupplyNames(List<Integer> farmIds) {
+        return findAvailableItemIds(farmIds).stream()
+                .map(id -> supplyItemRepository.findById(id).map(item -> item.getName()).orElse(null))
+                .filter(name -> name != null)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<org.example.inventory.dto.response.SupplyItemLookupDto> getAvailableSupplyDetails(List<Integer> farmIds) {
+        return findAvailableItemIds(farmIds).stream()
+                .map(id -> supplyItemRepository.findById(id).orElse(null))
+                .filter(item -> item != null)
+                .map(item -> org.example.inventory.dto.response.SupplyItemLookupDto.builder()
+                        .id(item.getId())
+                        .name(item.getName())
+                        .activeIngredient(item.getActiveIngredient())
+                        .restrictedFlag(item.getRestrictedFlag())
+                        .build())
+                .toList();
+    }
+
+    private List<Integer> findAvailableItemIds(List<Integer> farmIds) {
         if (farmIds == null || farmIds.isEmpty()) {
             return List.of();
         }
@@ -304,8 +325,7 @@ public class ProductWarehouseBridgeService {
         if (warehouseIds.isEmpty()) {
             return List.of();
         }
-
-        List<Integer> availableItemIds = inventoryBalanceRepository.findAll().stream()
+        return inventoryBalanceRepository.findAll().stream()
                 .filter(balance -> warehouseIds.contains(balance.getWarehouseId())
                         && balance.getQuantity() != null
                         && balance.getQuantity().compareTo(BigDecimal.ZERO) > 0)
@@ -315,11 +335,6 @@ public class ProductWarehouseBridgeService {
                 })
                 .filter(id -> id != null)
                 .distinct()
-                .toList();
-
-        return availableItemIds.stream()
-                .map(id -> supplyItemRepository.findById(id).map(item -> item.getName()).orElse(null))
-                .filter(name -> name != null)
                 .toList();
     }
 

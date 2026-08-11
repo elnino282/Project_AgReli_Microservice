@@ -1860,7 +1860,17 @@
         "includeInventoryAriaLabel": "Bao gồm ngữ cảnh tồn kho",
         "generateErrorPrefix": "Không thể tạo gợi ý AI:",
         "generatedAt": "Tạo lúc",
-        "disclaimer": "Gợi ý chỉ mang tính tham khảo, không thay thế tư vấn chuyên gia."
+        "disclaimer": "Gợi ý chỉ mang tính tham khảo, không thay thế tư vấn chuyên gia.",
+        "quickActionLabel": "Hỏi AI xử lý",
+        "dialogTitle": "Gợi ý xử lý từ AI",
+        "loading": "Đang kiểm tra kho vật tư và tạo gợi ý...",
+        "matchedBadge": "Có sẵn trong kho",
+        "externalBadge": "Không có trong kho — gợi ý từ nguồn ngoài",
+        "matchedSupplyLabel": "Vật tư trong kho",
+        "recommendedProductLabel": "Thuốc đề xuất",
+        "recommendedActiveIngredientLabel": "Hoạt chất",
+        "safetyNotesLabel": "Lưu ý an toàn",
+        "askAgain": "Hỏi lại"
       },
       "timeline": {
         "title": "Timeline điều trị",

@@ -311,6 +311,7 @@ public class GeminiService {
                 .replace("{{availableSupplies}}", request.getAvailableSupplies() != null && !request.getAvailableSupplies().isEmpty() ? String.join(", ", request.getAvailableSupplies()) : "Không có");
 
         GenerateContentConfig config = GenerateContentConfig.builder()
+                .responseMimeType("application/json")
                 .temperature(0.3F)
                 .maxOutputTokens(1024)
                 .build();

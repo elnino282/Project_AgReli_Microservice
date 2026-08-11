@@ -37,6 +37,12 @@ public class InventoryServiceClientFallback implements InventoryServiceClient {
     }
 
     @Override
+    public java.util.List<InventoryServiceClient.SupplyContextDto> getAvailableSupplyDetails(String farmIdsCsv) {
+        log.error("Fallback triggered: Failed to get available supply details for farms {}", farmIdsCsv);
+        return java.util.Collections.emptyList();
+    }
+
+    @Override
     public String getSupplyLotBatchCode(Integer lotId) {
         log.error("Fallback triggered: Failed to get supply lot batch code {}", lotId);
         return null;
