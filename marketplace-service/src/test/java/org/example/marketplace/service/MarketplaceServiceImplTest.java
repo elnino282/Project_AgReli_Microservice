@@ -14,6 +14,19 @@ import org.example.marketplace.shared.security.CurrentUserService;
 import org.example.marketplace.event.DomainEventPublisher;
 import org.example.marketplace.event.MarketplaceProductChangedEvent;
 import org.example.marketplace.dto.request.MarketplaceFarmerProductUpsertRequest;
+import org.example.marketplace.repository.MarketplaceOrderRepository;
+import org.example.marketplace.entity.MarketplaceOrder;
+import org.example.marketplace.model.MarketplacePaymentVerificationStatus;
+import org.example.marketplace.exception.ConflictException;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.mock.web.MockMultipartFile;
+import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.example.marketplace.repository.MarketplaceOrderItemRepository;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.Mockito.verify;
 import static org.mockito.ArgumentMatchers.any;
@@ -48,6 +61,12 @@ class MarketplaceServiceImplTest {
     private CurrentUserService currentUserService;
     @Mock
     private DomainEventPublisher domainEventPublisher;
+    @Mock
+    private MarketplaceOrderRepository marketplaceOrderRepository;
+    @Mock
+    private MarketplaceOrderItemRepository marketplaceOrderItemRepository;
+    @Mock
+    private MarketplaceStorageService storageService;
 
     @InjectMocks
     private MarketplaceServiceImpl marketplaceService;
@@ -169,5 +188,110 @@ class MarketplaceServiceImplTest {
         assertThat(capturedEvent.payload().productName()).isEqualTo("Fresh Lettuce");
         assertThat(capturedEvent.payload().farmerId()).isEqualTo(1L);
         assertThat(capturedEvent.payload().status()).isEqualTo("DRAFT");
+    }
+
+    @Test
+    @DisplayName("Should successfully upload payment proof and set SUBMITTED status")
+    void uploadPaymentProof_shouldSetSubmittedStatus() {
+        // Given
+        Long userId = 1L;
+        Long orderId = 100L;
+        when(currentUserService.getCurrentUserId()).thenReturn(userId);
+
+        MarketplaceOrder order = new MarketplaceOrder();
+        order.setId(orderId);
+        order.setBuyerUserId(userId);
+        order.setPaymentVerificationStatus(MarketplacePaymentVerificationStatus.AWAITING_PROOF);
+
+        when(marketplaceOrderRepository.findByIdAndBuyerUserId(orderId, userId)).thenReturn(Optional.of(order));
+        when(marketplaceOrderItemRepository.findByOrderId(orderId)).thenReturn(List.of());
+        
+        MockMultipartFile file = new MockMultipartFile("file", "proof.jpg", "image/jpeg", "image data".getBytes());
+        when(storageService.storePaymentProof(file, orderId, userId)).thenReturn("http://minio/proof.jpg");
+        when(marketplaceOrderRepository.save(any(MarketplaceOrder.class))).thenAnswer(i -> i.getArgument(0));
+
+        // When
+        MarketplaceOrderResponse response = marketplaceService.uploadPaymentProof(orderId, file);
+
+        // Then
+        assertThat(order.getPaymentVerificationStatus()).isEqualTo(MarketplacePaymentVerificationStatus.SUBMITTED);
+        assertThat(order.getPaymentProofFileName()).isEqualTo("proof.jpg");
+        assertThat(order.getPaymentProofStoragePath()).isEqualTo("http://minio/proof.jpg");
+        assertThat(order.getPaymentProofUploadedAt()).isNotNull();
+        
+        verify(domainEventPublisher).publish(any());
+    }
+
+    @Test
+    @DisplayName("Should not set SUBMITTED status if NOT_REQUIRED")
+    void uploadPaymentProof_shouldNotSetSubmittedIfNotRequired() {
+        // Given
+        Long userId = 1L;
+        Long orderId = 100L;
+        when(currentUserService.getCurrentUserId()).thenReturn(userId);
+
+        MarketplaceOrder order = new MarketplaceOrder();
+        order.setId(orderId);
+        order.setBuyerUserId(userId);
+        order.setPaymentVerificationStatus(MarketplacePaymentVerificationStatus.NOT_REQUIRED);
+
+        when(marketplaceOrderRepository.findByIdAndBuyerUserId(orderId, userId)).thenReturn(Optional.of(order));
+        when(marketplaceOrderItemRepository.findByOrderId(orderId)).thenReturn(List.of());
+        
+        MockMultipartFile file = new MockMultipartFile("file", "proof.jpg", "image/jpeg", "image data".getBytes());
+        when(storageService.storePaymentProof(file, orderId, userId)).thenReturn("http://minio/proof.jpg");
+        when(marketplaceOrderRepository.save(any(MarketplaceOrder.class))).thenAnswer(i -> i.getArgument(0));
+
+        // When
+        MarketplaceOrderResponse response = marketplaceService.uploadPaymentProof(orderId, file);
+
+        // Then
+        assertThat(order.getPaymentVerificationStatus()).isEqualTo(MarketplacePaymentVerificationStatus.NOT_REQUIRED);
+        assertThat(order.getPaymentProofStoragePath()).isEqualTo("http://minio/proof.jpg");
+    }
+
+    @Test
+    @DisplayName("Should throw ConflictException if VERIFIED")
+    void uploadPaymentProof_shouldThrowConflictIfVerified() {
+        // Given
+        Long userId = 1L;
+        Long orderId = 100L;
+        when(currentUserService.getCurrentUserId()).thenReturn(userId);
+
+        MarketplaceOrder order = new MarketplaceOrder();
+        order.setId(orderId);
+        order.setBuyerUserId(userId);
+        order.setPaymentVerificationStatus(MarketplacePaymentVerificationStatus.VERIFIED);
+
+        when(marketplaceOrderRepository.findByIdAndBuyerUserId(orderId, userId)).thenReturn(Optional.of(order));
+        
+        MockMultipartFile file = new MockMultipartFile("file", "proof.jpg", "image/jpeg", "image data".getBytes());
+
+        // When/Then
+        assertThrows(ConflictException.class, () -> marketplaceService.uploadPaymentProof(orderId, file));
+    }
+
+    @Test
+    @DisplayName("Should return SUBMITTED orders for admin list")
+    void listAdminPaymentProofs_shouldReturnSubmittedOrders() {
+        // Given
+        int page = 0;
+        int size = 10;
+        MarketplaceOrder order = new MarketplaceOrder();
+        order.setId(200L);
+        order.setPaymentVerificationStatus(MarketplacePaymentVerificationStatus.SUBMITTED);
+        
+        Page<MarketplaceOrder> orderPage = new PageImpl<>(List.of(order));
+        when(marketplaceOrderRepository.findByPaymentVerificationStatus(
+                MarketplacePaymentVerificationStatus.SUBMITTED, PageRequest.of(page, size)))
+                .thenReturn(orderPage);
+
+        // When
+        org.example.DTO.Common.PageResponse<MarketplacePaymentProofResponse> response = 
+                marketplaceService.listAdminPaymentProofs(page, size);
+
+        // Then
+        assertThat(response.items()).hasSize(1);
+        assertThat(response.items().get(0).orderId()).isEqualTo(200L);
     }
 }

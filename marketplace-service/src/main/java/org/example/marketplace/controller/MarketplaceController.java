@@ -46,6 +46,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/v1/marketplace")
@@ -148,16 +149,19 @@ public class MarketplaceController {
         return ApiResponse.success(marketplaceService.getTraceability(productId));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @GetMapping("/cart")
     public ApiResponse<MarketplaceCartResponse> getCart() {
         return ApiResponse.success(marketplaceService.getCart());
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @PostMapping("/cart/items")
     public ApiResponse<MarketplaceCartResponse> addCartItem(@Valid @RequestBody MarketplaceAddCartItemRequest request) {
         return ApiResponse.success(marketplaceService.addCartItem(request));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @PutMapping("/cart/items/{productId}")
     public ApiResponse<MarketplaceCartResponse> updateCartItem(
             @PathVariable Long productId,
@@ -165,6 +169,7 @@ public class MarketplaceController {
         return ApiResponse.success(marketplaceService.updateCartItem(productId, request));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @PatchMapping("/cart/items/{productId}")
     public ApiResponse<MarketplaceCartResponse> patchCartItem(
             @PathVariable Long productId,
@@ -172,27 +177,32 @@ public class MarketplaceController {
         return ApiResponse.success(marketplaceService.updateCartItem(productId, request));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @DeleteMapping("/cart/items/{productId}")
     public ApiResponse<MarketplaceCartResponse> removeCartItem(@PathVariable Long productId) {
         return ApiResponse.success(marketplaceService.removeCartItem(productId));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @PostMapping("/cart/merge")
     public ApiResponse<MarketplaceCartResponse> mergeCart(@Valid @RequestBody MarketplaceMergeCartRequest request) {
         return ApiResponse.success(marketplaceService.mergeCart(request));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @DeleteMapping("/cart")
     public ApiResponse<MarketplaceCartResponse> clearCart() {
         return ApiResponse.success(marketplaceService.clearCart());
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @PostMapping("/orders/preview")
     public ApiResponse<MarketplaceOrderPreviewResponse> previewOrder(
             @Valid @RequestBody MarketplaceCreateOrderRequest request) {
         return ApiResponse.success(marketplaceService.previewOrder(request));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @PostMapping("/orders")
     public ApiResponse<MarketplaceCreateOrderResultResponse> createOrder(
             @Valid @RequestBody MarketplaceCreateOrderRequest request,
@@ -200,6 +210,7 @@ public class MarketplaceController {
         return ApiResponse.success(marketplaceService.createOrder(request, idempotencyKeyHeader));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @PostMapping("/orders/{orderId}/payment-proof")
     public ApiResponse<MarketplaceOrderResponse> uploadPaymentProof(
             @PathVariable Long orderId,
@@ -207,6 +218,7 @@ public class MarketplaceController {
         return ApiResponse.success(marketplaceService.uploadPaymentProof(orderId, file));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @GetMapping("/orders")
     public ApiResponse<PageResponse<MarketplaceOrderResponse>> listOrders(
             @RequestParam(value = "status", required = false) String status,
@@ -215,32 +227,38 @@ public class MarketplaceController {
         return ApiResponse.success(marketplaceService.listOrders(status, page, size));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @GetMapping("/orders/{orderId}")
     public ApiResponse<MarketplaceOrderResponse> getOrderDetail(@PathVariable Long orderId) {
         return ApiResponse.success(marketplaceService.getOrderDetail(orderId));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @PutMapping("/orders/{orderId}/cancel")
     public ApiResponse<MarketplaceOrderResponse> cancelOrderPut(@PathVariable Long orderId) {
         return ApiResponse.success(marketplaceService.cancelOrder(orderId));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @PostMapping("/orders/{orderId}/cancel")
     public ApiResponse<MarketplaceOrderResponse> cancelOrderPost(@PathVariable Long orderId) {
         return ApiResponse.success(marketplaceService.cancelOrder(orderId));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @GetMapping("/addresses")
     public ApiResponse<List<MarketplaceAddressResponse>> listAddresses() {
         return ApiResponse.success(marketplaceService.listAddresses());
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @PostMapping("/addresses")
     public ApiResponse<MarketplaceAddressResponse> createAddress(
             @Valid @RequestBody MarketplaceAddressUpsertRequest request) {
         return ApiResponse.success(marketplaceService.createAddress(request));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @PatchMapping("/addresses/{addressId}")
     public ApiResponse<MarketplaceAddressResponse> updateAddress(
             @PathVariable Long addressId,
@@ -248,11 +266,13 @@ public class MarketplaceController {
         return ApiResponse.success(marketplaceService.updateAddress(addressId, request));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @PatchMapping("/addresses/{addressId}/default")
     public ApiResponse<MarketplaceAddressResponse> setDefaultAddress(@PathVariable Long addressId) {
         return ApiResponse.success(marketplaceService.setDefaultAddress(addressId));
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @DeleteMapping("/addresses/{addressId}")
     public ApiResponse<Void> deleteAddress(@PathVariable Long addressId) {
         marketplaceService.deleteAddress(addressId);
@@ -264,6 +284,7 @@ public class MarketplaceController {
      * Kept temporarily for backward compatibility.
      */
     @Deprecated
+    @PreAuthorize("hasRole('BUYER')")
     @PostMapping("/reviews")
     public ApiResponse<MarketplaceReviewResponse> createReview(
             @Valid @RequestBody MarketplaceCreateReviewRequest request) {

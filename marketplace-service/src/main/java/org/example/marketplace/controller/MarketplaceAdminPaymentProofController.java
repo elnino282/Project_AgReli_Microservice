@@ -16,17 +16,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * Admin controller for payment proof verification.
  * <p>
  * Base path: {@code /api/v1/admin/marketplace/payment-proofs}
  * <p>
- * Security: {@code /api/v1/admin/**} is restricted to ADMIN role
- * by SecurityConfig.
+ * Security: Enforced by {@code @PreAuthorize} at the controller level.
  */
 @RestController
 @RequestMapping("/api/v1/admin/marketplace/payment-proofs")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MarketplaceAdminPaymentProofController {

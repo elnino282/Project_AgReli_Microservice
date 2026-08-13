@@ -1028,6 +1028,10 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         MarketplaceOrder order = marketplaceOrderRepository.findByIdAndBuyerUserId(orderId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
+        if (order.getPaymentVerificationStatus() == MarketplacePaymentVerificationStatus.VERIFIED) {
+            throw new ConflictException("Đơn hàng đã được xác nhận thanh toán, không thể tải lại minh chứng");
+        }
+
         // Upload payment proof to MinIO
         String paymentProofUrl = storageService.storePaymentProof(file, orderId, userId);
 
@@ -1036,6 +1040,13 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         order.setPaymentProofContentType(file.getContentType());
         order.setPaymentProofStoragePath(paymentProofUrl);
         order.setPaymentProofUploadedAt(LocalDateTime.now());
+
+        if (order.getPaymentVerificationStatus() == MarketplacePaymentVerificationStatus.NOT_REQUIRED) {
+            log.warn("Đơn hàng {} không yêu cầu minh chứng thanh toán nhưng vẫn nhận được file", orderId);
+        } else {
+            order.setPaymentVerificationStatus(MarketplacePaymentVerificationStatus.SUBMITTED);
+        }
+
         order = marketplaceOrderRepository.save(order);
 
         // Publish PaymentSubmitted event
