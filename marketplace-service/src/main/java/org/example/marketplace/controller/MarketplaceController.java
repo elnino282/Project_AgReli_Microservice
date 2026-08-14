@@ -15,6 +15,7 @@ import org.example.marketplace.dto.request.MarketplaceCreateOrderRequest;
 import org.example.marketplace.dto.request.MarketplaceCreateReviewRequest;
 import org.example.marketplace.dto.request.MarketplaceMergeCartRequest;
 import org.example.marketplace.dto.request.MarketplaceUpdateCartItemRequest;
+import org.example.marketplace.dto.request.MarketplaceShippingQuoteRequest;
 import org.example.marketplace.dto.response.MarketplaceAddressResponse;
 import org.example.marketplace.dto.response.MarketplaceCartResponse;
 import org.example.marketplace.dto.response.MarketplaceCreateOrderResultResponse;
@@ -26,6 +27,7 @@ import org.example.marketplace.dto.response.MarketplaceProductDetailResponse;
 import org.example.marketplace.dto.response.MarketplaceProductSummaryResponse;
 import org.example.marketplace.dto.response.MarketplaceReviewResponse;
 import org.example.marketplace.dto.response.MarketplaceTraceabilityResponse;
+import org.example.marketplace.dto.response.MarketplaceShippingQuoteGroupResponse;
 import org.example.marketplace.service.MarketplaceProductImageStorageService;
 import org.example.marketplace.service.MarketplaceProductImageStorageService.StoredProductImage;
 import org.example.marketplace.service.MarketplaceService;
@@ -200,6 +202,13 @@ public class MarketplaceController {
     public ApiResponse<MarketplaceOrderPreviewResponse> previewOrder(
             @Valid @RequestBody MarketplaceCreateOrderRequest request) {
         return ApiResponse.success(marketplaceService.previewOrder(request));
+    }
+
+    @PreAuthorize("hasRole('BUYER')")
+    @PostMapping("/shipping-quotes")
+    public ApiResponse<List<MarketplaceShippingQuoteGroupResponse>> createShippingQuotes(
+            @Valid @RequestBody MarketplaceShippingQuoteRequest request) {
+        return ApiResponse.success(marketplaceService.createShippingQuotes(request));
     }
 
     @PreAuthorize("hasRole('BUYER')")

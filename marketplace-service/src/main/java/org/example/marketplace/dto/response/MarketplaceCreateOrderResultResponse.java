@@ -9,5 +9,11 @@ public record MarketplaceCreateOrderResultResponse(
         BigDecimal totalAmount,
         String currency,
         String message,
-        String nextStep) {
+        String nextStep,
+        List<OrderShippingQuote> orderShippingQuotes) {
+
+    public record OrderShippingQuote(
+            Long orderId,
+            String shippingQuoteId) {
+    }
 }

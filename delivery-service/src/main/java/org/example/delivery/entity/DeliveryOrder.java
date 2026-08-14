@@ -23,6 +23,12 @@ public class DeliveryOrder {
     @Column(name = "marketplace_order_id", nullable = false)
     private Long marketplaceOrderId;
 
+    @Column(name = "shipping_quote_id", length = 36, unique = true)
+    private String shippingQuoteId;
+
+    @Column(name = "buyer_user_id")
+    private Long buyerUserId;
+
     @Column(name = "provider_id", nullable = false)
     private Integer providerId;
 

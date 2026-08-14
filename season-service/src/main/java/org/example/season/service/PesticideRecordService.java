@@ -41,33 +41,16 @@ public class PesticideRecordService {
         String activeIngredient = req.activeIngredient();
 
         if (phiDays == null || phiDays <= 0) {
-            // Lookup PHI từ reference table
-            Optional<PesticidePHIReference> refOpt = pesticidePhiReferenceRepo
-                    .findByPesticideNameContainingIgnoreCase(req.pesticideName());
-
-            if (refOpt.isEmpty() && req.activeIngredient() != null) {
-                refOpt = pesticidePhiReferenceRepo
-                        .findByActiveIngredientContainingIgnoreCase(req.activeIngredient());
+            PesticidePHIReference reference = findPhiReference(
+                    req.pesticideName(), req.activeIngredient())
+                    .orElseThrow(() -> new AppException(ErrorCode.PESTICIDE_PHI_NOT_FOUND));
+            phiDays = reference.getPhiDays();
+            if (phiDays == null || phiDays < 0) {
+                throw new AppException(ErrorCode.PESTICIDE_PHI_NOT_FOUND);
             }
-
-            if (refOpt.isEmpty()) {
-                refOpt = pesticidePhiReferenceRepo.findByName(req.pesticideName());
-            }
-
-            if (refOpt.isPresent()) {
-                phiDays = refOpt.get().getPhiDays();
                 if (activeIngredient == null || activeIngredient.isBlank()) {
-                    activeIngredient = refOpt.get().getActiveIngredient();
+                activeIngredient = reference.getActiveIngredient();
                 }
-            } else {
-                throw new IllegalArgumentException(
-                        "Không tìm thấy thông tin PHI cho thuốc: " + req.pesticideName() +
-                        ". Vui lòng nhập số ngày cách ly thủ công.");
-            }
-        }
-
-        if (phiDays == null || phiDays < 0) {
-            phiDays = 0;
         }
 
         PesticideRecord record = PesticideRecord.builder()
@@ -98,22 +81,21 @@ public class PesticideRecordService {
         // Parse thuốc từ notes hoặc dedicated field
         final String pesticideName = extractPesticideName(log.getNotes());
 
-        // Lookup PHI từ reference table
-        Integer phiDays = 0;
-        if (pesticideName != null && !pesticideName.isBlank()) {
-            phiDays = pesticidePhiReferenceRepo
-                    .findByPesticideNameContainingIgnoreCase(pesticideName)
-                    .map(PesticidePHIReference::getPhiDays)
-                    .orElseGet(() -> {
-                        return pesticidePhiReferenceRepo.findByActiveIngredientContainingIgnoreCase(pesticideName)
-                                .map(PesticidePHIReference::getPhiDays)
-                                .orElse(0); // Default to 0 if not found in reference table
-                    });
+        if (pesticideName == null || pesticideName.isBlank()) {
+            throw new AppException(ErrorCode.PESTICIDE_PHI_NOT_FOUND);
         }
 
-        final String recordPesticideName = (pesticideName != null && !pesticideName.isBlank())
-                ? pesticideName
-                : "Unknown/General Pesticide";
+        PesticidePHIReference reference = findPhiReference(pesticideName, pesticideName)
+                .orElseThrow(() -> new AppException(ErrorCode.PESTICIDE_PHI_NOT_FOUND));
+        Integer phiDays = reference.getPhiDays();
+        if (phiDays == null || phiDays < 0) {
+            throw new AppException(ErrorCode.PESTICIDE_PHI_NOT_FOUND);
+        }
+
+        String activeIngredient = reference.getActiveIngredient();
+        if (activeIngredient == null || activeIngredient.isBlank()) {
+            activeIngredient = pesticideName;
+        }
 
         // Xóa bản ghi cũ nếu có để tránh trùng lặp khi update field log
         repository.findByFieldLogId(fieldLogId).ifPresent(repository::delete);
@@ -122,8 +104,8 @@ public class PesticideRecordService {
                 .seasonId(log.getSeason().getId())
                 .plotId(log.getSeason().getPlotId() != null ? log.getSeason().getPlotId() : 0)
                 .fieldLogId(fieldLogId)
-                .pesticideName(recordPesticideName)
-                .activeIngredient(recordPesticideName)
+                .pesticideName(pesticideName)
+                .activeIngredient(activeIngredient)
                 .applicationDate(log.getLogDate())
                 .phiDays(phiDays)
                 .createdBy(userId)
@@ -134,6 +116,24 @@ public class PesticideRecordService {
         saved.setHarvestAllowedDate(saved.getApplicationDate().plusDays(saved.getPhiDays()));
 
         return toResponse(saved);
+    }
+
+    private Optional<PesticidePHIReference> findPhiReference(
+            String pesticideName,
+            String activeIngredient) {
+        Optional<PesticidePHIReference> reference = Optional.empty();
+        if (pesticideName != null && !pesticideName.isBlank()) {
+            reference = pesticidePhiReferenceRepo
+                    .findByPesticideNameContainingIgnoreCase(pesticideName);
+        }
+        if (reference.isEmpty() && activeIngredient != null && !activeIngredient.isBlank()) {
+            reference = pesticidePhiReferenceRepo
+                    .findByActiveIngredientContainingIgnoreCase(activeIngredient);
+        }
+        if (reference.isEmpty() && pesticideName != null && !pesticideName.isBlank()) {
+            reference = pesticidePhiReferenceRepo.findByName(pesticideName);
+        }
+        return reference;
     }
 
     public void deleteByFieldLogId(Integer fieldLogId) {

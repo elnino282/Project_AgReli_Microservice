@@ -9,12 +9,24 @@ export default {
     { name: 'finance', port: 8087, entity: 'finance' },
     { name: 'incident', port: 8088, entity: 'incident' },
     { name: 'sustainability', port: 8089, entity: 'sustainability' },
-    { name: 'marketplace', port: 8090, entity: 'marketplace' },
+    {
+      name: 'marketplace',
+      port: 8090,
+      entity: 'marketplace',
+      contract: '../docs/openapi/marketplace-service-v1.json',
+    },
     { name: 'admin-reporting', port: 8091, entity: 'report' },
+    {
+      name: 'delivery',
+      port: 8092,
+      entity: 'delivery',
+      contract: '../docs/openapi/delivery-service-v1.json',
+    },
   ].reduce((acc, service) => {
     acc[`${service.name}Service`] = {
       input: {
-        target: `http://localhost:${service.port}/v3/api-docs`,
+        target:
+          service.contract ?? `http://localhost:${service.port}/v3/api-docs`,
       },
       output: {
         mode: 'split',

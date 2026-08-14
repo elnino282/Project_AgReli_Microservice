@@ -120,6 +120,9 @@ function productFixture(): MarketplaceProductDetail {
     unit: 'kg',
     stockQuantity: 6,
     availableQuantity: 6,
+    shippingWeightKgPerUnit: 1,
+    perishable: false,
+    requiresColdChain: false,
     imageUrl: 'https://example.com/rice.jpg',
     imageUrls: [],
     farmerUserId: 7,
@@ -217,6 +220,7 @@ describe('SellerProductFormPage', () => {
 
     await user.clear(screen.getByLabelText(/Quantity to sell/i));
     await user.type(screen.getByLabelText(/Quantity to sell/i), '8');
+    await user.type(screen.getByLabelText(/Shipping weight per unit/i), '1');
     await user.click(screen.getByRole('button', { name: 'Create draft' }));
 
     await waitFor(() => {
@@ -227,6 +231,9 @@ describe('SellerProductFormPage', () => {
         description: 'Packed after harvest with traceability enabled.',
         price: 55000,
         stockQuantity: 8,
+        shippingWeightKgPerUnit: 1,
+        perishable: false,
+        requiresColdChain: false,
         imageUrl: 'https://example.com/premium.jpg',
         lotId: 30,
       });
@@ -254,6 +261,7 @@ describe('SellerProductFormPage', () => {
     await chooseOption('Harvested lot', 'LOT-30 - Jasmine rice');
     await user.clear(screen.getByLabelText(/Quantity to sell/i));
     await user.type(screen.getByLabelText(/Quantity to sell/i), '3');
+    await user.type(screen.getByLabelText(/Shipping weight per unit/i), '2.5');
 
     await user.click(screen.getByRole('button', { name: 'Create draft' }));
 
@@ -296,6 +304,7 @@ describe('SellerProductFormPage', () => {
 
     await user.clear(screen.getByLabelText(/Quantity to sell/i));
     await user.type(screen.getByLabelText(/Quantity to sell/i), '13');
+    await user.type(screen.getByLabelText(/Shipping weight per unit/i), '1');
 
     expect(screen.getByRole('button', { name: 'Create draft' })).toBeDisabled();
     expect(marketplaceApi.createFarmerProduct).not.toHaveBeenCalled();

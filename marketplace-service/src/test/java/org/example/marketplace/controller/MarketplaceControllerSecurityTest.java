@@ -54,6 +54,12 @@ public class MarketplaceControllerSecurityTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    public void testLegacyTraceability_Public_ReturnsOk() throws Exception {
+        mockMvc.perform(get("/api/v1/marketplace/traceability/1"))
+                .andExpect(status().isOk());
+    }
+
     // --- 2. Endpoint ADMIN đại diện ---
     @Test
     @WithMockUser(roles = "ADMIN")
@@ -123,5 +129,31 @@ public class MarketplaceControllerSecurityTest {
     public void testBuyerEndpoint_NoToken_Returns4xx() throws Exception {
         mockMvc.perform(get("/api/v1/marketplace/cart"))
                 .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    public void anonymousCannotIssueAuthoritativeShippingQuotes() throws Exception {
+        mockMvc.perform(post("/api/v1/marketplace/shipping-quotes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"recipientProvince\":\"Lam Dong\"}"))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @WithMockUser(roles = "FARMER")
+    public void farmerCannotIssueBuyerShippingQuotes() throws Exception {
+        mockMvc.perform(post("/api/v1/marketplace/shipping-quotes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"recipientProvince\":\"Lam Dong\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "BUYER")
+    public void buyerCanIssueShippingQuotes() throws Exception {
+        mockMvc.perform(post("/api/v1/marketplace/shipping-quotes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"recipientProvince\":\"Lam Dong\"}"))
+                .andExpect(status().isOk());
     }
 }

@@ -94,19 +94,20 @@ public class VarietyService {
         Variety variety = varietyRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
 
-        // Check if variety is referenced in seasons in monolith via HTTP request
-        boolean hasSeasons = false;
+        final Boolean hasSeasons;
         try {
-            Boolean response = seasonServiceClient.existsByVariety(id);
-            if (response != null) {
-                hasSeasons = response;
+            hasSeasons = seasonServiceClient.existsByVariety(id);
+            if (hasSeasons == null) {
+                throw new AppException(ErrorCode.DOWNSTREAM_GUARD_UNAVAILABLE);
             }
+        } catch (AppException exception) {
+            throw exception;
         } catch (Exception e) {
-            log.error("Failed to check if variety is referenced in seasons via monolith: {}", e.getMessage());
-            // Fallback or rethrow? Usually fallback to false or raise exception. Let's log it.
+            log.error("Failed to verify whether variety {} is referenced in seasons", id, e);
+            throw new AppException(ErrorCode.DOWNSTREAM_GUARD_UNAVAILABLE);
         }
 
-        if (hasSeasons) {
+        if (Boolean.TRUE.equals(hasSeasons)) {
             log.warn("Cannot delete variety {} - referenced in seasons", id);
             throw new AppException(ErrorCode.DUPLICATE_RESOURCE); // Using existing error code for conflict
         }

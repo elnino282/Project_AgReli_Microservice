@@ -690,6 +690,75 @@ paths:
             '*/*':
               schema:
                 type: object
+  /api/v1/farmer/seasons/{seasonId}/teams/{teamId}:
+    put:
+      tags:
+      - farmer-team-controller
+      operationId: updateTeam
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: teamName
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: leaderId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+                format: int64
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+    delete:
+      tags:
+      - farmer-team-controller
+      operationId: deleteTeam
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
   /api/v1/disease-treatments/{id}:
     put:
       tags:
@@ -811,6 +880,7 @@ paths:
           enum:
           - PENDING
           - IN_PROGRESS
+          - REVIEWING
           - DONE
           - OVERDUE
           - CANCELLED
@@ -1250,6 +1320,46 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponsePesticideRecordResponse"
+  /api/v1/seasons/{seasonId}/phi/ai-prefill:
+    post:
+      tags:
+      - pesticide-record-controller
+      summary: Prefill pesticide record from AI
+      description: Maps an AI disease suggestion into a CreatePesticideRecordRequest
+        with PHI lookup
+      operationId: prefillFromAi
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiDiseaseSuggestionRequest"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCreatePesticideRecordRequest"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCreatePesticideRecordRequest"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCreatePesticideRecordRequest"
   /api/v1/seasons/{seasonId}/harvests:
     get:
       tags:
@@ -1759,6 +1869,41 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseFieldLogResponse"
+  /api/v1/farmer/training-programs:
+    get:
+      tags:
+      - employee-training-controller
+      operationId: getTrainingPrograms
+      parameters:
+      - name: category
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListTrainingProgramDto"
+    post:
+      tags:
+      - employee-training-controller
+      operationId: createTrainingProgram
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrainingProgramRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTrainingProgramDto"
   /api/v1/farmer/seasons/{seasonId}/teams:
     get:
       tags:
@@ -1796,7 +1941,7 @@ paths:
           type: string
       - name: leaderId
         in: query
-        required: true
+        required: false
         schema:
           type: integer
           format: int64
@@ -1816,6 +1961,31 @@ paths:
             '*/*':
               schema:
                 type: object
+  /api/v1/farmer/labor/tasks/{taskId}/reject:
+    post:
+      tags:
+      - farmer-labor-management-controller
+      operationId: rejectTask
+      parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectTaskRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
   /api/v1/farmer/labor/seasons/{seasonId}/payroll/recalculate:
     post:
       tags:
@@ -1927,6 +2097,31 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseListSeasonEmployeeResponse"
+  /api/v1/farmer/employees/{userId}/training-records:
+    post:
+      tags:
+      - employee-training-controller
+      operationId: recordTraining
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmployeeTrainingRecordRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseEmployeeTrainingRecordDto"
   /api/v1/employee/tasks/{taskId}/progress:
     post:
       tags:
@@ -1952,6 +2147,31 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseTaskProgressLogResponse"
+  /api/v1/employee/disease-records/{id}/ai-suggestion:
+    post:
+      tags:
+      - employee-portal-controller
+      operationId: generateAiSuggestionForAssignedEmployee
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiseaseSuggestionRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseDiseaseSuggestionResponse"
   /api/v1/disease-records/{id}/treatments:
     get:
       tags:
@@ -2009,6 +2229,31 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseDiseaseTreatmentResponse"
+  /api/v1/disease-records/{id}/ai-suggestion:
+    post:
+      tags:
+      - disease-record-controller
+      operationId: generateAiSuggestion
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiseaseSuggestionRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseDiseaseSuggestionResponse"
   /api/v1/workspace/tasks/{id}/start:
     patch:
       tags:
@@ -2309,6 +2554,25 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseTaskResponse"
+  /api/v1/farmer/labor/tasks/{taskId}/approve:
+    patch:
+      tags:
+      - farmer-labor-management-controller
+      operationId: approveTask
+      parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseTaskResponse"
   /api/v1/farmer/labor/seasons/{seasonId}/payroll/{payrollRecordId}:
     get:
       tags:
@@ -2365,30 +2629,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiResponsePayrollRecordResponse"
   /api/v1/farmer/labor/seasons/{seasonId}/employees/{employeeUserId}:
-    delete:
-      tags:
-      - farmer-labor-management-controller
-      operationId: removeSeasonEmployee
-      parameters:
-      - name: seasonId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int32
-      - name: employeeUserId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                $ref: "#/components/schemas/ApiResponseVoid"
     patch:
       tags:
       - farmer-labor-management-controller
@@ -2536,6 +2776,46 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseHarvestStockContextResponse"
+  /api/v1/seasons/{seasonId}/eligible-assignees:
+    get:
+      tags:
+      - task-controller
+      summary: Get eligible assignees
+      description: "Get eligible assignees for a season, optionally filtered by task\
+        \ or team"
+      operationId: getEligibleAssignees
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: taskId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: workTeamId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListSeasonEmployeeResponse"
+        "404":
+          description: Season not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListSeasonEmployeeResponse"
   /api/v1/seasons/search:
     get:
       tags:
@@ -2613,6 +2893,50 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/TaskInternalDto"
+  /api/v1/internal/seasons/{seasonId}/training-stats:
+    get:
+      tags:
+      - internal-season-controller
+      operationId: getTrainingStatsInternal
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/EmployeeTrainingRecordDto"
+  /api/v1/internal/seasons/{seasonId}/production-diary:
+    get:
+      tags:
+      - production-diary-controller
+      operationId: getProductionDiaryInternal
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductionDiaryEventDto"
   /api/v1/internal/seasons/{seasonId}/phi/all:
     get:
       tags:
@@ -2721,6 +3045,25 @@ paths:
                 items:
                   type: integer
                   format: int32
+  /api/v1/internal/seasons/exists-by-variety/{varietyId}:
+    get:
+      tags:
+      - internal-season-controller
+      operationId: existsByVariety
+      parameters:
+      - name: varietyId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: boolean
   /api/v1/internal/plots/{plotId}/seasons:
     get:
       tags:
@@ -2742,6 +3085,25 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/SeasonSummaryDto"
+  /api/v1/internal/plots/{plotId}/dependencies:
+    get:
+      tags:
+      - internal-season-controller
+      operationId: getPlotDependencies
+      parameters:
+      - name: plotId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PlotDependencyStatusDto"
   /api/v1/harvests:
     get:
       tags:
@@ -2842,6 +3204,83 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseHarvestSummaryResponse"
+  /api/v1/farmer/seasons/{seasonId}/training-status:
+    get:
+      tags:
+      - employee-training-controller
+      operationId: getTrainingStatusForSeason
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseMapLongListEmployeeTrainingRecordDto"
+  /api/v1/farmer/seasons/{seasonId}/production-diary:
+    get:
+      tags:
+      - production-diary-controller
+      summary: Get Production Diary
+      description: Get aggregated production diary events for a season
+      operationId: getProductionDiary
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListProductionDiaryEventDto"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListProductionDiaryEventDto"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListProductionDiaryEventDto"
+        "404":
+          description: Season not found
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListProductionDiaryEventDto"
+  /api/v1/farmer/labor/tasks/{taskId}/progress-logs:
+    get:
+      tags:
+      - farmer-labor-management-controller
+      operationId: getTaskProgressLogs
+      parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListTaskProgressLogResponse"
   /api/v1/farmer/labor/seasons/{seasonId}/progress:
     get:
       tags:
@@ -2979,6 +3418,74 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TeamProgressSummaryResponse"
+  /api/v1/farmer/dashboard/season-stats:
+    get:
+      tags:
+      - dashboard-controller
+      summary: Get Season Stats
+      description: Get stats for the dashboard
+      operationId: getSeasonStats
+      parameters:
+      - name: seasonId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseSeasonReportDto"
+  /api/v1/farmer/dashboard/phi-alerts:
+    get:
+      tags:
+      - dashboard-controller
+      summary: Get PHI Alerts
+      description: List all active PHI alerts for the current farmer's active seasons
+      operationId: getPHIAlerts
+      responses:
+        "200":
+          description: Success
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPHIAlertDto"
+        "401":
+          description: Unauthorized
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPHIAlertDto"
+        "403":
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListPHIAlertDto"
+  /api/v1/farmer/dashboard/farming-logs:
+    get:
+      tags:
+      - dashboard-controller
+      summary: Get Farming Logs
+      description: List farming logs for the dashboard
+      operationId: getFarmingLogs
+      parameters:
+      - name: seasonId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListFarmingLogDto"
   /api/v1/employee/tasks:
     get:
       tags:
@@ -3254,6 +3761,31 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponsePayrollRecordResponse"
+  /api/v1/farmer/labor/seasons/{seasonId}/employees/{seasonEmployeeId}:
+    delete:
+      tags:
+      - farmer-labor-management-controller
+      operationId: removeSeasonEmployee
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: seasonEmployeeId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseVoid"
 components:
   schemas:
     UpdateTaskRequest:
@@ -3346,6 +3878,15 @@ components:
         estimatedDays:
           type: integer
           format: int32
+        estimatedCompletionDate:
+          type: string
+          format: date
+        plotName:
+          type: string
+        plotArea:
+          type: number
+        baseWage:
+          type: number
         createdAt:
           type: string
           format: date-time
@@ -3461,6 +4002,21 @@ components:
           type: string
         note:
           type: string
+        qualityGrade:
+          type: string
+        qualityNotes:
+          type: string
+        subStandardQuantity:
+          type: number
+        subStandardDisposition:
+          type: string
+        packagingType:
+          type: string
+        packagingCount:
+          type: integer
+          format: int32
+        processingType:
+          type: string
       required:
       - harvestDate
       - quantity
@@ -3510,6 +4066,32 @@ components:
         createdAt:
           type: string
           format: date-time
+        qualityGrade:
+          type: string
+        qualityNotes:
+          type: string
+        subStandardQuantity:
+          type: number
+        subStandardDisposition:
+          type: string
+        packagingType:
+          type: string
+        packagingCount:
+          type: integer
+          format: int32
+        processingType:
+          type: string
+        cropCategory:
+          type: string
+        grossWetWeight:
+          type: number
+        netDryWeight:
+          type: number
+        warehouseReceiptStatus:
+          type: string
+        postHarvestDelayDays:
+          type: integer
+          format: int32
     UpdateFieldLogRequest:
       type: object
       properties:
@@ -3872,6 +4454,8 @@ components:
         estimatedDays:
           type: integer
           format: int32
+        baseWage:
+          type: number
       required:
       - title
     CreateSeasonRequest:
@@ -3999,6 +4583,31 @@ components:
         updatedAt:
           type: string
           format: date-time
+    AiDiseaseSuggestionRequest:
+      type: object
+      properties:
+        suggestedPesticide:
+          type: string
+        diseaseName:
+          type: string
+      required:
+      - suggestedPesticide
+    ApiResponseCreatePesticideRecordRequest:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/CreatePesticideRecordRequest"
+        data:
+          $ref: "#/components/schemas/CreatePesticideRecordRequest"
+        generatedAt:
+          type: string
     CreateHarvestDetailRequest:
       type: object
       properties:
@@ -4032,6 +4641,23 @@ components:
           type: string
         note:
           type: string
+        qualityGrade:
+          type: string
+        qualityNotes:
+          type: string
+        subStandardQuantity:
+          type: number
+        subStandardDisposition:
+          type: string
+        packagingType:
+          type: string
+        packagingCount:
+          type: integer
+          format: int32
+        processingType:
+          type: string
+        grossWetWeight:
+          type: number
       required:
       - harvestDate
       - lotCode
@@ -4203,6 +4829,59 @@ components:
       required:
       - logDate
       - logType
+    TrainingProgramRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        isMandatory:
+          type: boolean
+      required:
+      - title
+    ApiResponseTrainingProgramDto:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/TrainingProgramDto"
+        data:
+          $ref: "#/components/schemas/TrainingProgramDto"
+        generatedAt:
+          type: string
+    TrainingProgramDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        title:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        isMandatory:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    RejectTaskRequest:
+      type: object
+      properties:
+        rejectReason:
+          type: string
+      required:
+      - rejectReason
     PayrollRecalculateRequest:
       type: object
       properties:
@@ -4323,6 +5002,13 @@ components:
           type: number
         active:
           type: boolean
+        isTrained:
+          type: boolean
+        trainedAt:
+          type: string
+          format: date-time
+        trainingNotes:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -4358,6 +5044,80 @@ components:
             $ref: "#/components/schemas/SeasonEmployeeResponse"
         generatedAt:
           type: string
+    EmployeeTrainingRecordRequest:
+      type: object
+      properties:
+        workTeamId:
+          type: integer
+          format: int32
+        trainingProgramId:
+          type: integer
+          format: int32
+        trainedAt:
+          type: string
+          format: date
+        trainerName:
+          type: string
+        evidenceUrls:
+          type: array
+          items:
+            type: string
+        certifiedUntil:
+          type: string
+          format: date
+      required:
+      - trainedAt
+      - trainingProgramId
+    ApiResponseEmployeeTrainingRecordDto:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/EmployeeTrainingRecordDto"
+        data:
+          $ref: "#/components/schemas/EmployeeTrainingRecordDto"
+        generatedAt:
+          type: string
+    EmployeeTrainingRecordDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        userId:
+          type: integer
+          format: int64
+        workTeamId:
+          type: integer
+          format: int32
+        trainingProgram:
+          $ref: "#/components/schemas/TrainingProgramDto"
+        trainedAt:
+          type: string
+          format: date
+        trainerName:
+          type: string
+        evidenceUrls:
+          type: array
+          items:
+            type: string
+        certifiedUntil:
+          type: string
+          format: date
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     EmployeeTaskProgressRequest:
       type: object
       properties:
@@ -4423,6 +5183,66 @@ components:
         loggedAt:
           type: string
           format: date-time
+    DiseaseSuggestionRequest:
+      type: object
+      properties:
+        question:
+          type: string
+          maxLength: 2000
+          minLength: 0
+        includeInventory:
+          type: boolean
+        additionalNote:
+          type: string
+          maxLength: 4000
+          minLength: 0
+    ApiResponseDiseaseSuggestionResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/DiseaseSuggestionResponse"
+        data:
+          $ref: "#/components/schemas/DiseaseSuggestionResponse"
+        generatedAt:
+          type: string
+    DiseaseSuggestionResponse:
+      type: object
+      properties:
+        diseaseRecordId:
+          type: integer
+          format: int32
+        suggestionText:
+          type: string
+        usedContextSummary:
+          type: object
+          additionalProperties:
+            type: object
+        generatedAt:
+          type: string
+          format: date-time
+        warning:
+          type: string
+        matchedFromInventory:
+          type: boolean
+        matchedSupplyName:
+          type: string
+        recommendedProductName:
+          type: string
+        recommendedActiveIngredient:
+          type: string
+        summary:
+          type: string
+        safetyNotes:
+          type: string
+        usageInstructions:
+          type: string
     CreateDiseaseTreatmentRequest:
       type: object
       properties:
@@ -4553,6 +5373,13 @@ components:
           minimum: 0
         active:
           type: boolean
+        isTrained:
+          type: boolean
+        trainedAt:
+          type: string
+          format: date-time
+        trainingNotes:
+          type: string
     ApiResponsePageResponseTaskResponse:
       type: object
       properties:
@@ -4880,6 +5707,23 @@ components:
           format: int64
         status:
           type: string
+    ProductionDiaryEventDto:
+      type: object
+      properties:
+        eventDate:
+          type: string
+          format: date
+        eventType:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        sourceService:
+          type: string
+        sourceId:
+          type: integer
+          format: int32
     PesticideRecordInternalDto:
       type: object
       properties:
@@ -4930,6 +5774,13 @@ components:
         endDate:
           type: string
           format: date
+    PlotDependencyStatusDto:
+      type: object
+      properties:
+        hasActiveSeasons:
+          type: boolean
+        hasActiveTasks:
+          type: boolean
     ApiResponseHarvestSummaryResponse:
       type: object
       properties:
@@ -5005,6 +5856,90 @@ components:
         totalPages:
           type: integer
           format: int32
+    ApiResponseListTrainingProgramDto:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrainingProgramDto"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrainingProgramDto"
+        generatedAt:
+          type: string
+    ApiResponseMapLongListEmployeeTrainingRecordDto:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/EmployeeTrainingRecordDto"
+        data:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/EmployeeTrainingRecordDto"
+        generatedAt:
+          type: string
+    ApiResponseListProductionDiaryEventDto:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductionDiaryEventDto"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductionDiaryEventDto"
+        generatedAt:
+          type: string
+    ApiResponseListTaskProgressLogResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaskProgressLogResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaskProgressLogResponse"
+        generatedAt:
+          type: string
     ApiResponsePageResponseTaskProgressLogResponse:
       type: object
       properties:
@@ -5182,6 +6117,142 @@ components:
         completionRate:
           type: number
           format: double
+    ApiResponseSeasonReportDto:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/SeasonReportDto"
+        data:
+          $ref: "#/components/schemas/SeasonReportDto"
+        generatedAt:
+          type: string
+    ExpenseCategoryDto:
+      type: object
+      properties:
+        category:
+          type: string
+        amountVnd:
+          type: number
+    SeasonReportDto:
+      type: object
+      properties:
+        seasonId:
+          type: string
+        totalYieldKg:
+          type: number
+        expectedYieldKg:
+          type: number
+        totalExpenseVnd:
+          type: number
+        expenseByCategory:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExpenseCategoryDto"
+    ApiResponseListPHIAlertDto:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/PHIAlertDto"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PHIAlertDto"
+        generatedAt:
+          type: string
+    PHIAlertDto:
+      type: object
+      properties:
+        seasonId:
+          type: integer
+          format: int32
+        seasonName:
+          type: string
+        pesticideName:
+          type: string
+        appliedDate:
+          type: string
+          format: date
+        requiredIntervalDays:
+          type: integer
+          format: int32
+        earliestSafeDate:
+          type: string
+          format: date
+        daysRemaining:
+          type: integer
+          format: int64
+    ApiResponseListFarmingLogDto:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/FarmingLogDto"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/FarmingLogDto"
+        generatedAt:
+          type: string
+    FarmingLogDto:
+      type: object
+      properties:
+        id:
+          type: string
+        seasonId:
+          type: string
+        date:
+          type: string
+          format: date
+        activityType:
+          type: string
+        description:
+          type: string
+        amount:
+          type: number
+          format: double
+        unit:
+          type: string
+        performedBy:
+          type: string
+        status:
+          type: string
+        notes:
+          type: string
+        materialName:
+          type: string
+        quarantineDays:
+          type: integer
+          format: int32
+        soilCondition:
+          type: string
+        vietGapCompliant:
+          type: boolean
+        vietGapReason:
+          type: string
     ApiResponseListTaskResponse:
       type: object
       properties:
@@ -5289,6 +6360,5 @@ components:
   securitySchemes:
     bearerAuth:
       type: http
-      name: bearerAuth
       scheme: bearer
       bearerFormat: JWT

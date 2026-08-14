@@ -7,6 +7,7 @@ import org.example.marketplace.client.SeasonClient;
 import org.example.marketplace.dto.client.FarmSummaryDto;
 import org.example.marketplace.dto.client.SeasonDetailDto;
 import org.example.marketplace.dto.response.*;
+import org.example.marketplace.dto.request.MarketplaceUpdateProductStatusRequest;
 import org.example.marketplace.entity.MarketplaceProduct;
 import org.example.marketplace.model.MarketplaceProductStatus;
 import org.example.marketplace.repository.MarketplaceProductRepository;
@@ -18,6 +19,7 @@ import org.example.marketplace.repository.MarketplaceOrderRepository;
 import org.example.marketplace.entity.MarketplaceOrder;
 import org.example.marketplace.model.MarketplacePaymentVerificationStatus;
 import org.example.marketplace.exception.ConflictException;
+import org.example.marketplace.exception.ResourceNotFoundException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.mock.web.MockMultipartFile;
 import java.util.Optional;
@@ -29,6 +31,7 @@ import org.springframework.data.domain.Pageable;
 import org.example.marketplace.repository.MarketplaceOrderItemRepository;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.ArgumentMatchers.any;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -67,9 +70,115 @@ class MarketplaceServiceImplTest {
     private MarketplaceOrderItemRepository marketplaceOrderItemRepository;
     @Mock
     private MarketplaceStorageService storageService;
+    @Mock
+    private MarketplaceComplianceGateService complianceGateService;
 
     @InjectMocks
     private MarketplaceServiceImpl marketplaceService;
+
+    @Test
+    @DisplayName("Public product lookup does not expose a draft by slug")
+    void getProductBySlug_shouldNotExposeDraftProduct() {
+        when(marketplaceProductRepository.findBySlugAndStatusIn(
+                "draft-product", MarketplaceServiceImpl.PUBLIC_PRODUCT_STATUSES))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> marketplaceService.getProductBySlug("draft-product"));
+    }
+
+    @Test
+    @DisplayName("Public trace does not expose a draft by id")
+    void getPublicTraceability_shouldNotExposeDraftProduct() {
+        when(marketplaceProductRepository.findByIdAndStatusIn(
+                42L, MarketplaceServiceImpl.PUBLIC_PRODUCT_STATUSES))
+                .thenReturn(Optional.empty());
+        when(marketplaceProductRepository.findBySlugAndStatusIn(
+                "42", MarketplaceServiceImpl.PUBLIC_PRODUCT_STATUSES))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> marketplaceService.getPublicTraceability("42"));
+    }
+
+    @Test
+    @DisplayName("Farmer cannot move a draft product directly to a sellable status")
+    void updateFarmerProductStatus_shouldRejectDirectPublish() {
+        Long userId = 1L;
+        MarketplaceProduct product = MarketplaceProduct.builder()
+                .id(99L)
+                .farmerUserId(userId)
+                .status(MarketplaceProductStatus.DRAFT)
+                .build();
+        when(currentUserService.getCurrentUserId()).thenReturn(userId);
+        when(marketplaceProductRepository.findByIdAndFarmerUserId(99L, userId))
+                .thenReturn(Optional.of(product));
+
+        assertThrows(ConflictException.class, () -> marketplaceService.updateFarmerProductStatus(
+                99L,
+                new MarketplaceUpdateProductStatusRequest(MarketplaceProductStatus.ACTIVE, null)));
+
+        verify(marketplaceProductRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Admin approval to ACTIVE must pass the compliance gate")
+    void updateAdminProductStatus_activeShouldRunComplianceGate() {
+        MarketplaceProduct product = MarketplaceProduct.builder()
+                .id(100L)
+                .status(MarketplaceProductStatus.PENDING_REVIEW)
+                .build();
+        ComplianceCheckResponse compliance = new ComplianceCheckResponse(
+                true,
+                List.of(),
+                "VERIFIED",
+                "{\"certificate\":true}",
+                "{\"phi\":true}");
+        when(marketplaceProductRepository.findById(100L)).thenReturn(Optional.of(product));
+        when(complianceGateService.checkCompliance(product)).thenReturn(compliance);
+        when(currentUserService.getCurrentUserId()).thenReturn(2L);
+        when(marketplaceProductRepository.save(any(MarketplaceProduct.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        marketplaceService.updateAdminProductStatus(
+                100L,
+                new MarketplaceUpdateProductStatusRequest(MarketplaceProductStatus.ACTIVE, null));
+
+        verify(complianceGateService).checkCompliance(product);
+        assertThat(product.getCertificationSnapshotJson()).isEqualTo("{\"certificate\":true}");
+        assertThat(product.getHarvestSafetySnapshotJson()).isEqualTo("{\"phi\":true}");
+        assertThat(product.getComplianceCheckedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Admin sellable transitions must not persist when compliance is unavailable")
+    void updateAdminProductStatus_sellableShouldNotPersistWhenComplianceFails() {
+        for (MarketplaceProductStatus requestedStatus : List.of(
+                MarketplaceProductStatus.ACTIVE, MarketplaceProductStatus.PUBLISHED)) {
+            MarketplaceProduct product = MarketplaceProduct.builder()
+                    .id(101L)
+                    .status(MarketplaceProductStatus.PENDING_REVIEW)
+                    .build();
+            ComplianceCheckResponse rejected = new ComplianceCheckResponse(
+                    false,
+                    List.of("Không thể xác minh dữ liệu an toàn thu hoạch với season-service."),
+                    "NONE",
+                    null,
+                    null);
+            when(marketplaceProductRepository.findById(101L)).thenReturn(Optional.of(product));
+            when(complianceGateService.checkCompliance(product)).thenReturn(rejected);
+
+            assertThrows(ConflictException.class, () -> marketplaceService.updateAdminProductStatus(
+                    101L,
+                    new MarketplaceUpdateProductStatusRequest(requestedStatus, null)));
+
+            assertThat(product.getStatus()).isEqualTo(MarketplaceProductStatus.PENDING_REVIEW);
+            assertThat(product.getHarvestSafetySnapshotJson()).isNull();
+        }
+
+        verify(marketplaceProductRepository, never()).save(any());
+        verify(domainEventPublisher, never()).publish(any());
+    }
 
     @Test
     @DisplayName("Should successfully retrieve farmer product form options")
@@ -149,6 +258,9 @@ class MarketplaceServiceImplTest {
                 "Locally grown organic lettuce",
                 BigDecimal.valueOf(15000),
                 BigDecimal.valueOf(100),
+                BigDecimal.ONE,
+                true,
+                false,
                 "http://example.com/lettuce.png",
                 List.of(),
                 1001
@@ -162,6 +274,9 @@ class MarketplaceServiceImplTest {
                 .description(request.description())
                 .price(request.price())
                 .stockQuantity(request.stockQuantity())
+                .shippingWeightKgPerUnit(request.shippingWeightKgPerUnit())
+                .perishable(request.perishable())
+                .requiresColdChain(request.requiresColdChain())
                 .imageUrl(request.imageUrl())
                 .farmerUserId(userId)
                 .lotId(request.lotId())

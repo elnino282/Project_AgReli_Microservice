@@ -196,6 +196,24 @@ describe("FarmStorePage", () => {
     expect(screen.queryByText("Alpha Rice")).not.toBeInTheDocument();
   });
 
+  it("does not present standards or activity claims absent from the farm API", () => {
+    authMock.isAuthenticated = false;
+    authMock.user = null as never;
+
+    renderFarmStore();
+
+    expect(screen.queryByText("100% Hữu cơ")).not.toBeInTheDocument();
+    expect(screen.queryByText("Nước sạch tinh khiết")).not.toBeInTheDocument();
+    expect(screen.queryByText("Thuận tự nhiên")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Nhật ký nông trại" }));
+
+    expect(screen.queryByText("Ghi chép: Thu hoạch đợt 1")).not.toBeInTheDocument();
+    expect(screen.queryByText("Nhật ký: Bón phân vi sinh")).not.toBeInTheDocument();
+    expect(screen.queryByText("Kiểm tra chất lượng nước")).not.toBeInTheDocument();
+    expect(screen.getByText("Chưa có nhật ký canh tác được xác minh.")).toBeInTheDocument();
+  });
+
   it("triggers open-chat-widget custom event with the farm owner user ID when clicking message", () => {
     const dispatchSpy = vi.spyOn(window, "dispatchEvent");
     renderFarmStore();

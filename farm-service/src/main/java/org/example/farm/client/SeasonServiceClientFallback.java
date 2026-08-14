@@ -8,21 +8,17 @@ import org.springframework.stereotype.Component;
 public class SeasonServiceClientFallback implements SeasonServiceClient {
 
     @Override
-    public Boolean existsActiveSeasonsByPlot(Integer plotId) {
-        log.error("Fallback triggered: Failed to check active seasons for plot {} via season-service", plotId);
-        return false;
-    }
-
-    @Override
-    public Boolean existsActiveTasksByPlot(Integer plotId) {
-        log.error("Fallback triggered: Failed to check active tasks for plot {} via season-service", plotId);
-        return false;
+    public PlotDependencyStatusDto getPlotDependencies(Integer plotId) {
+        log.error("Fallback triggered: Failed to check dependencies for plot {} via season-service", plotId);
+        throw new IllegalStateException(
+                "season-service is unavailable; plot dependencies cannot be verified");
     }
 
     @Override
     public java.util.List<SeasonServiceClient.PesticideRecordInternalDto> getActivePHIInternal(Integer seasonId) {
         log.error("Fallback triggered: Failed to get active PHI for season {} via season-service", seasonId);
-        return java.util.Collections.emptyList();
+        throw new IllegalStateException(
+                "season-service is unavailable; PHI evidence cannot be verified");
     }
 
     @Override
@@ -34,7 +30,8 @@ public class SeasonServiceClientFallback implements SeasonServiceClient {
     @Override
     public java.util.List<SeasonServiceClient.SeasonSummaryDto> getSeasonsByPlotId(Integer plotId) {
         log.error("Fallback triggered: Failed to get seasons for plot {} via season-service", plotId);
-        return java.util.Collections.emptyList();
+        throw new IllegalStateException(
+                "season-service is unavailable; season evidence cannot be verified");
     }
 
     @Override

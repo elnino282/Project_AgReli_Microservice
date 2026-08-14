@@ -18,6 +18,20 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useMarketplacePublicTraceability } from "@/features/marketplace/hooks";
+import type { MarketplaceTraceability } from "@/shared/api";
+
+type TraceCertification = NonNullable<MarketplaceTraceability["certification"]>;
+
+export function isCertificationVerified(
+  certification: MarketplaceTraceability["certification"],
+  today = new Date(),
+): certification is TraceCertification {
+  if (!certification || certification.status !== "PUBLISHED") return false;
+  if (!certification.expiryDate) return true;
+
+  const expiry = new Date(`${certification.expiryDate}T23:59:59.999`);
+  return !Number.isNaN(expiry.getTime()) && expiry >= today;
+}
 
 export function PublicTracePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -66,9 +80,11 @@ export function PublicTracePage() {
   }
 
   const { farm, season, plot, harvest, productLot, timeline, validatedAt, certification, phiSafety, nutritionClaim } = traceability;
+  const hasVerifiedCertification = isCertificationVerified(certification);
 
   // Determine global PHI safety status
-  const isPHISafe = phiSafety?.safe ?? true;
+  const hasVerifiedPHI = phiSafety != null;
+  const isPHISafe = phiSafety?.safe ?? false;
   const pesticideUsage = phiSafety?.pesticideUsage ?? [];
   const totalPesticides = phiSafety?.totalPesticidesUsed ?? 0;
   const safePesticides = phiSafety?.safePesticides ?? 0;
@@ -76,12 +92,17 @@ export function PublicTracePage() {
   const blockedPesticides = totalPesticides - safePesticides - cautionPesticides;
 
   // Global safety color badge configuration
-  let safetyBadgeColor = "bg-emerald-50 text-emerald-800 border-emerald-100";
-  let safetyBgClass = "bg-emerald-600";
-  let safetyStatusLabel = "An toàn - Đã hết thời gian cách ly";
-  let safetyIcon = <CheckCircle2 className="w-6 h-6 text-emerald-500" />;
+  let safetyBadgeColor = "bg-slate-50 text-slate-700 border-slate-200";
+  let safetyBgClass = "bg-slate-600";
+  let safetyStatusLabel = "Chưa có dữ liệu PHI được xác minh";
+  let safetyIcon = <Info className="w-6 h-6 text-slate-500" />;
 
-  if (!isPHISafe) {
+  if (hasVerifiedPHI && isPHISafe) {
+    safetyBadgeColor = "bg-emerald-50 text-emerald-800 border-emerald-100";
+    safetyBgClass = "bg-emerald-600";
+    safetyStatusLabel = "An toàn - Đã hết thời gian cách ly";
+    safetyIcon = <CheckCircle2 className="w-6 h-6 text-emerald-500" />;
+  } else if (hasVerifiedPHI) {
     if (blockedPesticides > 0) {
       safetyBadgeColor = "bg-rose-50 text-rose-800 border-rose-100";
       safetyBgClass = "bg-red-600";
@@ -147,7 +168,7 @@ export function PublicTracePage() {
           <div className={`${safetyBgClass} p-6 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4`}>
             <div>
               <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase">
-                <ShieldCheck className="w-3.5 h-3.5" /> Khóa bảo vệ an toàn thực phẩm
+                <ShieldCheck className="w-3.5 h-3.5" /> {hasVerifiedPHI ? "Khóa bảo vệ an toàn thực phẩm" : "Trạng thái xác minh an toàn thực phẩm"}
               </div>
               <h2 className="text-xl font-bold mt-2 leading-tight">
                 {productLot?.lotCode ? `Lô hàng: ${productLot.lotCode}` : "Thông tin lô nông sản"}
@@ -174,11 +195,11 @@ export function PublicTracePage() {
               <div>
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Nguồn sản xuất</span>
                 <h3 className="font-bold text-slate-800 text-base mt-1 flex items-center gap-1.5">
-                  <Leaf className="w-4 h-4 text-emerald-600" /> {farm?.name ?? "Nông trại VietGAP"}
+                  <Leaf className="w-4 h-4 text-emerald-600" /> {farm?.name ?? "Nông trại chưa cập nhật"}
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 flex items-start gap-1">
                   <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                  <span>{farm?.address ?? farm?.region ?? "Vùng sản xuất nông nghiệp sạch"}</span>
+                  <span>{farm?.address ?? farm?.region ?? "Chưa cập nhật địa chỉ"}</span>
                 </p>
               </div>
 
@@ -198,48 +219,54 @@ export function PublicTracePage() {
               </div>
             </div>
 
-            {/* VietGAP certification badge */}
             <div className="bg-white p-5 rounded-2xl border border-slate-100 flex flex-col justify-between relative overflow-hidden group">
               <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50 group-hover:opacity-80 transition-opacity" />
-              <div className="relative">
+              {hasVerifiedCertification ? <><div className="relative">
                 <div className="flex items-center gap-2">
                   <Award className="w-6 h-6 text-emerald-600 shrink-0" />
                   <div>
                     <span className="text-xs font-bold text-emerald-800">Đạt tiêu chuẩn VietGAP</span>
                     <h4 className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">
-                      {certification?.certificationName ?? "VietGAP Trồng trọt 2024"}
+                      {certification.certificationName}
                     </h4>
                   </div>
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
                   <div>
-                    <span className="text-slate-400 block text-[10px]">Mã số chứng chỉ</span>
+                    <span className="text-slate-400 block text-[10px]">Loại chứng nhận</span>
                     <span className="font-mono font-semibold text-slate-700 block mt-0.5">
-                      {certification?.certificationType ? "VG-2026-ACTIVE" : "ĐANG HOẠT ĐỘNG"}
+                      {certification.certificationType}
                     </span>
                   </div>
                   <div>
                     <span className="text-slate-400 block text-[10px]">Điểm compliance</span>
                     <span className="font-extrabold text-emerald-600 block mt-0.5">
-                      {certification?.complianceScore ? `${certification.complianceScore.toFixed(0)}%` : "85%"}
+                      {`${certification.complianceScore.toFixed(0)}%`}
                     </span>
                   </div>
                 </div>
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-50 text-[10px] text-slate-400 flex items-center justify-between relative">
-                <span>Hạn dùng: {certification?.expiryDate ? new Date(certification.expiryDate).toLocaleDateString("vi-VN") : "Còn hiệu lực"}</span>
+                <span>Hạn dùng: {certification.expiryDate ? new Date(certification.expiryDate).toLocaleDateString("vi-VN") : "Không ghi nhận"}</span>
                 <span className="flex items-center gap-0.5 text-emerald-600 font-semibold">
                   Đã xác thực <ShieldCheck className="w-3.5 h-3.5" />
                 </span>
               </div>
+              </> : <div className="relative flex h-full flex-col justify-center gap-2 text-slate-500">
+                <div className="flex items-center gap-2">
+                  <Info className="h-6 w-6 shrink-0 text-slate-400" />
+                  <span className="text-sm font-bold text-slate-700">Chưa có chứng nhận được xác minh</span>
+                </div>
+                <p className="text-xs">Hệ thống không có snapshot chứng nhận còn hiệu lực cho lô hàng này.</p>
+              </div>}
             </div>
           </div>
 
           <div className="p-4 bg-emerald-50/20 px-6 flex items-center justify-between text-xs text-slate-500">
             <span className="flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" /> Xác thực số ngày: {validatedAt ? new Date(validatedAt).toLocaleDateString("vi-VN") : new Date().toLocaleDateString("vi-VN")}
+              <Calendar className="w-3.5 h-3.5 text-slate-400" /> Xác thực số ngày: {validatedAt ? new Date(validatedAt).toLocaleDateString("vi-VN") : "Chưa ghi nhận"}
             </span>
             <span className="font-semibold text-emerald-700 flex items-center gap-0.5">
               Ký số nông sản <Sparkles className="w-3.5 h-3.5" />

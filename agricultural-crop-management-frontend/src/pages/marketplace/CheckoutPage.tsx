@@ -12,9 +12,8 @@ import type {
   MarketplacePaymentMethod,
   MarketplaceCart,
   MarketplaceCartItem,
-  ShippingOption,
 } from "@/shared/api";
-import { deliveryApi } from "@/shared/api";
+import { deliveryApi, marketplaceApi } from "@/shared/api";
 import {
   useCheckoutValidation,
   useMarketplaceAddresses,
@@ -152,8 +151,7 @@ export function CheckoutPage() {
   const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
   const [addressForm, setAddressForm] = useState<AddressFormState>(() => emptyAddressForm());
   const [addressFormMessage, setAddressFormMessage] = useState<string | null>(null);
-  const [selectedShippingOption, setSelectedShippingOption] = useState<ShippingOption | null>(null);
-  const [isGroupedDelivery, setIsGroupedDelivery] = useState(false);
+  const [selectedShippingQuotes, setSelectedShippingQuotes] = useState<Record<string, string>>({});
 
   const mockCart = useMemo<MarketplaceCart | undefined>(() => {
     if (!buyNowItem) return undefined;
@@ -200,6 +198,7 @@ export function CheckoutPage() {
       return cart.sellerGroups.map((group) => ({
         farmerUserId: group.farmerUserId,
         farmerName: group.farmerName,
+        farmId: group.farmId,
         items: group.items,
       }));
     }
@@ -208,7 +207,12 @@ export function CheckoutPage() {
     cart.items.forEach((item) => {
       groups.set(item.farmerUserId, [...(groups.get(item.farmerUserId) ?? []), item]);
     });
-    return Array.from(groups.entries()).map(([farmerUserId, items]) => ({ farmerUserId, farmerName: null as string | null, items }));
+    return Array.from(groups.entries()).map(([farmerUserId, items]) => ({
+      farmerUserId,
+      farmerName: null as string | null,
+      farmId: null as number | null,
+      items,
+    }));
   }, [cart]);
 
   useEffect(() => {
@@ -244,59 +248,37 @@ export function CheckoutPage() {
     );
   }, [addressesQuery.data, defaultAddress, selectedAddressId]);
 
-  // Dynamic shipping calculations
-  const totalWeight = useMemo(() => {
-    if (!cart) return 0;
-    return cart.items.reduce((sum, item) => sum + item.quantity * 0.5, 0);
-  }, [cart]);
-
-  const requiresColdChain = useMemo(() => {
-    if (!cart) return false;
-    const keywords = ["rau", "củ", "quả", "thịt", "cá", "sữa", "fresh", "perishable", "tươi", "lạnh"];
-    return cart.items.some((item) =>
-      keywords.some((kw) => item.name.toLowerCase().includes(kw))
-    );
-  }, [cart]);
-
-  const senderProvince = "Lâm Đồng";
   const recipientProvince = addressMode === "new" ? addressForm.province : selectedAddress?.province;
 
-  const { data: shippingOptions, isLoading: isShippingLoading } = useQuery({
-    queryKey: ["shippingOptions", senderProvince, recipientProvince, totalWeight, requiresColdChain, isGroupedDelivery],
-    queryFn: () =>
-      deliveryApi.calculate({
-        senderProvince,
+  const { data: shippingQuoteGroups, isLoading: isShippingLoading } = useQuery({
+    queryKey: ["marketplaceShippingQuotes", cartFingerprint, selectedAddress?.id, recipientProvince],
+    queryFn: async () => {
+      const response = await marketplaceApi.createShippingQuotes({
+        addressId: addressMode === "saved" ? selectedAddress?.id : undefined,
         recipientProvince: recipientProvince ?? "",
-        weightKg: totalWeight,
-        requiresColdChain,
-        prefersSameDay: false,
-        isGroupedDelivery,
-        // Mock tọa độ nông trại và người mua để test tính phí theo bán kính Haversine
-        senderLat: 11.9404, // Đà Lạt
-        senderLon: 108.4583,
-        recipientLat: recipientProvince === "Lâm Đồng" ? 11.9450 : 10.7626, // Cùng TP hoặc HCM
-        recipientLon: recipientProvince === "Lâm Đồng" ? 108.4550 : 106.6601,
-      }),
-    enabled: !!recipientProvince && totalWeight > 0,
+        items: buyNowItem ? [{ productId: buyNowItem.productId, quantity: buyNowItem.quantity }] : undefined,
+      });
+      return response.result;
+    },
+    enabled: Boolean(recipientProvince && cart && cart.items.length > 0),
   });
 
   useEffect(() => {
-    // Reset selected shipping option if cart changes
-    setSelectedShippingOption(null);
-  }, [cart]);
-
-  useEffect(() => {
-    if (shippingOptions && shippingOptions.length > 0) {
-      const exists = shippingOptions.find(
-        (o) => o.providerId === selectedShippingOption?.providerId && o.type === selectedShippingOption?.type
-      );
-      if (!exists) {
-        setSelectedShippingOption(shippingOptions[0]);
-      }
-    } else {
-      setSelectedShippingOption(null);
+    if (!shippingQuoteGroups) {
+      setSelectedShippingQuotes({});
+      return;
     }
-  }, [shippingOptions]);
+    setSelectedShippingQuotes((current) => {
+      const next: Record<string, string> = {};
+      shippingQuoteGroups.forEach((group) => {
+        const key = `${group.sellerUserId}:${group.farmId}`;
+        const existing = group.options.some((option) => option.quoteId === current[key]);
+        const quoteId = existing ? current[key] : group.options[0]?.quoteId;
+        if (quoteId) next[key] = quoteId;
+      });
+      return next;
+    });
+  }, [shippingQuoteGroups]);
 
   const currentAddressMutation =
     editingAddressId == null ? createAddressMutation : updateAddressMutation;
@@ -372,7 +354,15 @@ export function CheckoutPage() {
     );
   }
 
-  const shippingFee = selectedShippingOption ? selectedShippingOption.shippingFeeVnd : 0;
+  const selectedQuoteOptions = (shippingQuoteGroups ?? []).flatMap((group) => {
+    const key = `${group.sellerUserId}:${group.farmId}`;
+    const option = group.options.find((candidate) => candidate.quoteId === selectedShippingQuotes[key]);
+    return option ? [{ group, option }] : [];
+  });
+  const hasQuoteForEveryGroup = Boolean(
+    shippingQuoteGroups?.length && selectedQuoteOptions.length === shippingQuoteGroups.length,
+  );
+  const shippingFee = selectedQuoteOptions.reduce((sum, selected) => sum + selected.option.shippingFeeVnd, 0);
   const total = cart.subtotal + shippingFee;
   const submitErrorMessage =
     createOrderMutation.error instanceof Error
@@ -715,41 +705,6 @@ export function CheckoutPage() {
                 />
               </div>
 
-              {/* Delivery Schedule Options */}
-              <div className="space-y-3 pt-2">
-                <label className="block text-sm font-medium text-foreground">Thời gian nhận hàng</label>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  <div
-                    onClick={() => setIsGroupedDelivery(false)}
-                    className={cn(
-                      "flex cursor-pointer items-center justify-between rounded-lg border-2 p-4 transition-all",
-                      !isGroupedDelivery ? "border-primary bg-primary/5" : "border-border bg-card hover:border-border/80"
-                    )}
-                  >
-                    <div>
-                      <div className="font-semibold text-foreground">Giao hàng tiêu chuẩn</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">Nhận hàng ngay khi có thể</div>
-                    </div>
-                  </div>
-                  
-                  <div
-                    onClick={() => setIsGroupedDelivery(true)}
-                    className={cn(
-                      "flex cursor-pointer items-center justify-between rounded-lg border-2 p-4 transition-all relative overflow-hidden",
-                      isGroupedDelivery ? "border-emerald-500 bg-emerald-500/5" : "border-border bg-card hover:border-border/80"
-                    )}
-                  >
-                    <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">
-                      Giảm 30% phí
-                    </div>
-                    <div>
-                      <div className="font-semibold text-foreground text-emerald-700">Hẹn lịch cuối tuần</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">Gom đơn - Tiết kiệm chi phí ship</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Shipping Options Selector */}
               {isShippingLoading && (
                 <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-center text-sm text-muted-foreground animate-pulse">
@@ -757,50 +712,60 @@ export function CheckoutPage() {
                 </div>
               )}
 
-              {recipientProvince && !isShippingLoading && (!shippingOptions || shippingOptions.length === 0) && (
+              {recipientProvince && !isShippingLoading && (!shippingQuoteGroups || shippingQuoteGroups.length === 0) && (
                 <div className="rounded-lg border border-dashed border-destructive/20 bg-destructive/5 p-4 text-center text-sm text-destructive">
                   Không tìm thấy đơn vị vận chuyển phù hợp cho tuyến đường này.
                 </div>
               )}
 
-              {shippingOptions && shippingOptions.length > 0 && (
+              {shippingQuoteGroups && shippingQuoteGroups.length > 0 && (
                 <div className="space-y-3">
-                  <label className="block text-sm font-medium text-foreground">Phương thức vận chuyển</label>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {shippingOptions.map((option) => {
-                      const isSelected =
-                        selectedShippingOption?.providerId === option.providerId &&
-                        selectedShippingOption?.type === option.type;
-                      return (
-                        <div
-                          key={`${option.providerId}-${option.type}`}
-                          onClick={() => setSelectedShippingOption(option)}
-                          className={cn(
-                            "flex cursor-pointer flex-col gap-1.5 rounded-lg border-2 p-4 transition-all duration-200",
-                            isSelected
-                              ? "border-emerald-600 bg-emerald-50/50 shadow-sm"
-                              : "border-border bg-card hover:border-border/80 hover:bg-muted/30"
-                          )}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold text-foreground">{option.providerName}</span>
-                            <span className="text-sm font-bold text-primary">{formatVnd(option.shippingFeeVnd)}</span>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                            <span className="rounded bg-muted px-1.5 py-0.5 capitalize">
-                              {option.type === "same_day" ? "Giao trong ngày" : "Giao hàng tiêu chuẩn"}
-                            </span>
-                            {option.isColdChain && (
-                              <span className="rounded bg-blue-100 text-blue-800 px-1.5 py-0.5">
-                                Chuỗi lạnh (Cold chain)
-                              </span>
-                            )}
-                            <span>Dự kiến: {option.estimatedHours}h</span>
-                          </div>
+                  <label className="block text-sm font-medium text-foreground">Phương thức vận chuyển theo nông trại</label>
+                  {shippingQuoteGroups.map((group) => {
+                    const groupKey = `${group.sellerUserId}:${group.farmId}`;
+                    return (
+                      <div key={groupKey} className="space-y-2 rounded-xl border border-border p-3">
+                        <div className="text-sm font-semibold text-foreground">
+                          {group.farmName ?? `Nông trại ${group.farmId}`} · {group.senderProvince} · {group.weightKg} kg
                         </div>
-                      );
-                    })}
-                  </div>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          {group.options.map((option) => {
+                            const isSelected = selectedShippingQuotes[groupKey] === option.quoteId;
+                            return (
+                              <button
+                                type="button"
+                                key={option.quoteId}
+                                onClick={() => setSelectedShippingQuotes((current) => ({
+                                  ...current,
+                                  [groupKey]: option.quoteId,
+                                }))}
+                                className={cn(
+                                  "flex cursor-pointer flex-col gap-1.5 rounded-lg border-2 p-4 text-left transition-all duration-200",
+                                  isSelected
+                                    ? "border-emerald-600 bg-emerald-50/50 shadow-sm"
+                                    : "border-border bg-card hover:border-border/80 hover:bg-muted/30",
+                                )}
+                              >
+                                <div className="flex items-center justify-between gap-3">
+                                  <span className="font-semibold text-foreground">{option.providerName}</span>
+                                  <span className="text-sm font-bold text-primary">{formatVnd(option.shippingFeeVnd)}</span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                  <span className="rounded bg-muted px-1.5 py-0.5">
+                                    {option.serviceType === "same_day" ? "Giao trong ngày" : "Giao hàng tiêu chuẩn"}
+                                  </span>
+                                  {group.requiresColdChain ? (
+                                    <span className="rounded bg-blue-100 px-1.5 py-0.5 text-blue-800">Chuỗi lạnh</span>
+                                  ) : null}
+                                  <span>Dự kiến: {option.estimatedHours}h</span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
@@ -1024,7 +989,8 @@ export function CheckoutPage() {
                   createOrderMutation.isPending ||
                   !effectiveRecipientName ||
                   !effectivePhone ||
-                  !effectiveShippingAddressLine
+                  !effectiveShippingAddressLine ||
+                  !hasQuoteForEveryGroup
                 }
                 onClick={async () => {
                   const validation = validateCheckout({
@@ -1047,35 +1013,27 @@ export function CheckoutPage() {
                       shippingRecipientName: effectiveRecipientName,
                       shippingPhone: effectivePhone,
                       shippingAddressLine: effectiveShippingAddressLine ?? '',
+                      shippingProvince: recipientProvince ?? '',
                       note: note.trim() || undefined,
                       idempotencyKey: checkoutIdempotencyKey,
                       items: buyNowItem ? [{ productId: buyNowItem.productId, quantity: buyNowItem.quantity }] : undefined,
+                      shippingQuotes: selectedQuoteOptions.map(({ group, option }) => ({
+                        sellerUserId: group.sellerUserId,
+                        farmId: group.farmId,
+                        quoteId: option.quoteId,
+                      })),
                     });
 
                     // Register delivery orders for each split order
-                    if (selectedShippingOption && result.orders && result.orders.length > 0) {
-                      for (const order of result.orders) {
-                        try {
-                          await deliveryApi.createDeliveryOrder({
-                            marketplaceOrderId: order.id,
-                            providerId: selectedShippingOption.providerId,
-                            shippingFeeVnd: selectedShippingOption.shippingFeeVnd,
-                            isPerishable: requiresColdChain,
-                            requiresColdChain: requiresColdChain,
-                            recipientName: effectiveRecipientName ?? '',
-                            recipientPhone: effectivePhone ?? '',
-                            recipientAddress: effectiveShippingAddressLine ?? '',
-                            recipientProvince: recipientProvince ?? '',
-                            weightKg: totalWeight,
-                          });
-                        } catch (err) {
-                          console.error("Failed to register delivery order in delivery-service", err);
-                        }
-                      }
+                    for (const orderQuote of result.orderShippingQuotes) {
+                      await deliveryApi.createDeliveryOrder({
+                        marketplaceOrderId: orderQuote.orderId,
+                        shippingQuoteId: orderQuote.shippingQuoteId,
+                      });
                     }
 
                     toast.success('Đặt hàng thành công.');
-                    const firstOrderId = result.orders[0]?.id;
+                    const firstOrderId = result.orderIds[0];
                     if (firstOrderId) {
                       navigate(`/marketplace/orders/${firstOrderId}`);
                       return;

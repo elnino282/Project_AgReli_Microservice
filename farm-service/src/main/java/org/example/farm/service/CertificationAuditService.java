@@ -36,6 +36,7 @@ public class CertificationAuditService {
     private final FarmDocumentRepository farmDocumentRepository;
     private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
+    private final CertificationService certificationService;
 
     // === VALID TRANSITIONS (state machine guard) ===
     private static final Map<String, Set<String>> VALID_TRANSITIONS = Map.ofEntries(
@@ -326,6 +327,7 @@ public class CertificationAuditService {
     public void issueCertificate(Integer farmId, IssueCertificateRequest req) {
         CertificationRecord record = findRecordByFarmId(farmId);
         validateTransition(record.getStatus(), "CERTIFIED");
+        certificationService.requireVerifiedEvidence(farmId);
 
         // BR-D-01: Check no CRITICAL nonconformity is OPEN
         List<CertificationAudit> audits = auditRepository.findByRecordId(record.getId());
@@ -361,6 +363,11 @@ public class CertificationAuditService {
 
         if (!doc.getFarmId().equals(farmId)) {
             throw new AppException(ErrorCode.BAD_REQUEST);
+        }
+
+        if ("VERIFIED".equals(req.getStatus().toUpperCase())
+                && "CERTIFICATE".equals(doc.getDocumentType())) {
+            certificationService.requireVerifiedEvidence(farmId);
         }
 
         doc.setVerificationStatus(req.getStatus().toUpperCase());

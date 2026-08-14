@@ -26,6 +26,7 @@ export interface ShippingOption {
 export interface DeliveryOrder {
   id: number;
   marketplaceOrderId: number;
+  buyerUserId: number | null;
   providerId: number;
   trackingNumber: string | null;
   status: "PENDING" | "PICKUP_SCHEDULED" | "IN_TRANSIT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "RETURNED" | "CANCELLED";
@@ -54,15 +55,7 @@ export const deliveryApi = {
   },
   createDeliveryOrder: async (req: {
     marketplaceOrderId: number;
-    providerId: number;
-    shippingFeeVnd: number;
-    isPerishable: boolean;
-    requiresColdChain: boolean;
-    recipientName: string;
-    recipientPhone: string;
-    recipientAddress: string;
-    recipientProvince: string;
-    weightKg: number;
+    shippingQuoteId: string;
   }): Promise<DeliveryOrder> => {
     const response = await httpClient.post<DeliveryOrder>("/api/v1/delivery/orders", req);
     return response.data;

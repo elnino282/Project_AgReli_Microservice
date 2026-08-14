@@ -9,6 +9,7 @@ import type {
   MarketplaceCart,
   MarketplaceCreateOrderRequest,
   MarketplaceCreateOrderResult,
+  MarketplaceShippingQuoteGroup,
   MarketplaceCreateReviewRequest,
   MarketplaceFarmerDashboard,
   MarketplaceFarmerOrderQuery,
@@ -104,6 +105,12 @@ export interface MarketplaceApiAdapter {
   createOrder(
     request: MarketplaceCreateOrderRequest,
   ): Promise<MarketplaceApiResponse<MarketplaceCreateOrderResult>>;
+
+  createShippingQuotes(request: {
+    addressId?: number;
+    recipientProvince: string;
+    items?: Array<{ productId: number; quantity: number }>;
+  }): Promise<MarketplaceApiResponse<MarketplaceShippingQuoteGroup[]>>;
 
   listOrders(
     query?: MarketplaceOrderQuery,

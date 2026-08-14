@@ -689,7 +689,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseCropNitrogenReferenceResponse"
-  /api/v1/catalog/crops:
+  /api/v1/catalogs/crops:
     get:
       tags:
       - catalog-controller
@@ -709,7 +709,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseListCropResponse"
-  /api/v1/catalog/crops/{cropId}/varieties:
+  /api/v1/catalogs/crops/{cropId}/varieties:
     get:
       tags:
       - catalog-controller
@@ -751,6 +751,25 @@ components:
           type: string
         description:
           type: string
+        category:
+          type: string
+          enum:
+          - GRAIN
+          - VEGETABLE
+          - FRUIT
+          - TUBER
+          - HERB
+          - OTHER
+        postHarvestDelayDays:
+          type: integer
+          format: int32
+        shelfLifeDays:
+          type: integer
+          format: int32
+        defaultStorageCategory:
+          type: string
+        requiresColdChain:
+          type: boolean
       required:
       - cropName
     ApiResponseCropResponse:
@@ -779,6 +798,25 @@ components:
           type: string
         description:
           type: string
+        category:
+          type: string
+          enum:
+          - GRAIN
+          - VEGETABLE
+          - FRUIT
+          - TUBER
+          - HERB
+          - OTHER
+        postHarvestDelayDays:
+          type: integer
+          format: int32
+        shelfLifeDays:
+          type: integer
+          format: int32
+        defaultStorageCategory:
+          type: string
+        requiresColdChain:
+          type: boolean
     VarietyRequest:
       type: object
       properties:
@@ -862,6 +900,25 @@ components:
           format: int32
         cropName:
           type: string
+        category:
+          type: string
+          enum:
+          - GRAIN
+          - VEGETABLE
+          - FRUIT
+          - TUBER
+          - HERB
+          - OTHER
+        postHarvestDelayDays:
+          type: integer
+          format: int32
+        shelfLifeDays:
+          type: integer
+          format: int32
+        defaultStorageCategory:
+          type: string
+        requiresColdChain:
+          type: boolean
     ApiResponseListCropResponse:
       type: object
       properties:
@@ -932,6 +989,5 @@ components:
   securitySchemes:
     bearerAuth:
       type: http
-      name: bearerAuth
       scheme: bearer
       bearerFormat: JWT

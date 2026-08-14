@@ -25,6 +25,7 @@ public class ControllerSecurityAnnotationTest {
             "getFarmDetail",
             "listFarmReviews",
             "getProductTraceability",
+            "getTraceabilityLegacy",
             "getPublicTrace",
             "getProductQRCode"
     );

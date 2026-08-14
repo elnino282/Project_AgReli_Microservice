@@ -17,6 +17,7 @@ import type {
   MarketplaceCart,
   MarketplaceCreateOrderRequest,
   MarketplaceCreateOrderResult,
+  MarketplaceShippingQuoteGroup,
   MarketplaceCreateReviewRequest,
   MarketplaceFarmerDashboard,
   MarketplaceFarmerOrderQuery,
@@ -226,6 +227,16 @@ export function createMarketplaceRealAdapter(): MarketplaceApiAdapter {
             'X-Idempotency-Key': request.idempotencyKey,
           },
         }),
+      );
+    },
+
+    createShippingQuotes(request: {
+      addressId?: number;
+      recipientProvince: string;
+      items?: Array<{ productId: number; quantity: number }>;
+    }) {
+      return requestEnvelope<MarketplaceShippingQuoteGroup[]>(() =>
+        httpClient.post(`${MARKETPLACE_API_PREFIX}/shipping-quotes`, request),
       );
     },
 

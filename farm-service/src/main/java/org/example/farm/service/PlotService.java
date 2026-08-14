@@ -172,30 +172,24 @@ public class PlotService {
         Plot plot = plotRepository.findByIdAndFarmUserId(id, userId)
                 .orElseThrow(() -> new AppException(ErrorCode.PLOT_NOT_FOUND));
 
-        // Check if there are active seasons on this plot via monolith/season-service
+        final SeasonServiceClient.PlotDependencyStatusDto dependencies;
         try {
-            Boolean response = seasonServiceClient.existsActiveSeasonsByPlot(id);
-            if (response != null && response) {
-                throw new AppException(ErrorCode.PLOT_HAS_ACTIVE_SEASONS);
+            dependencies = seasonServiceClient.getPlotDependencies(id);
+            if (dependencies == null) {
+                throw new AppException(ErrorCode.PLOT_DEPENDENCY_UNAVAILABLE);
             }
         } catch (AppException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Failed to check active seasons via season service: {}", e.getMessage());
-            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
+            log.error("Failed to verify dependencies for plot {} via season service", id, e);
+            throw new AppException(ErrorCode.PLOT_DEPENDENCY_UNAVAILABLE);
         }
 
-        // Check if there are active tasks on this plot via monolith/season-service
-        try {
-            Boolean response = seasonServiceClient.existsActiveTasksByPlot(id);
-            if (response != null && response) {
-                throw new AppException(ErrorCode.PLOT_HAS_ACTIVE_TASKS);
-            }
-        } catch (AppException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("Failed to check active tasks via season service: {}", e.getMessage());
-            throw new AppException(ErrorCode.INTERNAL_SERVER_ERROR);
+        if (dependencies.isHasActiveSeasons()) {
+            throw new AppException(ErrorCode.PLOT_HAS_ACTIVE_SEASONS);
+        }
+        if (dependencies.isHasActiveTasks()) {
+            throw new AppException(ErrorCode.PLOT_HAS_ACTIVE_TASKS);
         }
 
         writeOutboxEvent(plot, Action.DELETED);

@@ -28,6 +28,7 @@ public class SecurityConfig {
             "/api/v1/marketplace/products/*/public-trace",
             "/api/v1/marketplace/products/*/qr-code",
             "/api/v1/marketplace/products/{id}/traceability",
+            "/api/v1/marketplace/traceability/*",
             "/api/v1/marketplace/products/**",
             "/api/v1/marketplace/farms/**",
             "/api/v1/marketplace/product-images/**"

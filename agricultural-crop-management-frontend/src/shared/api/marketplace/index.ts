@@ -20,6 +20,7 @@ export type {
   MarketplaceCartSellerGroup,
   MarketplaceCreateOrderRequest,
   MarketplaceCreateOrderResult,
+  MarketplaceShippingQuoteGroup,
   MarketplaceCreateReviewRequest,
   MarketplaceFarmerDashboard,
   MarketplaceFarmerOrderQuery,

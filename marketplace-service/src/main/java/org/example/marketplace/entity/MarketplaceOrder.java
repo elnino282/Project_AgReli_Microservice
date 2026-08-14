@@ -57,6 +57,9 @@ public class MarketplaceOrder {
     @Column(name = "farmer_user_id", nullable = false)
     Long farmerUserId;
 
+    @Column(name = "farm_id")
+    Integer farmId;
+
     @Convert(converter = org.example.marketplace.model.MarketplaceOrderStatusConverter.class)
     @Column(name = "status", nullable = false, length = 30)
     MarketplaceOrderStatus status;
@@ -107,6 +110,21 @@ public class MarketplaceOrder {
 
     @Column(name = "shipping_fee", nullable = false, precision = 19, scale = 2)
     BigDecimal shippingFee;
+
+    @Column(name = "shipping_quote_id", length = 36, unique = true)
+    String shippingQuoteId;
+
+    @Column(name = "shipping_weight_kg", precision = 10, scale = 3)
+    BigDecimal shippingWeightKg;
+
+    @Column(name = "shipping_provider_id")
+    Integer shippingProviderId;
+
+    @Column(name = "shipping_origin_province", length = 100)
+    String shippingOriginProvince;
+
+    @Column(name = "shipping_destination_province", length = 100)
+    String shippingDestinationProvince;
 
     @Column(name = "total_amount", nullable = false, precision = 19, scale = 2)
     BigDecimal totalAmount;

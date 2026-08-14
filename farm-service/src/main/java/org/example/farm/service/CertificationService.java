@@ -197,20 +197,31 @@ public class CertificationService {
     }
 
     public void apply(Integer farmId) {
-        CertificationRecord record = getOrCreateRecord(farmId);
-
-        // Lấy score hiện tại
-        List<CertificationItemStatus> statuses = itemStatusRepository.findByRecordId(record.getId());
-        List<CertificationChecklistItem> items = checklistItemRepository.findByStandardId(record.getStandardId());
-        BigDecimal score = scoringService.calculateScore(statuses, items);
-
-        if (score.compareTo(BigDecimal.valueOf(80)) < 0) {
-            throw new IllegalArgumentException("Không đủ điều kiện: Điểm VietGAP phải đạt ít nhất 80%.");
-        }
+        CertificationRecord record = requireVerifiedEvidence(farmId);
 
         record.setStatus("APPLIED");
         record.setAppliedAt(LocalDateTime.now());
         recordRepository.save(record);
+    }
+
+    /**
+     * Revalidate auto evidence before a state transition consumes the score.
+     * Downstream-unavailable throws a typed 503 and the caller transaction rolls back.
+     */
+    public CertificationRecord requireVerifiedEvidence(Integer farmId) {
+        CertificationRecord record = getOrCreateRecord(farmId);
+        List<CertificationItemStatus> statuses = itemStatusRepository.findByRecordId(record.getId());
+        List<CertificationChecklistItem> items = checklistItemRepository.findByStandardId(record.getStandardId());
+
+        scoringService.autoPopulateFromFieldLogs(farmId, statuses, items);
+        itemStatusRepository.saveAll(statuses);
+
+        BigDecimal score = scoringService.calculateScore(statuses, items);
+        record.setComplianceScore(score);
+        if (score.compareTo(BigDecimal.valueOf(80)) < 0) {
+            throw new IllegalArgumentException("Không đủ điều kiện: Điểm VietGAP phải đạt ít nhất 80%.");
+        }
+        return record;
     }
 
     public org.example.farm.dto.response.FarmDocumentResponse exportDossier(Integer farmId, org.example.farm.dto.request.ExportDossierRequest request, Long userId, org.example.farm.client.SeasonProductionDiaryClient diaryClient, FarmDocumentService documentService) {

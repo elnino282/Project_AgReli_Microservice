@@ -15,7 +15,14 @@ services:
       - ./init-mysql.sql:/docker-entrypoint-initdb.d/init.sql
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test:
+        - CMD-SHELL
+        - >-
+          mysql --protocol=TCP -h 127.0.0.1 -u"$${MYSQL_USER}" -p"$${MYSQL_PASSWORD}"
+          -e "USE identity_db; USE crop_catalog_db; USE farm_db; USE season_db;
+          USE inventory_db; USE marketplace_db; USE finance_db; USE incident_db;
+          USE sustainability_db; USE admin_reporting_db; USE delivery_db; SELECT 1;"
+          >/dev/null 2>&1
       interval: 10s
       timeout: 5s
       retries: 5
@@ -90,7 +97,15 @@ services:
     volumes:
       - chroma_data:/chroma/chroma
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      test:
+        - CMD
+        - bash
+        - -ec
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/8000;
+          printf 'GET /api/v2/healthcheck HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3;
+          IFS=' ' read -r _ status _ <&3;
+          test "$${status}" = 200
       interval: 10s
       timeout: 5s
       retries: 5
@@ -101,8 +116,8 @@ services:
       dockerfile: Dockerfile
     container_name: identity_service_quanlymuavu
     restart: unless-stopped
-    ports:
-      - "8081:8081"
+    expose:
+      - "8081"
     environment:
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
@@ -148,8 +163,8 @@ services:
       dockerfile: Dockerfile
     container_name: crop_catalog_service_quanlymuavu
     restart: unless-stopped
-    ports:
-      - "8082:8082"
+    expose:
+      - "8082"
     environment:
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
@@ -172,7 +187,7 @@ services:
       mysql:
         condition: service_healthy
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
 
   ai-service:
     build:
@@ -180,8 +195,8 @@ services:
       dockerfile: Dockerfile
     container_name: ai_service_quanlymuavu
     restart: unless-stopped
-    ports:
-      - "8083:8083"
+    expose:
+      - "8083"
     environment:
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
@@ -202,8 +217,10 @@ services:
       retries: 3
       start_period: 180s
     depends_on:
-      - identity-service
-      - chroma
+      identity-service:
+        condition: service_healthy
+      chroma:
+        condition: service_healthy
 
   farm-service:
     build:
@@ -211,8 +228,8 @@ services:
       dockerfile: Dockerfile
     container_name: farm_service_quanlymuavu
     restart: unless-stopped
-    ports:
-      - "8084:8084"
+    expose:
+      - "8084"
     environment:
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
@@ -250,8 +267,8 @@ services:
       dockerfile: Dockerfile
     container_name: season_service_quanlymuavu
     restart: unless-stopped
-    ports:
-      - "8085:8085"
+    expose:
+      - "8085"
     environment:
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
@@ -279,13 +296,13 @@ services:
       start_period: 180s
     depends_on:
       identity-service:
-        condition: service_started
+        condition: service_healthy
       mysql:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
       farm-service:
-        condition: service_started
+        condition: service_healthy
       ai-service:
         condition: service_healthy
 
@@ -295,8 +312,8 @@ services:
       dockerfile: Dockerfile
     container_name: inventory_service_quanlymuavu
     restart: unless-stopped
-    ports:
-      - "8086:8086"
+    expose:
+      - "8086"
     environment:
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
@@ -328,8 +345,8 @@ services:
       dockerfile: Dockerfile
     container_name: finance_service_quanlymuavu
     restart: unless-stopped
-    ports:
-      - "8087:8087"
+    expose:
+      - "8087"
     environment:
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
@@ -356,7 +373,7 @@ services:
       rabbitmq:
         condition: service_healthy
       season-service:
-        condition: service_started
+        condition: service_healthy
 
   incident-service:
     build:
@@ -364,8 +381,8 @@ services:
       dockerfile: Dockerfile
     container_name: incident_service_quanlymuavu
     restart: unless-stopped
-    ports:
-      - "8088:8088"
+    expose:
+      - "8088"
     environment:
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
@@ -393,9 +410,9 @@ services:
       rabbitmq:
         condition: service_healthy
       season-service:
-        condition: service_started
+        condition: service_healthy
       identity-service:
-        condition: service_started
+        condition: service_healthy
 
   sustainability-service:
     build:
@@ -403,8 +420,8 @@ services:
       dockerfile: Dockerfile
     container_name: sustainability_service_quanlymuavu
     restart: unless-stopped
-    ports:
-      - "8089:8089"
+    expose:
+      - "8089"
     environment:
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
@@ -435,13 +452,13 @@ services:
       rabbitmq:
         condition: service_healthy
       season-service:
-        condition: service_started
+        condition: service_healthy
       farm-service:
-        condition: service_started
+        condition: service_healthy
       finance-service:
-        condition: service_started
+        condition: service_healthy
       incident-service:
-        condition: service_started
+        condition: service_healthy
 
   marketplace-service:
     build:
@@ -449,8 +466,8 @@ services:
       dockerfile: Dockerfile
     container_name: marketplace_service_quanlymuavu
     restart: unless-stopped
-    ports:
-      - "8090:8090"
+    expose:
+      - "8090"
     environment:
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
@@ -463,6 +480,7 @@ services:
       EXTERNAL_SERVICES_SEASON_SERVICE_URL: http://season-service:8085
       EXTERNAL_SERVICES_INVENTORY_SERVICE_URL: http://inventory-service:8086
       EXTERNAL_SERVICES_IDENTITY_SERVICE_URL: http://identity-service:8081
+      EXTERNAL_SERVICES_DELIVERY_SERVICE_URL: http://delivery-service:8092
       MINIO_URL: http://minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
@@ -486,7 +504,7 @@ services:
       rabbitmq:
         condition: service_healthy
       identity-service:
-        condition: service_started
+        condition: service_healthy
 
   admin-reporting-service:
     build:
@@ -494,8 +512,8 @@ services:
       dockerfile: Dockerfile
     container_name: admin_reporting_service_quanlymuavu
     restart: unless-stopped
-    ports:
-      - "8091:8091"
+    expose:
+      - "8091"
     environment:
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
@@ -522,7 +540,7 @@ services:
       rabbitmq:
         condition: service_healthy
       identity-service:
-        condition: service_started
+        condition: service_healthy
 
   delivery-service:
     build:
@@ -530,8 +548,8 @@ services:
       dockerfile: Dockerfile
     container_name: delivery_service_quanlymuavu
     restart: unless-stopped
-    ports:
-      - "8092:8092"
+    expose:
+      - "8092"
     environment:
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
@@ -540,6 +558,7 @@ services:
       DB_USER: ${MYSQL_USER:-springuser}
       DB_PASS: ${MYSQL_PASSWORD:-springpass}
       JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
+      EXTERNAL_SERVICES_MARKETPLACE_SERVICE_URL: http://marketplace-service:8090
       MANAGEMENT_OTLP_TRACING_EXPORT_ENABLED: "false"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8092/actuator/health"]
@@ -551,7 +570,7 @@ services:
       mysql:
         condition: service_healthy
       identity-service:
-        condition: service_started
+        condition: service_healthy
 
   api-gateway:
     build:

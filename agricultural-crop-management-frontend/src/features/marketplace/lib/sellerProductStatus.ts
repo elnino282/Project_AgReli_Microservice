@@ -14,11 +14,12 @@ export function getNextSellerProductStatusAction(
     case "ACTIVE":
       return { status: "INACTIVE" };
     case "INACTIVE":
-      return { status: "ACTIVE" };
+    case "HIDDEN":
+    case "REJECTED":
+    case "SOLD_OUT":
+      return { status: "PENDING_REVIEW" };
     case "PUBLISHED":
       return { status: "INACTIVE" };
-    case "HIDDEN":
-      return { status: "ACTIVE" };
     default:
       return null;
   }
@@ -35,11 +36,12 @@ export function getNextSellerProductStatusLabel(
     case "ACTIVE":
       return "Hide product";
     case "INACTIVE":
-      return "Show product";
+    case "HIDDEN":
+    case "REJECTED":
+    case "SOLD_OUT":
+      return "Submit for review";
     case "PUBLISHED":
       return "Hide product";
-    case "HIDDEN":
-      return "Show product";
     default:
       return "Update status";
   }

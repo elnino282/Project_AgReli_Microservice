@@ -14,6 +14,7 @@ import org.example.marketplace.client.FarmClient;
 import org.example.marketplace.client.IdentityClient;
 import org.example.marketplace.client.InventoryClient;
 import org.example.marketplace.client.SeasonClient;
+import org.example.marketplace.client.DeliveryShippingQuoteClient;
 import org.example.marketplace.dto.client.FarmDetailDto;
 import org.example.marketplace.dto.client.FarmSummaryDto;
 import org.example.marketplace.dto.client.SeasonDetailDto;
@@ -29,6 +30,7 @@ import org.example.marketplace.dto.request.MarketplaceUpdateOrderStatusRequest;
 import org.example.marketplace.dto.request.MarketplaceUpdatePaymentVerificationRequest;
 import org.example.marketplace.dto.request.MarketplaceUpdateProductStatusRequest;
 import org.example.marketplace.dto.request.MarketplaceUpdateReviewRequest;
+import org.example.marketplace.dto.request.MarketplaceShippingQuoteRequest;
 import org.example.marketplace.dto.response.MarketplaceAdminStatsResponse;
 import org.example.marketplace.dto.response.MarketplaceAddressResponse;
 import org.example.marketplace.dto.response.MarketplaceCartResponse;
@@ -50,6 +52,7 @@ import org.example.marketplace.dto.response.MarketplaceProductDetailResponse;
 import org.example.marketplace.dto.response.MarketplaceProductSummaryResponse;
 import org.example.marketplace.dto.response.MarketplaceReviewResponse;
 import org.example.marketplace.dto.response.MarketplaceTraceabilityResponse;
+import org.example.marketplace.dto.response.MarketplaceShippingQuoteGroupResponse;
 import org.example.marketplace.dto.client.FarmCertificationDto;
 import org.example.marketplace.dto.client.PesticideRecordDto;
 import org.example.marketplace.dto.response.MarketplaceTraceabilityResponse.CertificationInfo;
@@ -112,10 +115,12 @@ import java.util.Optional;
 @Slf4j
 public class MarketplaceServiceImpl implements MarketplaceService {
 
-    static final BigDecimal DEFAULT_SHIPPING_FEE = new BigDecimal("20000");
     static final String CURRENCY_VND = "VND";
     static final BigDecimal LOW_STOCK_THRESHOLD = new BigDecimal("10");
     static final BigDecimal ZERO_QUANTITY = BigDecimal.ZERO;
+    static final List<MarketplaceProductStatus> PUBLIC_PRODUCT_STATUSES = List.of(
+            MarketplaceProductStatus.ACTIVE,
+            MarketplaceProductStatus.PUBLISHED);
 
     MarketplaceProductRepository marketplaceProductRepository;
     MarketplaceCartRepository marketplaceCartRepository;
@@ -137,6 +142,11 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     QRCodeGenerator qrCodeGenerator;
     DomainEventPublisher domainEventPublisher;
     MarketplaceComplianceGateService complianceGateService;
+    MarketplaceShippingQuoteService marketplaceShippingQuoteService;
+    MarketplaceCheckoutItemResolver checkoutItemResolver;
+
+    private record OrderShippingGroup(Long sellerUserId, Integer farmId) {
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -158,7 +168,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Override
     @Transactional(readOnly = true)
     public MarketplaceProductDetailResponse getProductBySlug(String slug) {
-        MarketplaceProduct product = marketplaceProductRepository.findBySlug(slug)
+        MarketplaceProduct product = marketplaceProductRepository.findBySlugAndStatusIn(slug, PUBLIC_PRODUCT_STATUSES)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         return toProductDetail(product);
     }
@@ -296,7 +306,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     @Override
     @Transactional(readOnly = true)
     public MarketplaceTraceabilityResponse getTraceability(Long productId) {
-        MarketplaceProduct product = marketplaceProductRepository.findById(productId)
+        MarketplaceProduct product = marketplaceProductRepository.findByIdAndStatusIn(productId, PUBLIC_PRODUCT_STATUSES)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         return buildTraceabilityResponse(product, null);
@@ -308,13 +318,13 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         MarketplaceProduct product = null;
         try {
             Long productId = Long.parseLong(productIdOrSlug);
-            product = marketplaceProductRepository.findById(productId).orElse(null);
+            product = marketplaceProductRepository.findByIdAndStatusIn(productId, PUBLIC_PRODUCT_STATUSES).orElse(null);
         } catch (NumberFormatException e) {
             // Not a number, try by slug
         }
 
         if (product == null) {
-            product = marketplaceProductRepository.findBySlug(productIdOrSlug)
+            product = marketplaceProductRepository.findBySlugAndStatusIn(productIdOrSlug, PUBLIC_PRODUCT_STATUSES)
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found with id or slug: " + productIdOrSlug));
         }
 
@@ -740,6 +750,11 @@ public class MarketplaceServiceImpl implements MarketplaceService {
     }
 
     @Override
+    public List<MarketplaceShippingQuoteGroupResponse> createShippingQuotes(MarketplaceShippingQuoteRequest request) {
+        return marketplaceShippingQuoteService.quoteCart(request);
+    }
+
+    @Override
     @Transactional
     public MarketplaceCreateOrderResultResponse createOrder(MarketplaceCreateOrderRequest request, String idempotencyKey) {
         // Validate idempotency key
@@ -778,23 +793,23 @@ public class MarketplaceServiceImpl implements MarketplaceService {
             throw new BadRequestException("requestedDeliveryDate is required for pre-orders");
         }
 
-        // 1. Get cart items and group by farmer
-        MarketplaceCart cart = marketplaceCartRepository.findByUserIdWithItems(buyerUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
+        // 1. Resolve the exact same item selection used to obtain the quote.
+        MarketplaceCheckoutItemResolver.Selection checkoutSelection =
+                checkoutItemResolver.resolve(buyerUserId, request.items());
+        List<MarketplaceCartItem> cartItems = checkoutSelection.items();
 
-        List<MarketplaceCartItem> cartItems = cart.getItems();
-        if (cartItems.isEmpty()) {
-            throw new BadRequestException("Cart is empty");
-        }
-
-        // 2. Group items by farmer
-        Map<Long, List<MarketplaceCartItem>> itemsByFarmer = cartItems.stream()
-                .collect(java.util.stream.Collectors.groupingBy(MarketplaceCartItem::getFarmerUserId));
+        // 2. Group items by the shipping invariant: seller and authoritative farm origin.
+        Map<OrderShippingGroup, List<MarketplaceCartItem>> itemsByShippingGroup = cartItems.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        item -> new OrderShippingGroup(item.getFarmerUserId(), item.getProduct().getFarmId()),
+                        java.util.LinkedHashMap::new,
+                        java.util.stream.Collectors.toList()));
 
         // Resolve buyer address if addressId provided
         String shippingRecipientName = request.shippingRecipientName();
         String phoneVal = request.shippingPhone();
         String addressLineVal = request.shippingAddressLine();
+        String provinceVal = request.shippingProvince();
         if (request.addressId() != null) {
             Optional<MarketplaceAddress> addressOpt = marketplaceAddressRepository.findByIdAndUserId(request.addressId(), buyerUserId);
             if (addressOpt.isPresent()) {
@@ -806,10 +821,37 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                     addrLine = addr.getDetail() + ", " + addrLine;
                 }
                 addressLineVal = addrLine;
+                provinceVal = addr.getProvince();
             }
         }
         final String shippingPhone = phoneVal;
         final String shippingAddressLine = addressLineVal;
+        final String shippingProvince = provinceVal;
+        if (shippingProvince == null || shippingProvince.isBlank()) {
+            throw new BadRequestException("shippingProvince is required for authoritative shipping quotes");
+        }
+
+        if (request.shippingQuotes() == null || request.shippingQuotes().size() != itemsByShippingGroup.size()) {
+            throw new BadRequestException("One accepted shipping quote is required for each seller/farm group");
+        }
+        Map<OrderShippingGroup, String> acceptedQuoteIds = new java.util.HashMap<>();
+        for (MarketplaceCreateOrderRequest.AcceptedShippingQuote accepted : request.shippingQuotes()) {
+            OrderShippingGroup key = new OrderShippingGroup(accepted.sellerUserId(), accepted.farmId());
+            if (acceptedQuoteIds.putIfAbsent(key, accepted.quoteId()) != null) {
+                throw new BadRequestException("Duplicate shipping quote for seller/farm group");
+            }
+        }
+        Map<OrderShippingGroup, DeliveryShippingQuoteClient.ShippingQuote> validatedQuotes = new java.util.HashMap<>();
+        for (Map.Entry<OrderShippingGroup, List<MarketplaceCartItem>> entry : itemsByShippingGroup.entrySet()) {
+            String quoteId = acceptedQuoteIds.get(entry.getKey());
+            if (quoteId == null) {
+                throw new BadRequestException("Missing shipping quote for seller/farm group");
+            }
+            DeliveryShippingQuoteClient.ShippingQuote quote = marketplaceShippingQuoteService.validateAcceptedQuote(
+                    quoteId, buyerUserId, entry.getKey().sellerUserId(), entry.getKey().farmId(), shippingProvince);
+            validateQuoteMatchesItems(quote, entry.getValue());
+            validatedQuotes.put(entry.getKey(), quote);
+        }
 
         // 3. Create order group with PENDING_RESERVATION status
         String groupCode = "OG-" + System.currentTimeMillis() + "-" + buyerUserId;
@@ -829,21 +871,28 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         List<MarketplaceOrder> createdOrders = new ArrayList<>();
         List<MarketplaceOrderItem> allOrderItems = new ArrayList<>();
 
-        for (Map.Entry<Long, List<MarketplaceCartItem>> farmerEntry : itemsByFarmer.entrySet()) {
-            Long farmerUserId = farmerEntry.getKey();
+        for (Map.Entry<OrderShippingGroup, List<MarketplaceCartItem>> farmerEntry : itemsByShippingGroup.entrySet()) {
+            Long farmerUserId = farmerEntry.getKey().sellerUserId();
             List<MarketplaceCartItem> farmerItems = farmerEntry.getValue();
+            DeliveryShippingQuoteClient.ShippingQuote shippingQuote = validatedQuotes.get(farmerEntry.getKey());
 
             MarketplaceOrder order = MarketplaceOrder.builder()
                     .orderGroupId(orderGroupId)
                     .buyerUserId(buyerUserId)
                     .farmerUserId(farmerUserId)
+                    .farmId(farmerEntry.getKey().farmId())
                     .status(MarketplaceOrderStatus.PENDING_RESERVATION)
                     .paymentMethod(request.paymentMethod())
                     .shippingRecipientName(shippingRecipientName)
                     .shippingPhone(shippingPhone)
                     .shippingAddressLine(shippingAddressLine)
                     .note(request.note())
-                    .shippingFee(DEFAULT_SHIPPING_FEE)
+                    .shippingFee(shippingQuote.shippingFeeVnd())
+                    .shippingQuoteId(shippingQuote.quoteId())
+                    .shippingWeightKg(shippingQuote.weightKg())
+                    .shippingProviderId(shippingQuote.providerId())
+                    .shippingOriginProvince(shippingQuote.senderProvince())
+                    .shippingDestinationProvince(shippingQuote.recipientProvince())
                     .totalAmount(BigDecimal.ZERO)
                     .subtotal(BigDecimal.ZERO)
                     .isPreOrder(request.isPreOrder() != null ? request.isPreOrder() : false)
@@ -961,9 +1010,11 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         marketplaceOrderGroupRepository.save(orderGroup);
 
         // 8. Clear the cart
-        marketplaceCartItemRepository.deleteAll(cartItems);
-        cart.setItems(new ArrayList<>());
-        marketplaceCartRepository.save(cart);
+        if (checkoutSelection.fromCart()) {
+            marketplaceCartItemRepository.deleteAll(cartItems);
+            checkoutSelection.sourceCart().setItems(new ArrayList<>());
+            marketplaceCartRepository.save(checkoutSelection.sourceCart());
+        }
 
         // 9. Record the successful response for idempotency
         BigDecimal totalAmount = orderGroup.getTotalAmount();
@@ -973,7 +1024,11 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 totalAmount,
                 CURRENCY_VND,
                 "Order created and stock reserved. Please complete payment.",
-                null);
+                null,
+                createdOrders.stream()
+                        .map(order -> new MarketplaceCreateOrderResultResponse.OrderShippingQuote(
+                                order.getId(), order.getShippingQuoteId()))
+                        .toList());
 
         idempotencyService.recordResponse(idempotencyKey, endpoint, result, 200);
 
@@ -984,6 +1039,43 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         }
 
         return result;
+    }
+
+    private void validateQuoteMatchesItems(
+            DeliveryShippingQuoteClient.ShippingQuote quote,
+            List<MarketplaceCartItem> items) {
+        if (quote == null || items == null || items.isEmpty()) {
+            throw new BadRequestException("Shipping quote cannot be matched to an empty order group");
+        }
+        MarketplaceProduct first = items.getFirst().getProduct();
+        if (first.getFarmId() == null || first.getFarmRegion() == null || first.getFarmRegion().isBlank()) {
+            throw new BadRequestException("Order group has no authoritative farm origin");
+        }
+
+        BigDecimal expectedWeight = BigDecimal.ZERO;
+        boolean expectedPerishable = false;
+        boolean expectedColdChain = false;
+        for (MarketplaceCartItem item : items) {
+            MarketplaceProduct product = item.getProduct();
+            if (product.getShippingWeightKgPerUnit() == null
+                    || product.getShippingWeightKgPerUnit().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new BadRequestException("Product " + product.getId() + " has no authoritative shipping weight");
+            }
+            if (!Objects.equals(first.getFarmId(), product.getFarmId())
+                    || !first.getFarmRegion().equalsIgnoreCase(product.getFarmRegion())) {
+                throw new BadRequestException("Shipping group contains products from different farm origins");
+            }
+            expectedWeight = expectedWeight.add(product.getShippingWeightKgPerUnit().multiply(item.getQuantity()));
+            expectedPerishable |= Boolean.TRUE.equals(product.getPerishable());
+            expectedColdChain |= Boolean.TRUE.equals(product.getRequiresColdChain());
+        }
+
+        if (quote.weightKg().compareTo(expectedWeight) != 0
+                || !quote.senderProvince().equalsIgnoreCase(first.getFarmRegion())
+                || quote.perishable() != expectedPerishable
+                || quote.requiresColdChain() != expectedColdChain) {
+            throw new BadRequestException("Shipping quote no longer matches the authoritative order inputs");
+        }
     }
 
     private void publishOrderCreatedEvent(MarketplaceOrder order, List<MarketplaceOrderItem> items) {
@@ -1674,6 +1766,9 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 .description(request.description())
                 .price(request.price())
                 .stockQuantity(request.stockQuantity())
+                .shippingWeightKgPerUnit(request.shippingWeightKgPerUnit())
+                .perishable(request.perishable())
+                .requiresColdChain(request.requiresColdChain())
                 .imageUrl(request.imageUrl())
                 .farmerUserId(userId)
                 .lotId(request.lotId())
@@ -1702,6 +1797,9 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         product.setDescription(request.description());
         product.setPrice(request.price());
         product.setStockQuantity(request.stockQuantity());
+        product.setShippingWeightKgPerUnit(request.shippingWeightKgPerUnit());
+        product.setPerishable(request.perishable());
+        product.setRequiresColdChain(request.requiresColdChain());
         product.setImageUrl(request.imageUrl());
         product.setLotId(request.lotId());
 
@@ -1769,6 +1867,7 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         MarketplaceProduct product = marketplaceProductRepository.findByIdAndFarmerUserId(productId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
+        validateFarmerProductStatusTransition(product.getStatus(), request.status());
         product.setStatus(request.status());
         if (request.statusReason() != null) {
             product.setStatusReason(request.statusReason());
@@ -1809,15 +1908,19 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         MarketplaceProduct product = marketplaceProductRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-        if (request.status() == MarketplaceProductStatus.PUBLISHED) {
+        if (isSellableStatus(request.status())) {
             org.example.marketplace.dto.response.ComplianceCheckResponse complianceCheck = complianceGateService.checkCompliance(product);
             if (!complianceCheck.isEligible()) {
                 throw new org.example.marketplace.exception.ConflictException("Compliance check failed: " + String.join("; ", complianceCheck.reasons()));
             }
             // Update snapshots
+            product.setComplianceClaim(complianceCheck.complianceClaim());
             product.setCertificationSnapshotJson(complianceCheck.certificationSnapshotJson());
             product.setHarvestSafetySnapshotJson(complianceCheck.harvestSafetySnapshotJson());
             product.setComplianceCheckedAt(LocalDateTime.now());
+            if (product.getPublishedAt() == null) {
+                product.setPublishedAt(LocalDateTime.now());
+            }
         }
 
         product.setStatus(request.status());
@@ -1830,6 +1933,27 @@ public class MarketplaceServiceImpl implements MarketplaceService {
         product = marketplaceProductRepository.save(product);
         publishProductChangedEvent(product);
         return toProductDetail(product);
+    }
+
+    private void validateFarmerProductStatusTransition(
+            MarketplaceProductStatus currentStatus,
+            MarketplaceProductStatus requestedStatus) {
+        boolean allowed = switch (currentStatus) {
+            case DRAFT -> requestedStatus == MarketplaceProductStatus.PENDING_REVIEW;
+            case PENDING_REVIEW -> requestedStatus == MarketplaceProductStatus.DRAFT;
+            case ACTIVE, PUBLISHED -> requestedStatus == MarketplaceProductStatus.INACTIVE;
+            case INACTIVE, HIDDEN, REJECTED, SOLD_OUT ->
+                    requestedStatus == MarketplaceProductStatus.PENDING_REVIEW;
+        };
+
+        if (!allowed) {
+            throw new ConflictException(
+                    "Farmer product status transition is not allowed: " + currentStatus + " -> " + requestedStatus);
+        }
+    }
+
+    private boolean isSellableStatus(MarketplaceProductStatus status) {
+        return status == MarketplaceProductStatus.ACTIVE || status == MarketplaceProductStatus.PUBLISHED;
     }
 
     @Override
@@ -1959,6 +2083,9 @@ public class MarketplaceServiceImpl implements MarketplaceService {
                 product.getUnit(),
                 product.getStockQuantity(),
                 product.getStockQuantity(),
+                product.getShippingWeightKgPerUnit(),
+                product.getPerishable(),
+                product.getRequiresColdChain(),
                 product.getImageUrl(),
                 null, // imageUrls
                 product.getFarmerUserId(),

@@ -14,7 +14,11 @@ public enum ErrorCode {
     RESOURCE_NOT_FOUND("ERR_RESOURCE_NOT_FOUND", "Resource not found", HttpStatus.NOT_FOUND),
     DUPLICATE_RESOURCE("ERR_DUPLICATE_RESOURCE", "Resource already exists", HttpStatus.CONFLICT),
     UNAUTHENTICATED("ERR_UNAUTHENTICATED", "Unauthenticated", HttpStatus.UNAUTHORIZED),
-    CROP_NOT_FOUND("ERR_CROP_NOT_FOUND", "Crop not found", HttpStatus.NOT_FOUND);
+    CROP_NOT_FOUND("ERR_CROP_NOT_FOUND", "Crop not found", HttpStatus.NOT_FOUND),
+    DOWNSTREAM_GUARD_UNAVAILABLE(
+            "ERR_DOWNSTREAM_GUARD_UNAVAILABLE",
+            "Cannot verify related data because a downstream service is unavailable",
+            HttpStatus.SERVICE_UNAVAILABLE);
 
     ErrorCode(String code, String message, HttpStatus statusCode) {
         this.code = code;

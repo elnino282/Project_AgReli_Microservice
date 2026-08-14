@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 // Shared HTTP Client with Axios Interceptors and JWT Handling
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios from 'axios';
+import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 const httpClient = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL || '',
@@ -25,29 +26,68 @@ type StoredAuth = {
     };
 };
 
+type AuthStorageLocation = 'local' | 'session';
+
+type StoredAuthWithLocation = {
+    auth: StoredAuth;
+    location: AuthStorageLocation;
+};
+
+function isStoredAuth(value: unknown): value is StoredAuth {
+    if (!value || typeof value !== 'object') return false;
+    const candidate = value as Partial<StoredAuth>;
+    return typeof candidate.token === 'string'
+        && candidate.token.length > 0
+        && typeof candidate.refreshToken === 'string'
+        && candidate.refreshToken.length > 0
+        && typeof candidate.expiresAt === 'number'
+        && Number.isFinite(candidate.expiresAt)
+        && Boolean(candidate.user)
+        && typeof candidate.user?.username === 'string'
+        && typeof candidate.user?.role === 'string';
+}
+
 /**
  * Get stored auth data from either localStorage or sessionStorage.
  * This matches the storage behavior in useSignIn hook:
  * - localStorage is used when "Keep me logged in" is checked
  * - sessionStorage is used otherwise
  */
-function getStoredAuth(): StoredAuth | null {
+function getStoredAuthWithLocation(): StoredAuthWithLocation | null {
     if (typeof window === 'undefined') return null;
 
-    try {
-        // Check localStorage first, then sessionStorage
-        const raw = window.localStorage.getItem(AUTH_STORAGE_KEY) 
-                 || window.sessionStorage.getItem(AUTH_STORAGE_KEY);
-        if (!raw) return null;
-        return JSON.parse(raw) as StoredAuth;
-    } catch {
-        return null;
+    const candidates: Array<[AuthStorageLocation, Storage]> = [
+        ['local', window.localStorage],
+        ['session', window.sessionStorage],
+    ];
+
+    for (const [location, storage] of candidates) {
+        const raw = storage.getItem(AUTH_STORAGE_KEY);
+        if (!raw) continue;
+        try {
+            const parsed: unknown = JSON.parse(raw);
+            if (isStoredAuth(parsed)) {
+                return { auth: parsed, location };
+            }
+        } catch {
+            // Invalid records are removed below so they cannot shadow valid auth.
+        }
+        storage.removeItem(AUTH_STORAGE_KEY);
     }
+
+    return null;
 }
 
-function setStoredAuth(data: StoredAuth) {
+function getStoredAuth(): StoredAuth | null {
+    return getStoredAuthWithLocation()?.auth ?? null;
+}
+
+function setStoredAuth(data: StoredAuth, location: AuthStorageLocation) {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
+    const target = location === 'local' ? window.localStorage : window.sessionStorage;
+    const stale = location === 'local' ? window.sessionStorage : window.localStorage;
+    target.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
+    stale.removeItem(AUTH_STORAGE_KEY);
 }
 
 function clearStoredAuth() {
@@ -95,46 +135,52 @@ httpClient.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-let isRefreshing = false;
 let refreshPromise: Promise<string | null> | null = null;
 
-async function refreshAccessToken(): Promise<string | null> {
-    const stored = getStoredAuth();
-    if (!stored?.refreshToken) return null;
-
-    if (isRefreshing && refreshPromise) {
+export async function refreshAccessToken(): Promise<string | null> {
+    if (refreshPromise) {
         return refreshPromise;
     }
 
-    isRefreshing = true;
+    const storedWithLocation = getStoredAuthWithLocation();
+    if (!storedWithLocation) return null;
+    const { auth: stored, location } = storedWithLocation;
+
     refreshPromise = (async () => {
         try {
             const response = await httpClient.post('/api/v1/auth/refresh', {
                 token: stored.refreshToken,
             });
 
-            const { token, refreshToken, expiresIn } = response.data as {
-                token: string;
-                refreshToken: string;
-                expiresIn: number;
-            };
+            const result = (response.data as {
+                result?: { token?: unknown; expiresIn?: unknown };
+            } | undefined)?.result;
+            if (
+                typeof result?.token !== 'string'
+                || result.token.length === 0
+                || typeof result.expiresIn !== 'number'
+                || !Number.isFinite(result.expiresIn)
+                || result.expiresIn <= 0
+            ) {
+                return null;
+            }
 
             const updated: StoredAuth = {
-                token,
-                refreshToken,
-                expiresAt: Date.now() + expiresIn * 1000,
+                token: result.token,
+                refreshToken: result.token,
+                expiresAt: Date.now() + result.expiresIn * 1000,
+                user: stored.user,
             };
 
-            setStoredAuth(updated);
+            setStoredAuth(updated, location);
 
-            return token;
+            return result.token;
         } catch (error) {
             if (axios.isAxiosError(error) && error.response?.status === 401) {
                 clearStoredAuth();
             }
             return null;
         } finally {
-            isRefreshing = false;
             refreshPromise = null;
         }
     })();
@@ -173,6 +219,7 @@ httpClient.interceptors.response.use(
             originalRequest &&
             status === 401 &&
             !originalRequest._retry &&
+            originalRequest.url !== '/api/v1/auth/refresh' &&
             typeof window !== 'undefined'
         ) {
             originalRequest._retry = true;

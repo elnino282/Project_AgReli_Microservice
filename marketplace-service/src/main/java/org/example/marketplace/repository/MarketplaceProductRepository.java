@@ -21,6 +21,8 @@ public interface MarketplaceProductRepository extends JpaRepository<MarketplaceP
 
     Optional<MarketplaceProduct> findBySlugAndStatusIn(String slug, Collection<MarketplaceProductStatus> statuses);
 
+    Optional<MarketplaceProduct> findByIdAndStatusIn(Long id, Collection<MarketplaceProductStatus> statuses);
+
     Optional<MarketplaceProduct> findByIdAndFarmerUserId(Long id, Long farmerUserId);
 
     Page<MarketplaceProduct> findByStatusIn(Collection<MarketplaceProductStatus> statuses, Pageable pageable);

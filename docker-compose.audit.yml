@@ -1,0 +1,100 @@
+# Isolated audit overlay. Always use with:
+# docker compose -p vietfuture_audit -f docker-compose.yml -f docker-compose.audit.yml ...
+#
+# Explicit container names and host ports from the development stack are reset
+# so the audit stack cannot attach to or replace developer containers.
+services:
+  mysql:
+    container_name: !reset null
+    restart: "no"
+    ports: !override
+      - "127.0.0.1:13307:3306"
+  rabbitmq:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  minio:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  redis:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  chroma:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  mailhog:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+
+  identity-service:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  crop-catalog-service:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  ai-service:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+    environment:
+      APP_AI_API_KEY: ""
+  farm-service:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  season-service:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  inventory-service:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  finance-service:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  incident-service:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  sustainability-service:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  marketplace-service:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  admin-reporting-service:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  delivery-service:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  api-gateway:
+    container_name: !reset null
+    restart: "no"
+    ports: !override
+      - "127.0.0.1:18080:8080"
+
+  prometheus:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  grafana:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []
+  tempo:
+    container_name: !reset null
+    restart: "no"
+    ports: !reset []

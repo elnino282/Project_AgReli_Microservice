@@ -43,6 +43,9 @@ export type MarketplaceProductSummary = {
   unit: string;
   stockQuantity: number;
   availableQuantity: number;
+  shippingWeightKgPerUnit?: number | null;
+  perishable?: boolean;
+  requiresColdChain?: boolean;
   imageUrl: string;
   farmerUserId: number;
   farmerDisplayName: string;
@@ -299,9 +302,35 @@ export type MarketplaceOrderAuditLog = {
 };
 
 export type MarketplaceCreateOrderResult = {
-  orderGroupCode: string;
-  splitCount: number;
-  orders: MarketplaceOrder[];
+  orderGroupId: number;
+  orderIds: number[];
+  totalAmount: number;
+  currency: string;
+  message: string;
+  nextStep: string | null;
+  orderShippingQuotes: Array<{
+    orderId: number;
+    shippingQuoteId: string;
+  }>;
+};
+
+export type MarketplaceShippingQuoteGroup = {
+  sellerUserId: number;
+  farmId: number;
+  farmName: string | null;
+  senderProvince: string;
+  weightKg: number;
+  perishable: boolean;
+  requiresColdChain: boolean;
+  options: Array<{
+    quoteId: string;
+    providerId: number;
+    providerName: string;
+    serviceType: "standard" | "same_day";
+    shippingFeeVnd: number;
+    estimatedHours: number;
+    expiresAt: string;
+  }>;
 };
 
 export type MarketplaceProductQuery = {
@@ -393,11 +422,17 @@ export type MarketplaceCreateOrderRequest = {
   shippingRecipientName?: string;
   shippingPhone?: string;
   shippingAddressLine?: string;
+  shippingProvince: string;
   note?: string;
   idempotencyKey: string;
   items?: Array<{
     productId: number;
     quantity: number;
+  }>;
+  shippingQuotes: Array<{
+    sellerUserId: number;
+    farmId: number;
+    quoteId: string;
   }>;
 };
 
@@ -428,6 +463,9 @@ export type MarketplaceFarmerProductUpsertRequest = {
   description?: string;
   price: number;
   stockQuantity: number;
+  shippingWeightKgPerUnit: number;
+  perishable: boolean;
+  requiresColdChain: boolean;
   imageUrl?: string;
   imageUrls?: string[];
   lotId: number;

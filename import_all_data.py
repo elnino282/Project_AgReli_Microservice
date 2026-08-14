@@ -1,14 +1,15 @@
 import mysql.connector
 from datetime import date
 import logging
+import os
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 DB_CONFIG = {
-    'host': 'localhost',
-    'port': 3307,
-    'user': 'springuser',
-    'password': 'springpass'
+    'host': os.getenv('IMPORT_DB_HOST', 'localhost'),
+    'port': int(os.getenv('IMPORT_DB_PORT', '3307')),
+    'user': os.getenv('IMPORT_DB_USER', 'springuser'),
+    'password': os.getenv('IMPORT_DB_PASSWORD', 'springpass')
 }
 
 def get_connection(db_name=None):
@@ -598,6 +599,7 @@ def main():
         logging.info('✅ HOÀN TẤT: Đã import dữ liệu nghiệp vụ cho TẤT CẢ các service thành công!')
     except Exception as e:
         logging.error(f'❌ Lỗi trong quá trình import: {e}')
+        raise
 
 if __name__ == '__main__':
     main()

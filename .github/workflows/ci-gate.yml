@@ -130,6 +130,10 @@ jobs:
             database: sustainability_service_ci
           - service: marketplace-service
             database: marketplace_service_ci
+          - service: admin-reporting-service
+            database: admin_reporting_service_ci
+          - service: delivery-service
+            database: delivery_service_ci
     defaults:
       run:
         working-directory: ${{ matrix.service }}

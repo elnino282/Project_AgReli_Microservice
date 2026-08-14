@@ -81,7 +81,8 @@ public class InventoryServiceClientFallback implements InventoryServiceClient {
     @Override
     public Boolean existsProductWarehouseLotByHarvestId(Integer harvestId) {
         log.error("Fallback triggered: Failed to check if lot exists for harvest {}", harvestId);
-        return false;
+        throw new org.example.season.exception.AppException(
+                org.example.season.exception.ErrorCode.DOWNSTREAM_GUARD_UNAVAILABLE);
     }
 
     @Override

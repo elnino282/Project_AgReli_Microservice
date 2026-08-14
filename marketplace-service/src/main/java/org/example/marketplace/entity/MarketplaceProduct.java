@@ -65,6 +65,17 @@ public class MarketplaceProduct {
     @Column(name = "stock_quantity", nullable = false, precision = 19, scale = 3)
     BigDecimal stockQuantity;
 
+    @Column(name = "shipping_weight_kg_per_unit", precision = 10, scale = 3)
+    BigDecimal shippingWeightKgPerUnit;
+
+    @Column(name = "is_perishable", nullable = false)
+    @Builder.Default
+    Boolean perishable = Boolean.FALSE;
+
+    @Column(name = "requires_cold_chain", nullable = false)
+    @Builder.Default
+    Boolean requiresColdChain = Boolean.FALSE;
+
     @Column(name = "image_url", length = 1024)
     String imageUrl;
 

@@ -12,12 +12,14 @@ public record MarketplaceCreateOrderRequest(
         String shippingRecipientName,
         String shippingPhone,
         String shippingAddressLine,
+        String shippingProvince,
         String note,
         String idempotencyKey,
         Boolean isPreOrder,
         java.time.LocalDate requestedDeliveryDate,
         java.time.LocalDate harvestReadyDate,
-        List<MarketplaceOrderItemRequest> items) {
+        List<MarketplaceOrderItemRequest> items,
+        List<AcceptedShippingQuote> shippingQuotes) {
 
     public MarketplaceCreateOrderRequest(
             MarketplacePaymentMethod paymentMethod,
@@ -27,11 +29,18 @@ public record MarketplaceCreateOrderRequest(
             String shippingAddressLine,
             String note,
             String idempotencyKey) {
-        this(paymentMethod, addressId, shippingRecipientName, shippingPhone, shippingAddressLine, note, idempotencyKey, false, null, null, null);
+        this(paymentMethod, addressId, shippingRecipientName, shippingPhone, shippingAddressLine, null,
+                note, idempotencyKey, false, null, null, null, null);
     }
 
     public record MarketplaceOrderItemRequest(
             @NotNull Long productId,
             @NotNull BigDecimal quantity) {
+    }
+
+    public record AcceptedShippingQuote(
+            @NotNull Long sellerUserId,
+            @NotNull Integer farmId,
+            @NotNull String quoteId) {
     }
 }

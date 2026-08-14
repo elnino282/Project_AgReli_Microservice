@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.season.service.ExternalServiceClient.ValidationResultDto;
 import org.example.season.service.ExternalServiceClient.CreateNotificationRequest;
 import org.springframework.stereotype.Component;
+import org.example.season.exception.AppException;
+import org.example.season.exception.ErrorCode;
 
 @Component
 @Slf4j
@@ -12,7 +14,7 @@ public class MonolithServiceClientFallback implements MonolithServiceClient {
     @Override
     public Boolean existsExpenseBySeasonId(Integer seasonId) {
         log.error("Fallback triggered: Failed to check expenses for season {} from monolith-service", seasonId);
-        return false;
+        throw new AppException(ErrorCode.DOWNSTREAM_GUARD_UNAVAILABLE);
     }
 
     @Override

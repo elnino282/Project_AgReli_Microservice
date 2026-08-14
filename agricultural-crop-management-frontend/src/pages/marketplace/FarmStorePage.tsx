@@ -12,12 +12,6 @@ import {
   ShoppingCart,
   Star,
   Tractor,
-  Leaf,
-  Droplets,
-  Sun,
-  Shield,
-  Calendar,
-  ThumbsUp,
 } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import {
@@ -35,63 +29,6 @@ import {
   MarketplaceReview,
 } from "@/shared/api";
 import "./FarmStorePage.css";
-
-// ── MOCK DATA & INTERFACES FOR PHASE 2 ─────────────────────────
-export interface FarmActivityLog {
-  id: string;
-  date: string;
-  action: string;
-  description: string;
-  images: string[];
-  likes: number;
-}
-
-export interface SelfDeclaredStandard {
-  id: string;
-  title: string;
-  iconName: "leaf" | "droplets" | "sun" | "shield";
-  description: string;
-}
-
-const MOCK_ACTIVITY_LOGS: FarmActivityLog[] = [
-  {
-    id: "log-1",
-    date: "Vừa xong",
-    action: "Ghi chép: Thu hoạch đợt 1",
-    description: "Sáng nay bà con đã bắt đầu thu hoạch những hecta lúa đầu tiên. Thời tiết rất ủng hộ, lúa chín vàng ươm.",
-    images: ["https://images.unsplash.com/photo-1595856403254-20b8f05e36f4?auto=format&fit=crop&q=80&w=800"],
-    likes: 24
-  },
-  {
-    id: "log-2",
-    date: "2 ngày trước",
-    action: "Nhật ký: Bón phân vi sinh",
-    description: "Tiến hành bón phân hữu cơ vi sinh đợt 2 cho toàn bộ cánh đồng mẫu lớn. Đảm bảo dinh dưỡng tự nhiên cho đất.",
-    images: ["https://images.unsplash.com/photo-1627920769213-9111b15170d1?auto=format&fit=crop&q=80&w=800"],
-    likes: 15
-  },
-  {
-    id: "log-3",
-    date: "5 ngày trước",
-    action: "Kiểm tra chất lượng nước",
-    description: "Hệ thống lọc sinh học hoạt động tốt, các chỉ số phèn và kim loại nặng đều ở mức an toàn.",
-    images: [],
-    likes: 42
-  }
-];
-
-const MOCK_STANDARDS: SelfDeclaredStandard[] = [
-  { id: "std-1", title: "100% Hữu cơ", iconName: "leaf", description: "Không dùng hóa chất" },
-  { id: "std-2", title: "Nước sạch tinh khiết", iconName: "droplets", description: "Qua hệ thống lọc" },
-  { id: "std-3", title: "Thuận tự nhiên", iconName: "sun", description: "Trồng ngoài trời" },
-];
-
-const IconMap = { leaf: Leaf, droplets: Droplets, sun: Sun, shield: Shield };
-function StandardIcon({ name }: { name: string }) {
-  const Icon = IconMap[name as keyof typeof IconMap] || Shield;
-  return <Icon className="w-8 h-8 text-emerald-600 mb-3" />;
-}
-// ──────────────────────────────────────────────────────────────
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Mới nhất" },
@@ -463,23 +400,6 @@ export function FarmStorePage() {
           currentUserId={user?.id ?? null}
         />
 
-        {/* ── MOCK WIDGET: Bộ Tiêu Chuẩn Tự Thân ───────────────── */}
-        <section className="bg-emerald-50 rounded-2xl p-6 mt-8 mb-8 border border-emerald-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-6">
-            <ShieldCheck className="w-6 h-6 text-emerald-700" />
-            <h2 className="text-xl font-bold text-emerald-900">Bộ Tiêu Chuẩn Tự Thân</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {MOCK_STANDARDS.map(std => (
-              <div key={std.id} className="bg-white rounded-xl p-5 shadow-sm flex flex-col items-center text-center hover:shadow-md transition-shadow">
-                <StandardIcon name={std.iconName} />
-                <h3 className="font-bold text-neutral-800 mb-1">{std.title}</h3>
-                <p className="text-sm text-neutral-500">{std.description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
         {/* ── HIGH LEVEL TABS: Store vs Activity Log ───────────── */}
         <div className="flex border-b border-neutral-200 mb-8 overflow-x-auto hide-scrollbar">
           <button
@@ -621,32 +541,7 @@ export function FarmStorePage() {
           <section className="max-w-3xl mx-auto py-8">
             <div className="mb-8 text-center">
               <h2 className="text-2xl font-bold text-neutral-800 mb-2">Nhật Ký Nông Trại</h2>
-              <p className="text-neutral-500">Theo dõi các hoạt động canh tác hàng ngày từ {farm.name}</p>
-            </div>
-            <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-neutral-200 before:to-transparent">
-              {MOCK_ACTIVITY_LOGS.map((log) => (
-                <div key={log.id} className="relative flex items-start justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-emerald-100 text-emerald-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                    <Calendar className="w-4 h-4" />
-                  </div>
-                  <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] bg-white p-5 rounded-2xl shadow-sm border border-neutral-100 hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-bold text-neutral-800 text-lg">{log.action}</h4>
-                      <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">{log.date}</span>
-                    </div>
-                    <p className="text-neutral-600 text-sm mb-4 leading-relaxed">{log.description}</p>
-                    {log.images.length > 0 && (
-                      <div className="rounded-xl overflow-hidden mb-4 border border-neutral-100">
-                        <img src={log.images[0]} alt="Activity" className="w-full h-48 object-cover" />
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1.5 text-sm font-medium text-neutral-500 cursor-pointer hover:text-emerald-600 transition-colors">
-                      <ThumbsUp className="w-4 h-4" />
-                      {log.likes}
-                    </div>
-                  </div>
-                </div>
-              ))}
+              <p className="text-neutral-500">Chưa có nhật ký canh tác được xác minh.</p>
             </div>
           </section>
         )}

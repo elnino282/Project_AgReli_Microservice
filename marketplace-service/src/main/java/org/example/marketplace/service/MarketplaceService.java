@@ -28,6 +28,8 @@ import org.example.marketplace.dto.response.MarketplaceProductDetailResponse;
 import org.example.marketplace.dto.response.MarketplaceProductSummaryResponse;
 import org.example.marketplace.dto.response.MarketplaceReviewResponse;
 import org.example.marketplace.dto.response.MarketplaceTraceabilityResponse;
+import org.example.marketplace.dto.request.MarketplaceShippingQuoteRequest;
+import org.example.marketplace.dto.response.MarketplaceShippingQuoteGroupResponse;
 import org.example.DTO.Common.PageResponse;
 import org.example.marketplace.model.MarketplaceOrderStatus;
 import org.example.marketplace.model.MarketplaceProductStatus;
@@ -94,6 +96,8 @@ public interface MarketplaceService {
 
     // Orders (Buyer)
     MarketplaceOrderPreviewResponse previewOrder(MarketplaceCreateOrderRequest request);
+
+    List<MarketplaceShippingQuoteGroupResponse> createShippingQuotes(MarketplaceShippingQuoteRequest request);
 
     MarketplaceCreateOrderResultResponse createOrder(MarketplaceCreateOrderRequest request, String idempotencyKey);
 

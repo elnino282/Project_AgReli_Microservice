@@ -37,6 +37,9 @@ spring:
 jwt:
   jwks-uri: ${JWT_JWKS_URI:http://localhost:8081/api/v1/auth/.well-known/jwks.json}
 
+external-services:
+  marketplace-service-url: ${EXTERNAL_SERVICES_MARKETPLACE_SERVICE_URL:http://marketplace-service:8090}
+
 management:
   endpoints:
     web:

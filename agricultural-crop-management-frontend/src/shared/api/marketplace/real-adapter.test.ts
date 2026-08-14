@@ -88,4 +88,20 @@ describe("createMarketplaceRealAdapter", () => {
       },
     );
   });
+
+  it("requests authoritative shipping quotes from marketplace instead of delivery calculate", async () => {
+    const adapter = createMarketplaceRealAdapter();
+    const request = {
+      addressId: 7,
+      recipientProvince: "Lam Dong",
+      items: [{ productId: 11, quantity: 2 }],
+    };
+
+    await adapter.createShippingQuotes(request);
+
+    expect(httpClient.post).toHaveBeenCalledWith(
+      "/api/v1/marketplace/shipping-quotes",
+      request,
+    );
+  });
 });

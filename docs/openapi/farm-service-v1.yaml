@@ -168,6 +168,100 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseString"
+  /api/v1/certification-corrective-actions/{actionId}:
+    put:
+      tags:
+      - certification-audit-controller
+      operationId: updateCorrectiveAction
+      parameters:
+      - name: actionId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCorrectiveActionRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCorrectiveActionResponse"
+  /api/v1/certification-corrective-actions/{actionId}/review:
+    put:
+      tags:
+      - certification-audit-controller
+      operationId: reviewCorrectiveAction
+      parameters:
+      - name: actionId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewCorrectiveActionRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCorrectiveActionResponse"
+  /api/v1/certification-audits/{auditId}/start:
+    put:
+      tags:
+      - certification-audit-controller
+      operationId: startAudit
+      parameters:
+      - name: auditId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCertificationAuditResponse"
+  /api/v1/certification-audits/{auditId}/complete:
+    put:
+      tags:
+      - certification-audit-controller
+      operationId: completeAudit
+      parameters:
+      - name: auditId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompleteAuditRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCertificationAuditResponse"
   /api/v1/plots:
     get:
       tags:
@@ -393,7 +487,7 @@ paths:
           format: int32
       - name: X-User-Id
         in: header
-        required: true
+        required: false
         schema:
           type: integer
           format: int64
@@ -424,7 +518,7 @@ paths:
           format: int32
       - name: X-User-Id
         in: header
-        required: true
+        required: false
         schema:
           type: integer
           format: int64
@@ -446,6 +540,120 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseString"
+  /api/v1/farms/{farmId}/certification/issue:
+    post:
+      tags:
+      - certification-audit-controller
+      operationId: issueCertificate
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IssueCertificateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseString"
+  /api/v1/farms/{farmId}/certification/export-dossier:
+    post:
+      tags:
+      - certification-controller
+      operationId: exportDossier
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: X-User-Id
+        in: header
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: diaryClientProvider
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/ObjectProviderSeasonProductionDiaryClient"
+      - name: documentServiceProvider
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/ObjectProviderFarmDocumentService"
+      - name: currentUserServiceProvider
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/ObjectProviderCurrentUserService"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExportDossierRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseFarmDocumentResponse"
+  /api/v1/farms/{farmId}/certification/audits:
+    get:
+      tags:
+      - certification-audit-controller
+      operationId: getAudits
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListCertificationAuditResponse"
+    post:
+      tags:
+      - certification-audit-controller
+      operationId: scheduleAudit
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAuditRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCertificationAuditResponse"
   /api/v1/farms/{farmId}/certification/apply:
     post:
       tags:
@@ -458,6 +666,106 @@ paths:
         schema:
           type: integer
           format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseString"
+  /api/v1/certification-nonconformities/{nonconformityId}/corrective-actions:
+    post:
+      tags:
+      - certification-audit-controller
+      operationId: createCorrectiveAction
+      parameters:
+      - name: nonconformityId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCorrectiveActionRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCorrectiveActionResponse"
+  /api/v1/certification-corrective-actions/{actionId}/submit:
+    post:
+      tags:
+      - certification-audit-controller
+      operationId: submitCorrectiveAction
+      parameters:
+      - name: actionId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseCorrectiveActionResponse"
+  /api/v1/certification-audits/{auditId}/nonconformities:
+    post:
+      tags:
+      - certification-audit-controller
+      operationId: recordNonconformity
+      parameters:
+      - name: auditId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateNonconformityRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseNonconformityResponse"
+  /api/v1/admin/farms/{farmId}/documents/{documentId}/verify:
+    patch:
+      tags:
+      - certification-audit-controller
+      operationId: verifyDocument
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: documentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyDocumentRequest"
+        required: true
       responses:
         "200":
           description: OK
@@ -572,6 +880,12 @@ paths:
         schema:
           type: integer
           format: int32
+      - name: standardCode
+        in: query
+        required: false
+        schema:
+          type: string
+          default: VIETGAP-PLANTING-2024
       responses:
         "200":
           description: OK
@@ -617,6 +931,25 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseCertificationDetailsResponse"
+  /api/v1/farms/{farmId}/certification/nonconformities:
+    get:
+      tags:
+      - certification-audit-controller
+      operationId: getNonconformities
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListNonconformityResponse"
   /api/v1/addresses/wards/{id}:
     get:
       tags:
@@ -786,11 +1119,11 @@ components:
           format: double
         valid:
           type: boolean
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
         m:
           type: number
           format: double
-        coordinate:
-          $ref: "#/components/schemas/Coordinate"
     CoordinateSequence:
       type: object
       properties:
@@ -807,6 +1140,21 @@ components:
       properties:
         "null":
           type: boolean
+        diameter:
+          type: number
+          format: double
+        maxY:
+          type: number
+          format: double
+        minX:
+          type: number
+          format: double
+        minY:
+          type: number
+          format: double
+        maxX:
+          type: number
+          format: double
         width:
           type: number
           format: double
@@ -814,21 +1162,6 @@ components:
           type: number
           format: double
         height:
-          type: number
-          format: double
-        diameter:
-          type: number
-          format: double
-        maxX:
-          type: number
-          format: double
-        minX:
-          type: number
-          format: double
-        maxY:
-          type: number
-          format: double
-        minY:
           type: number
           format: double
     Geometry:
@@ -849,8 +1182,6 @@ components:
           type: boolean
         simple:
           type: boolean
-        precisionModel:
-          $ref: "#/components/schemas/PrecisionModel"
         dimension:
           type: integer
           format: int32
@@ -862,31 +1193,33 @@ components:
           format: int32
         boundary:
           $ref: "#/components/schemas/Geometry"
-        interiorPoint:
-          $ref: "#/components/schemas/Point"
-        centroid:
-          $ref: "#/components/schemas/Point"
         coordinates:
           type: array
           items:
             $ref: "#/components/schemas/Coordinate"
         coordinate:
           $ref: "#/components/schemas/Coordinate"
+        interiorPoint:
+          $ref: "#/components/schemas/Point"
         rectangle:
           type: boolean
-        area:
-          type: number
-          format: double
-        envelopeInternal:
-          $ref: "#/components/schemas/Envelope"
-        boundaryDimension:
-          type: integer
-          format: int32
-        geometryType:
-          type: string
+        centroid:
+          $ref: "#/components/schemas/Point"
+        precisionModel:
+          $ref: "#/components/schemas/PrecisionModel"
         srid:
           type: integer
           format: int32
+        area:
+          type: number
+          format: double
+        geometryType:
+          type: string
+        boundaryDimension:
+          type: integer
+          format: int32
+        envelopeInternal:
+          $ref: "#/components/schemas/Envelope"
     GeometryFactory:
       type: object
       properties:
@@ -894,72 +1227,6 @@ components:
           $ref: "#/components/schemas/PrecisionModel"
         coordinateSequenceFactory:
           $ref: "#/components/schemas/CoordinateSequenceFactory"
-        srid:
-          type: integer
-          format: int32
-    LinearRing:
-      type: object
-      properties:
-        envelope:
-          $ref: "#/components/schemas/Geometry"
-        factory:
-          $ref: "#/components/schemas/GeometryFactory"
-        userData:
-          type: object
-        closed:
-          type: boolean
-        boundaryDimension:
-          type: integer
-          format: int32
-        geometryType:
-          type: string
-        length:
-          type: number
-          format: double
-        empty:
-          type: boolean
-        dimension:
-          type: integer
-          format: int32
-        endPoint:
-          $ref: "#/components/schemas/Point"
-        numPoints:
-          type: integer
-          format: int32
-        boundary:
-          $ref: "#/components/schemas/Geometry"
-        startPoint:
-          $ref: "#/components/schemas/Point"
-        coordinates:
-          type: array
-          items:
-            $ref: "#/components/schemas/Coordinate"
-        coordinate:
-          $ref: "#/components/schemas/Coordinate"
-        coordinateSequence:
-          $ref: "#/components/schemas/CoordinateSequence"
-        ring:
-          type: boolean
-        valid:
-          type: boolean
-        simple:
-          type: boolean
-        precisionModel:
-          $ref: "#/components/schemas/PrecisionModel"
-        numGeometries:
-          type: integer
-          format: int32
-        interiorPoint:
-          $ref: "#/components/schemas/Point"
-        centroid:
-          $ref: "#/components/schemas/Point"
-        rectangle:
-          type: boolean
-        area:
-          type: number
-          format: double
-        envelopeInternal:
-          $ref: "#/components/schemas/Envelope"
         srid:
           type: integer
           format: int32
@@ -985,11 +1252,12 @@ components:
           type: integer
           format: int32
         polygon:
-          $ref: "#/components/schemas/Polygon"
+          $ref: "#/components/schemas/Geometry"
         status:
           type: string
           enum:
           - AVAILABLE
+          - ACTIVE
           - IN_USE
           - IDLE
           - FALLOW
@@ -1013,114 +1281,53 @@ components:
           type: boolean
         simple:
           type: boolean
+        dimension:
+          type: integer
+          format: int32
+        numPoints:
+          type: integer
+          format: int32
+        boundary:
+          $ref: "#/components/schemas/Geometry"
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
         "y":
           type: number
           format: double
         x:
           type: number
           format: double
-        dimension:
+        geometryType:
+          type: string
+        boundaryDimension:
           type: integer
           format: int32
-        numPoints:
-          type: integer
-          format: int32
-        boundary:
-          $ref: "#/components/schemas/Geometry"
-        coordinate:
-          $ref: "#/components/schemas/Coordinate"
         coordinateSequence:
           $ref: "#/components/schemas/CoordinateSequence"
-        boundaryDimension:
-          type: integer
-          format: int32
-        geometryType:
-          type: string
         length:
           type: number
           format: double
         valid:
           type: boolean
-        precisionModel:
-          $ref: "#/components/schemas/PrecisionModel"
         numGeometries:
           type: integer
           format: int32
         interiorPoint:
           $ref: "#/components/schemas/Point"
+        rectangle:
+          type: boolean
         centroid:
           $ref: "#/components/schemas/Point"
-        rectangle:
-          type: boolean
-        area:
-          type: number
-          format: double
-        envelopeInternal:
-          $ref: "#/components/schemas/Envelope"
-        srid:
-          type: integer
-          format: int32
-    Polygon:
-      type: object
-      properties:
-        envelope:
-          $ref: "#/components/schemas/Geometry"
-        factory:
-          $ref: "#/components/schemas/GeometryFactory"
-        userData:
-          type: object
-        length:
-          type: number
-          format: double
-        empty:
-          type: boolean
-        dimension:
-          type: integer
-          format: int32
-        exteriorRing:
-          $ref: "#/components/schemas/LinearRing"
-        numInteriorRing:
-          type: integer
-          format: int32
-        numPoints:
-          type: integer
-          format: int32
-        boundary:
-          $ref: "#/components/schemas/Geometry"
-        coordinates:
-          type: array
-          items:
-            $ref: "#/components/schemas/Coordinate"
-        coordinate:
-          $ref: "#/components/schemas/Coordinate"
-        rectangle:
-          type: boolean
-        area:
-          type: number
-          format: double
-        boundaryDimension:
-          type: integer
-          format: int32
-        geometryType:
-          type: string
-        valid:
-          type: boolean
-        simple:
-          type: boolean
         precisionModel:
           $ref: "#/components/schemas/PrecisionModel"
-        numGeometries:
-          type: integer
-          format: int32
-        interiorPoint:
-          $ref: "#/components/schemas/Point"
-        centroid:
-          $ref: "#/components/schemas/Point"
-        envelopeInternal:
-          $ref: "#/components/schemas/Envelope"
         srid:
           type: integer
           format: int32
+        area:
+          type: number
+          format: double
+        envelopeInternal:
+          $ref: "#/components/schemas/Envelope"
     PrecisionModel:
       type: object
       properties:
@@ -1131,10 +1338,10 @@ components:
           $ref: "#/components/schemas/Type"
         floating:
           type: boolean
-        offsetY:
+        offsetX:
           type: number
           format: double
-        offsetX:
+        offsetY:
           type: number
           format: double
         maximumSignificantDigits:
@@ -1180,12 +1387,11 @@ components:
         parentPlotId:
           type: integer
           format: int32
-        polygon:
-          $ref: "#/components/schemas/Polygon"
         status:
           type: string
           enum:
           - AVAILABLE
+          - ACTIVE
           - IN_USE
           - IDLE
           - FALLOW
@@ -1288,6 +1494,138 @@ components:
           type: string
         generatedAt:
           type: string
+    CreateCorrectiveActionRequest:
+      type: object
+      properties:
+        planDescription:
+          type: string
+        evidenceUrls:
+          type: array
+          items:
+            type: string
+        appliesFromSeasonId:
+          type: integer
+          format: int32
+    ApiResponseCorrectiveActionResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/CorrectiveActionResponse"
+        data:
+          $ref: "#/components/schemas/CorrectiveActionResponse"
+        generatedAt:
+          type: string
+    CorrectiveActionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        nonconformityId:
+          type: integer
+          format: int64
+        planDescription:
+          type: string
+        evidenceUrls:
+          type: array
+          items:
+            type: string
+        appliesFromSeasonId:
+          type: integer
+          format: int32
+        submittedByUserId:
+          type: integer
+          format: int64
+        submittedAt:
+          type: string
+          format: date-time
+        reviewedByUserId:
+          type: integer
+          format: int64
+        reviewResult:
+          type: string
+        reviewNote:
+          type: string
+        reviewedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    ReviewCorrectiveActionRequest:
+      type: object
+      properties:
+        result:
+          type: string
+        reviewNote:
+          type: string
+      required:
+      - result
+    ApiResponseCertificationAuditResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/CertificationAuditResponse"
+        data:
+          $ref: "#/components/schemas/CertificationAuditResponse"
+        generatedAt:
+          type: string
+    CertificationAuditResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        recordId:
+          type: integer
+          format: int32
+        auditType:
+          type: string
+        scheduledDate:
+          type: string
+          format: date
+        auditorUserId:
+          type: integer
+          format: int64
+        auditorOrgName:
+          type: string
+        status:
+          type: string
+        interviewNotes:
+          type: string
+        sampleCollectionNotes:
+          type: string
+        conductedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    CompleteAuditRequest:
+      type: object
+      properties:
+        result:
+          type: string
+        interviewNotes:
+          type: string
+        sampleCollectionNotes:
+          type: string
+      required:
+      - result
     PlotGeoJsonDto:
       type: object
       properties:
@@ -1438,6 +1776,152 @@ components:
         updatedAt:
           type: string
           format: date-time
+    IssueCertificateRequest:
+      type: object
+      properties:
+        certificateNumber:
+          type: string
+        issuedDate:
+          type: string
+          format: date
+        expiryDate:
+          type: string
+          format: date
+        certificateDocumentId:
+          type: integer
+          format: int32
+      required:
+      - certificateNumber
+      - expiryDate
+      - issuedDate
+    ExportDossierRequest:
+      type: object
+      properties:
+        seasonIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+    ObjectProviderSeasonProductionDiaryClient:
+      type: object
+      properties:
+        object:
+          $ref: "#/components/schemas/SeasonProductionDiaryClient"
+        ifUnique:
+          $ref: "#/components/schemas/SeasonProductionDiaryClient"
+        ifAvailable:
+          $ref: "#/components/schemas/SeasonProductionDiaryClient"
+    SeasonProductionDiaryClient:
+      type: object
+    FarmDocumentService:
+      type: object
+    ObjectProviderFarmDocumentService:
+      type: object
+      properties:
+        object:
+          $ref: "#/components/schemas/FarmDocumentService"
+        ifUnique:
+          $ref: "#/components/schemas/FarmDocumentService"
+        ifAvailable:
+          $ref: "#/components/schemas/FarmDocumentService"
+    CurrentUserService:
+      type: object
+      properties:
+        currentUserId:
+          type: integer
+          format: int64
+        currentRole:
+          type: string
+        currentUserFullName:
+          type: string
+    ObjectProviderCurrentUserService:
+      type: object
+      properties:
+        object:
+          $ref: "#/components/schemas/CurrentUserService"
+        ifUnique:
+          $ref: "#/components/schemas/CurrentUserService"
+        ifAvailable:
+          $ref: "#/components/schemas/CurrentUserService"
+    CreateAuditRequest:
+      type: object
+      properties:
+        auditType:
+          type: string
+        scheduledDate:
+          type: string
+          format: date
+        auditorUserId:
+          type: integer
+          format: int64
+        auditorOrgName:
+          type: string
+      required:
+      - auditType
+      - scheduledDate
+    CreateNonconformityRequest:
+      type: object
+      properties:
+        checklistItemId:
+          type: integer
+          format: int32
+        severity:
+          type: string
+        description:
+          type: string
+      required:
+      - description
+      - severity
+    ApiResponseNonconformityResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: "#/components/schemas/NonconformityResponse"
+        data:
+          $ref: "#/components/schemas/NonconformityResponse"
+        generatedAt:
+          type: string
+    NonconformityResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        auditId:
+          type: integer
+          format: int64
+        checklistItemId:
+          type: integer
+          format: int32
+        severity:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        correctiveActions:
+          type: array
+          items:
+            $ref: "#/components/schemas/CorrectiveActionResponse"
+    VerifyDocumentRequest:
+      type: object
+      properties:
+        status:
+          type: string
+        note:
+          type: string
+      required:
+      - status
     ApiResponseListPlotResponse:
       type: object
       properties:
@@ -1530,6 +2014,24 @@ components:
           format: date
         complianceScore:
           type: number
+        certificateNumber:
+          type: string
+        missingMandatoryEvidenceCount:
+          type: integer
+          format: int32
+        missingEvidenceItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/MissingEvidenceItem"
+    MissingEvidenceItem:
+      type: object
+      properties:
+        itemCode:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
     ApiResponseObject:
       type: object
       properties:
@@ -1616,6 +2118,21 @@ components:
             $ref: "#/components/schemas/CertificationItemDetail"
         isEligible:
           type: boolean
+        certificateNumber:
+          type: string
+        nextPeriodicReviewDate:
+          type: string
+          format: date
+        publishedAt:
+          type: string
+          format: date-time
+        missingMandatoryEvidenceCount:
+          type: integer
+          format: int32
+        missingEvidenceItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/MissingEvidenceItem"
     CertificationItemDetail:
       type: object
       properties:
@@ -1645,6 +2162,46 @@ components:
         checkedAt:
           type: string
           format: date-time
+    ApiResponseListNonconformityResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/NonconformityResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/NonconformityResponse"
+        generatedAt:
+          type: string
+    ApiResponseListCertificationAuditResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/CertificationAuditResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CertificationAuditResponse"
+        generatedAt:
+          type: string
     ApiResponseWardResponse:
       type: object
       properties:
@@ -1761,6 +2318,5 @@ components:
   securitySchemes:
     bearerAuth:
       type: http
-      name: bearerAuth
       scheme: bearer
       bearerFormat: JWT

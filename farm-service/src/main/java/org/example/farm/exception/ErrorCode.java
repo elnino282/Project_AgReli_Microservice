@@ -22,6 +22,7 @@ public enum ErrorCode {
     PLOT_STATUS_NOT_FOUND("ERR_PLOT_STATUS_NOT_FOUND", "Plot status not found", HttpStatus.NOT_FOUND),
     PLOT_HAS_ACTIVE_SEASONS("ERR_PLOT_HAS_ACTIVE_SEASONS", "Cannot delete plot because it has active or planned seasons", HttpStatus.BAD_REQUEST),
     PLOT_HAS_ACTIVE_TASKS("ERR_PLOT_HAS_ACTIVE_TASKS", "Cannot delete plot because it has pending, in-progress or overdue tasks", HttpStatus.BAD_REQUEST),
+    PLOT_DEPENDENCY_UNAVAILABLE("ERR_PLOT_DEPENDENCY_UNAVAILABLE", "Cannot verify plot dependencies because season service is unavailable", HttpStatus.SERVICE_UNAVAILABLE),
 
     FARM_NOT_FOUND("ERR_FARM_NOT_FOUND", "Farm not found", HttpStatus.NOT_FOUND),
     FARM_NAME_EXISTS("ERR_FARM_NAME_EXISTS", "Farm name already exists", HttpStatus.CONFLICT),
@@ -39,6 +40,7 @@ public enum ErrorCode {
 
     // Certification audit workflow errors
     CERTIFICATION_NOT_FOUND("ERR_CERTIFICATION_NOT_FOUND", "Certification record not found", HttpStatus.NOT_FOUND),
+    CERTIFICATION_EVIDENCE_UNAVAILABLE("ERR_CERTIFICATION_EVIDENCE_UNAVAILABLE", "Certification evidence cannot be verified because a downstream service is unavailable", HttpStatus.SERVICE_UNAVAILABLE),
     CERTIFICATION_INVALID_TRANSITION("ERR_CERTIFICATION_INVALID_TRANSITION", "Invalid certification status transition", HttpStatus.BAD_REQUEST),
     AUDIT_NOT_FOUND("ERR_AUDIT_NOT_FOUND", "Certification audit not found", HttpStatus.NOT_FOUND),
     NONCONFORMITY_NOT_FOUND("ERR_NONCONFORMITY_NOT_FOUND", "Nonconformity not found", HttpStatus.NOT_FOUND),

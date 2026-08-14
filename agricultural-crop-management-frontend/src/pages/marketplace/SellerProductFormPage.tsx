@@ -46,6 +46,9 @@ type ProductFormState = {
   description: string;
   price: string;
   stockQuantity: string;
+  shippingWeightKgPerUnit: string;
+  perishable: boolean;
+  requiresColdChain: boolean;
   imageUrl: string;
   selectedFarmId: string;
   selectedSeasonId: string;
@@ -62,6 +65,9 @@ const EMPTY_FORM: ProductFormState = {
   description: "",
   price: "",
   stockQuantity: "",
+  shippingWeightKgPerUnit: "",
+  perishable: false,
+  requiresColdChain: false,
   imageUrl: "",
   selectedFarmId: "",
   selectedSeasonId: "",
@@ -159,6 +165,9 @@ export function SellerProductFormPage() {
       description: product.description ?? "",
       price: String(product.price),
       stockQuantity: String(product.stockQuantity),
+      shippingWeightKgPerUnit: String(product.shippingWeightKgPerUnit ?? ""),
+      perishable: product.perishable ?? false,
+      requiresColdChain: product.requiresColdChain ?? false,
       imageUrl: product.imageUrl ?? "",
       selectedFarmId: product.farmId ? String(product.farmId) : "",
       selectedSeasonId: product.seasonId ? String(product.seasonId) : "",
@@ -250,6 +259,7 @@ export function SellerProductFormPage() {
     Boolean(form.selectedLotId) &&
     Number(form.price) > 0 &&
     Number(form.stockQuantity) > 0 &&
+    Number(form.shippingWeightKgPerUnit) > 0 &&
     Boolean(selectedLot) &&
     Number(form.stockQuantity) <= Number(selectedLot?.availableQuantity ?? 0);
 
@@ -275,6 +285,9 @@ export function SellerProductFormPage() {
       description: product.description ?? "",
       price: String(product.price),
       stockQuantity: String(product.stockQuantity),
+      shippingWeightKgPerUnit: String(product.shippingWeightKgPerUnit ?? ""),
+      perishable: product.perishable ?? false,
+      requiresColdChain: product.requiresColdChain ?? false,
       imageUrl: product.imageUrl ?? "",
       selectedFarmId: product.farmId ? String(product.farmId) : "",
       selectedSeasonId: product.seasonId ? String(product.seasonId) : "",
@@ -377,6 +390,7 @@ export function SellerProductFormPage() {
 
     const price = Number(form.price);
     const stockQuantity = Number(form.stockQuantity);
+    const shippingWeightKgPerUnit = Number(form.shippingWeightKgPerUnit);
 
     if (!Number.isFinite(price) || price <= 0) {
       setErrorMessage(t("marketplaceSeller.productForm.validation.pricePositive", "Price must be greater than 0."));
@@ -387,6 +401,14 @@ export function SellerProductFormPage() {
       setErrorMessage(
         t("marketplaceSeller.productForm.validation.quantityPositive", "Quantity to sell must be greater than 0."),
       );
+      return;
+    }
+
+    if (!Number.isFinite(shippingWeightKgPerUnit) || shippingWeightKgPerUnit <= 0) {
+      setErrorMessage(t(
+        "marketplaceSeller.productForm.validation.shippingWeightPositive",
+        "Shipping weight per unit must be greater than 0 kg.",
+      ));
       return;
     }
 
@@ -415,6 +437,9 @@ export function SellerProductFormPage() {
         description: form.description.trim() || undefined,
         price,
         stockQuantity,
+        shippingWeightKgPerUnit,
+        perishable: form.perishable,
+        requiresColdChain: form.requiresColdChain,
         imageUrl: productImageUrl,
         lotId: Number(form.selectedLotId),
       };
@@ -659,6 +684,47 @@ export function SellerProductFormPage() {
                     })}
                   </p>
                 ) : null}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="product-shipping-weight">
+                  {t("marketplaceSeller.productForm.fields.shippingWeight", "Shipping weight per unit (kg)")} *
+                </Label>
+                <Input
+                  id="product-shipping-weight"
+                  type="number"
+                  min="0.001"
+                  step="0.001"
+                  value={form.shippingWeightKgPerUnit}
+                  onChange={(event) => updateForm({ shippingWeightKgPerUnit: event.target.value })}
+                  required
+                  className={FORM_INPUT_CLASS_NAME}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t(
+                    "marketplaceSeller.productForm.fields.shippingWeightHint",
+                    "Used by delivery-service to issue an authoritative quote.",
+                  )}
+                </p>
+              </div>
+
+              <div className="space-y-3 rounded-xl border border-border p-4">
+                <label className="flex items-center gap-3 text-sm text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={form.perishable}
+                    onChange={(event) => updateForm({ perishable: event.target.checked })}
+                  />
+                  {t("marketplaceSeller.productForm.fields.perishable", "Perishable product")}
+                </label>
+                <label className="flex items-center gap-3 text-sm text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={form.requiresColdChain}
+                    onChange={(event) => updateForm({ requiresColdChain: event.target.checked })}
+                  />
+                  {t("marketplaceSeller.productForm.fields.requiresColdChain", "Requires cold chain")}
+                </label>
               </div>
 
               <div className="space-y-3 md:col-span-2">

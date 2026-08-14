@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/v1/delivery")
@@ -30,6 +31,7 @@ public class DeliveryController {
         return ResponseEntity.ok(options);
     }
 
+    @PreAuthorize("hasRole('BUYER')")
     @PostMapping("/orders")
     public ResponseEntity<DeliveryOrder> createDeliveryOrder(
             @Valid @RequestBody CreateDeliveryOrderRequest request) {
@@ -38,12 +40,14 @@ public class DeliveryController {
         return ResponseEntity.ok(order);
     }
 
+    @PreAuthorize("hasAnyRole('BUYER', 'ADMIN')")
     @GetMapping("/orders")
     public ResponseEntity<List<DeliveryOrder>> getAllDeliveryOrders() {
         log.info("Fetching all delivery orders");
         return ResponseEntity.ok(deliveryService.getAllDeliveryOrders());
     }
 
+    @PreAuthorize("hasAnyRole('BUYER', 'ADMIN')")
     @GetMapping("/orders/{id}")
     public ResponseEntity<DeliveryOrder> getDeliveryOrder(@PathVariable Integer id) {
         log.info("Fetching delivery order: {}", id);
@@ -51,6 +55,7 @@ public class DeliveryController {
         return ResponseEntity.ok(order);
     }
 
+    @PreAuthorize("hasAnyRole('BUYER', 'ADMIN')")
     @GetMapping("/orders/marketplace/{orderId}")
     public ResponseEntity<List<DeliveryOrder>> getDeliveryOrdersByMarketplace(@PathVariable Long orderId) {
         log.info("Fetching delivery orders for marketplace order: {}", orderId);
@@ -58,6 +63,7 @@ public class DeliveryController {
         return ResponseEntity.ok(orders);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/orders/{id}/status")
     public ResponseEntity<DeliveryOrder> updateDeliveryStatus(
             @PathVariable Integer id,
@@ -67,6 +73,7 @@ public class DeliveryController {
         return ResponseEntity.ok(order);
     }
 
+    @PreAuthorize("hasAnyRole('FARMER', 'ADMIN')")
     @GetMapping("/batch-suggestions")
     public ResponseEntity<org.example.delivery.dto.response.BatchSuggestionResponse> getBatchSuggestions(
             @RequestParam("date") @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate date,

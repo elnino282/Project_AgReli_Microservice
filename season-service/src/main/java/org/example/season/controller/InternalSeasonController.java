@@ -28,6 +28,7 @@ public class InternalSeasonController {
     private final PesticideRecordRepository pesticideRecordRepository;
     private final FieldLogRepository fieldLogRepository;
     private final org.example.season.service.EmployeeTrainingService employeeTrainingService;
+    private final org.example.season.service.SeasonQueryService seasonQueryService;
 
     @PostMapping("/seasons/batch")
     public ResponseEntity<List<SeasonSummaryDto>> getSeasonsByIds(@RequestBody List<Integer> seasonIds) {
@@ -67,6 +68,19 @@ public class InternalSeasonController {
                 .build();
 
         return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/seasons/exists-by-variety/{varietyId}")
+    public ResponseEntity<Boolean> existsByVariety(@PathVariable Integer varietyId) {
+        return ResponseEntity.ok(seasonQueryService.existsSeasonByVarietyId(varietyId));
+    }
+
+    @GetMapping("/plots/{plotId}/dependencies")
+    public ResponseEntity<PlotDependencyStatusDto> getPlotDependencies(@PathVariable Integer plotId) {
+        return ResponseEntity.ok(PlotDependencyStatusDto.builder()
+                .hasActiveSeasons(seasonQueryService.existsActiveSeasonByPlotId(plotId))
+                .hasActiveTasks(seasonQueryService.existsActiveTasksByPlotId(plotId))
+                .build());
     }
 
     @GetMapping("/tasks/{id}")
@@ -197,6 +211,15 @@ public class InternalSeasonController {
         private Integer seasonId;
         private Long userId;
         private String status;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PlotDependencyStatusDto {
+        private boolean hasActiveSeasons;
+        private boolean hasActiveTasks;
     }
 
     @Data

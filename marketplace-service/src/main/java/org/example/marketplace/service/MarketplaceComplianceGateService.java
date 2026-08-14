@@ -8,6 +8,8 @@ import org.example.marketplace.client.SeasonClient;
 import org.example.marketplace.dto.client.FarmCertificationDto;
 import org.example.marketplace.dto.client.PesticideRecordDto;
 import org.example.marketplace.dto.response.ComplianceCheckResponse;
+import org.example.marketplace.dto.response.MarketplaceTraceabilityResponse.PHISafetyInfo;
+import org.example.marketplace.dto.response.MarketplaceTraceabilityResponse.PHISafetyInfo.PesticideUsageItem;
 import org.example.marketplace.entity.MarketplaceProduct;
 import org.springframework.stereotype.Service;
 
@@ -36,10 +38,6 @@ public class MarketplaceComplianceGateService {
         String phiSnapshot = null;
 
         String claim = product.getComplianceClaim();
-        // BR-G-01: Bỏ qua nếu không claim
-        if (claim == null || "NONE".equalsIgnoreCase(claim)) {
-            return new ComplianceCheckResponse(true, reasons, claim, null, null);
-        }
 
         // 1. Kiểm tra chứng nhận (nếu claim VIETGAP hoặc ORGANIC)
         if ("VIETGAP".equalsIgnoreCase(claim) || "ORGANIC".equalsIgnoreCase(claim)) {
@@ -81,29 +79,36 @@ public class MarketplaceComplianceGateService {
                 if (pesticideRecords != null && !pesticideRecords.isEmpty()) {
                     LocalDate harvestDate = product.getLotHarvestDate() != null ? product.getLotHarvestDate().toLocalDate() : LocalDate.now();
                     boolean hasPhiViolation = false;
+                    List<PesticideUsageItem> usage = new ArrayList<>();
 
                     for (PesticideRecordDto record : pesticideRecords) {
                         LocalDate allowedDate = record.harvestAllowedDate();
-                        if (allowedDate == null && record.applicationDate() != null) {
+                        if (allowedDate == null && record.applicationDate() != null && record.phiDays() != null) {
                             allowedDate = record.applicationDate().plusDays(record.phiDays());
                         }
 
+                        String status = "SAFE";
                         if (allowedDate != null && harvestDate.isBefore(allowedDate)) {
                             hasPhiViolation = true;
+                            status = "BLOCKED";
                             reasons.add("Vi phạm PHI: Thuốc " + record.pesticideName() + 
                                     " phun ngày " + record.applicationDate() + 
                                     ", chỉ an toàn sau ngày " + allowedDate + 
                                     " (ngày thu hoạch lô hàng: " + harvestDate + ").");
                         }
+                        usage.add(new PesticideUsageItem(
+                                record.pesticideName(), record.applicationDate(), allowedDate, status));
                     }
 
                     if (hasPhiViolation) {
                         isEligible = false;
                     } else {
-                        phiSnapshot = objectMapper.writeValueAsString(pesticideRecords);
+                        phiSnapshot = objectMapper.writeValueAsString(new PHISafetyInfo(
+                                true, pesticideRecords.size(), pesticideRecords.size(), 0, usage));
                     }
                 } else {
-                    phiSnapshot = "[]";
+                    phiSnapshot = objectMapper.writeValueAsString(new PHISafetyInfo(
+                            true, 0, 0, 0, List.of()));
                 }
             } catch (Exception e) {
                 log.error("Lỗi khi kiểm tra PHI cho seasonId {}: {}", product.getSeasonId(), e.getMessage());

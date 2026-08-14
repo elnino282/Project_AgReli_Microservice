@@ -41,7 +41,9 @@ public class SeasonClientFallbackFactory implements FallbackFactory<SeasonClient
             @Override
             public List<org.example.marketplace.dto.client.PesticideRecordDto> getSeasonPesticideRecords(Integer seasonId) {
                 log.error("season-service lỗi khi lấy PesticideRecords cho seasonId={}: {}", seasonId, cause.toString());
-                return Collections.emptyList();
+                throw new IllegalStateException(
+                        "Dịch vụ season-service đang gặp sự cố, không thể xác minh an toàn thu hoạch",
+                        cause);
             }
         };
     }

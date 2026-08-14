@@ -8,6 +8,8 @@ import org.example.farm.entity.Plot;
 import org.example.farm.repository.PlotRepository;
 import org.example.farm.client.SeasonServiceClient;
 import org.example.farm.client.SustainabilityServiceClient;
+import org.example.farm.exception.AppException;
+import org.example.farm.exception.ErrorCode;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -73,6 +75,7 @@ public class CertificationScoringService {
                 }
             } catch (Exception e) {
                 log.error("Error fetching seasons for plot {}", plot.getId(), e);
+                throw new AppException(ErrorCode.CERTIFICATION_EVIDENCE_UNAVAILABLE);
             }
         }
 
@@ -85,8 +88,9 @@ public class CertificationScoringService {
             CertificationChecklistItem item = findItem(items, status.getChecklistItemId());
             if (item == null || item.getDataSourceType() == null) continue;
 
-            // Chỉ auto-populate nếu status đang là PENDING
-            if (!"PENDING".equalsIgnoreCase(status.getStatus())) continue;
+            boolean isPhiCheck = "PHI_CHECK".equalsIgnoreCase(item.getDataSourceType());
+            // PHI là evidence an toàn hiện thời nên luôn phải revalidate; nguồn khác chỉ auto-fill PENDING.
+            if (!isPhiCheck && !"PENDING".equalsIgnoreCase(status.getStatus())) continue;
 
             switch (item.getDataSourceType().toUpperCase()) {
                 case "SOIL_TEST" -> {
@@ -137,6 +141,7 @@ public class CertificationScoringService {
                             }
                         } catch (Exception e) {
                             log.error("Error checking PHI for season {}", seasonId, e);
+                            throw new AppException(ErrorCode.CERTIFICATION_EVIDENCE_UNAVAILABLE);
                         }
                     }
                     if (hasViolations) {
@@ -145,6 +150,7 @@ public class CertificationScoringService {
                         status.setCheckedAt(LocalDateTime.now());
                     } else {
                         status.setStatus("PASS");
+                        status.setNotes("Đã xác minh không có vi phạm PHI đang hoạt động");
                         status.setCheckedAt(LocalDateTime.now());
                     }
                 }

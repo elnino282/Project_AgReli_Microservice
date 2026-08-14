@@ -5,10 +5,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.delivery.dto.request.CalculateShippingRequest;
 import org.example.delivery.dto.request.CreateDeliveryOrderRequest;
 import org.example.delivery.dto.response.ShippingOption;
+import org.example.delivery.entity.ShippingQuote;
 import org.example.delivery.entity.DeliveryOrder;
 import org.example.delivery.entity.enums.DeliveryStatus;
 import org.example.delivery.repository.DeliveryOrderRepository;
 import org.example.delivery.repository.DeliveryProviderRepository;
+import org.example.delivery.config.CurrentUserService;
+import org.example.delivery.client.MarketplaceOrderClient;
+import org.example.delivery.client.MarketplaceOrderDeliveryContext;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +29,9 @@ public class DeliveryService {
     private final ShippingFeeCalculator shippingFeeCalculator;
     private final DeliveryOrderRepository deliveryOrderRepository;
     private final DeliveryProviderRepository deliveryProviderRepository;
+    private final CurrentUserService currentUserService;
+    private final ShippingQuoteService shippingQuoteService;
+    private final MarketplaceOrderClient marketplaceOrderClient;
 
     public List<ShippingOption> calculateShippingOptions(CalculateShippingRequest request) {
         return shippingFeeCalculator.calculateOptions(request);
@@ -33,27 +41,43 @@ public class DeliveryService {
     public DeliveryOrder createDeliveryOrder(CreateDeliveryOrderRequest request) {
         log.info("Creating delivery order for marketplace order: {}", request.marketplaceOrderId());
 
-        // Validate provider
-        deliveryProviderRepository.findById(request.providerId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid delivery provider ID: " + request.providerId()));
+        Long buyerUserId = currentUserService.getCurrentUserId();
+        MarketplaceOrderDeliveryContext context = marketplaceOrderClient.getDeliveryContext(request.marketplaceOrderId());
+        if (!request.marketplaceOrderId().equals(context.orderId())
+                || !buyerUserId.equals(context.buyerUserId())
+                || !request.shippingQuoteId().equals(context.shippingQuoteId())) {
+            throw new AccessDeniedException("Marketplace order does not belong to this buyer/quote");
+        }
+
+        ShippingQuote quote = shippingQuoteService.consumeQuote(
+                request.shippingQuoteId(), buyerUserId, context.sellerUserId(), context.farmId(),
+                context.recipientProvince(), request.marketplaceOrderId());
+        if (context.shippingFee() == null || context.shippingFee().compareTo(quote.getShippingFeeVnd()) != 0) {
+            throw new IllegalArgumentException("Marketplace order shipping fee does not match the accepted quote");
+        }
+
+        deliveryProviderRepository.findById(quote.getProviderId())
+                .orElseThrow(() -> new IllegalArgumentException("Shipping provider is unavailable"));
 
         // Generate a random mock tracking number
         String trackingNumber = "VTF" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
         DeliveryOrder order = DeliveryOrder.builder()
                 .marketplaceOrderId(request.marketplaceOrderId())
-                .providerId(request.providerId())
+                .shippingQuoteId(quote.getQuoteId())
+                .buyerUserId(buyerUserId)
+                .providerId(quote.getProviderId())
                 .trackingNumber(trackingNumber)
                 .status(DeliveryStatus.PENDING)
-                .shippingFeeVnd(request.shippingFeeVnd())
-                .isPerishable(request.isPerishable())
-                .requiresColdChain(request.requiresColdChain())
-                .recipientName(request.recipientName())
-                .recipientPhone(request.recipientPhone())
-                .recipientAddress(request.recipientAddress())
-                .recipientProvince(request.recipientProvince())
-                .weightKg(request.weightKg())
-                .estimatedDelivery(LocalDateTime.now().plusDays(2)) // Default 2 days estimate
+                .shippingFeeVnd(quote.getShippingFeeVnd())
+                .isPerishable(quote.getPerishable())
+                .requiresColdChain(quote.getRequiresColdChain())
+                .recipientName(context.recipientName())
+                .recipientPhone(context.recipientPhone())
+                .recipientAddress(context.recipientAddress())
+                .recipientProvince(context.recipientProvince())
+                .weightKg(quote.getWeightKg())
+                .estimatedDelivery(LocalDateTime.now().plusHours(quote.getEstimatedHours()))
                 .requestedDeliveryDate(request.requestedDeliveryDate())
                 .deliveryZoneTo(request.deliveryZoneTo())
                 .build();
@@ -68,16 +92,25 @@ public class DeliveryService {
     }
 
     public List<DeliveryOrder> getAllDeliveryOrders() {
-        return deliveryOrderRepository.findAll();
+        if (isAdmin()) {
+            return deliveryOrderRepository.findAll();
+        }
+        return deliveryOrderRepository.findByBuyerUserId(currentUserService.getCurrentUserId());
     }
 
     public DeliveryOrder getDeliveryOrder(Integer id) {
-        return deliveryOrderRepository.findById(id)
+        DeliveryOrder order = deliveryOrderRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Delivery order not found with ID: " + id));
+        requireOwnerOrAdmin(order);
+        return order;
     }
 
     public List<DeliveryOrder> getDeliveryOrdersByMarketplaceOrder(Long marketplaceOrderId) {
-        return deliveryOrderRepository.findByMarketplaceOrderId(marketplaceOrderId);
+        if (isAdmin()) {
+            return deliveryOrderRepository.findByMarketplaceOrderId(marketplaceOrderId);
+        }
+        return deliveryOrderRepository.findByMarketplaceOrderIdAndBuyerUserId(
+                marketplaceOrderId, currentUserService.getCurrentUserId());
     }
 
     @Transactional
@@ -91,5 +124,20 @@ public class DeliveryService {
         }
 
         return deliveryOrderRepository.save(order);
+    }
+
+    private boolean isAdmin() {
+        String role = currentUserService.getCurrentRole();
+        return "ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role);
+    }
+
+    private void requireOwnerOrAdmin(DeliveryOrder order) {
+        if (isAdmin()) {
+            return;
+        }
+        Long currentUserId = currentUserService.getCurrentUserId();
+        if (order.getBuyerUserId() == null || !order.getBuyerUserId().equals(currentUserId)) {
+            throw new AccessDeniedException("Delivery order does not belong to the current user");
+        }
     }
 }
