@@ -1,4 +1,4 @@
-import { ThemeToggle } from '@/components/ThemeToggle';
+﻿import { ThemeToggle } from '@/shared/ui/theme-toggle';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 import {
   Badge,

@@ -48,10 +48,30 @@ public class DeliveryService {
                 || !request.shippingQuoteId().equals(context.shippingQuoteId())) {
             throw new AccessDeniedException("Marketplace order does not belong to this buyer/quote");
         }
+        return provisionDelivery(context, request.requestedDeliveryDate(), request.deliveryZoneTo());
+    }
 
-        ShippingQuote quote = shippingQuoteService.consumeQuote(
-                request.shippingQuoteId(), buyerUserId, context.sellerUserId(), context.farmId(),
-                context.recipientProvince(), request.marketplaceOrderId());
+    @Transactional
+    public DeliveryOrder createDeliveryOrderFromMarketplaceEvent(Long marketplaceOrderId, Long eventBuyerUserId) {
+        DeliveryOrder existing = deliveryOrderRepository.findFirstByMarketplaceOrderId(marketplaceOrderId)
+                .orElse(null);
+        if (existing != null) {
+            return existing;
+        }
+        MarketplaceOrderDeliveryContext context = marketplaceOrderClient.getDeliveryContext(marketplaceOrderId);
+        if (!marketplaceOrderId.equals(context.orderId()) || !eventBuyerUserId.equals(context.buyerUserId())) {
+            throw new AccessDeniedException("Marketplace event does not match the persisted order owner");
+        }
+        return provisionDelivery(context, null, null);
+    }
+
+    private DeliveryOrder provisionDelivery(
+            MarketplaceOrderDeliveryContext context,
+            java.time.LocalDate requestedDeliveryDate,
+            String deliveryZoneTo) {
+        ShippingQuote quote = shippingQuoteService.consumeAcceptedQuote(
+                context.shippingQuoteId(), context.buyerUserId(), context.sellerUserId(), context.farmId(),
+                context.recipientProvince(), context.orderId(), context.orderCreatedAt());
         if (context.shippingFee() == null || context.shippingFee().compareTo(quote.getShippingFeeVnd()) != 0) {
             throw new IllegalArgumentException("Marketplace order shipping fee does not match the accepted quote");
         }
@@ -63,9 +83,9 @@ public class DeliveryService {
         String trackingNumber = "VTF" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
         DeliveryOrder order = DeliveryOrder.builder()
-                .marketplaceOrderId(request.marketplaceOrderId())
+                .marketplaceOrderId(context.orderId())
                 .shippingQuoteId(quote.getQuoteId())
-                .buyerUserId(buyerUserId)
+                .buyerUserId(context.buyerUserId())
                 .providerId(quote.getProviderId())
                 .trackingNumber(trackingNumber)
                 .status(DeliveryStatus.PENDING)
@@ -78,8 +98,8 @@ public class DeliveryService {
                 .recipientProvince(context.recipientProvince())
                 .weightKg(quote.getWeightKg())
                 .estimatedDelivery(LocalDateTime.now().plusHours(quote.getEstimatedHours()))
-                .requestedDeliveryDate(request.requestedDeliveryDate())
-                .deliveryZoneTo(request.deliveryZoneTo())
+                .requestedDeliveryDate(requestedDeliveryDate)
+                .deliveryZoneTo(deliveryZoneTo)
                 .build();
 
         return deliveryOrderRepository.save(order);

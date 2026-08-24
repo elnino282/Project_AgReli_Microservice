@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
+﻿import { useEffect, useRef } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { formatDateSeparator, getChatDisplayName } from "../lib/chatDisplayHelpers";
 import { ChatEmptyState } from "./ChatEmptyState";
 import { ChatMessageBubble } from "./ChatMessageBubble";

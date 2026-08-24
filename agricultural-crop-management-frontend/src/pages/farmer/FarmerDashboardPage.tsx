@@ -46,6 +46,7 @@ import { DataErrorBoundary } from '@/shared/ui/error-boundary/DataErrorBoundary'
 import { FarmingLog, ReportData } from '@/features/farmer/dashboard/types/dashboard-types';
 import { FarmingLogsWidget } from '@/features/farmer/dashboard/components/FarmingLogsWidget';
 import { SeasonAnalyticsWidget } from '@/features/farmer/dashboard/components/SeasonAnalyticsWidget';
+import { SustainabilityOverviewWidget } from '@/features/farmer/dashboard/components/SustainabilityOverviewWidget';
 import { useSeason } from '@/shared/contexts';
 import { SelectGroup, SelectLabel } from '@/shared/ui/select';
 
@@ -160,9 +161,10 @@ export function FarmerDashboardPage() {
           <div className="flex flex-col gap-4">
             <div className="flex justify-end shrink-0">
               <AiHarvestPredictionModal 
+                seasonId={String(activeSeason.id)}
                 seasonName={activeSeason.cropName ?? ""} 
-                plantingDate={activeSeason.startDate} 
-                expectedGrowthDays={75}
+                plantingDate={activeSeason.startDate ?? ""}
+                plannedHarvestDate={activeSeason.plannedHarvestDate ?? ""}
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
@@ -204,6 +206,12 @@ export function FarmerDashboardPage() {
         )}
 
         {/* ================= BODY (HOT DATA) ================= */}
+        {selectedSeasonId && (
+          <DataErrorBoundary fallbackMessage="Không thể tải chỉ số bền vững lúc này.">
+            <SustainabilityOverviewWidget seasonId={selectedSeasonId} />
+          </DataErrorBoundary>
+        )}
+
         <Card className="flex-1 flex flex-col min-h-[400px] border-border shadow-sm bg-card overflow-hidden">
           <CardHeader className="border-b border-border/50 bg-muted/20 shrink-0">
             <CardTitle className="text-lg flex items-center gap-2">

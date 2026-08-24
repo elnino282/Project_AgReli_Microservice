@@ -35,6 +35,7 @@ public class DomainEventPublisher {
                     event.getClass().getSimpleName(), event.aggregateType(), event.aggregateId());
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize domain event: {}", event, e);
+            throw new IllegalStateException("Cannot persist an unserializable domain event", e);
         }
     }
 }

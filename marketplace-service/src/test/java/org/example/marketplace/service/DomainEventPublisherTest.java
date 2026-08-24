@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -97,5 +98,19 @@ class DomainEventPublisherTest {
 
         OutboxEvent savedEvent = eventCaptor.getValue();
         assertThat(savedEvent.getEventType()).isEqualTo("MarketplaceOrderCreatedEvent");
+    }
+
+    @Test
+    void serializationFailureDoesNotAllowOrderTransactionToContinueWithoutOutbox() throws Exception {
+        MarketplaceOrderCreatedEvent event = new MarketplaceOrderCreatedEvent(
+                "event-1", "MarketplaceOrder", "456", LocalDateTime.now(),
+                new MarketplaceOrderCreatedEvent.Payload(
+                        1L, 456L, 1L, 2L, "PENDING", List.of(), java.math.BigDecimal.TEN));
+        when(objectMapper.writeValueAsString(event))
+                .thenThrow(new com.fasterxml.jackson.core.JsonProcessingException("broken") {});
+
+        assertThatThrownBy(() -> domainEventPublisher.publish(event))
+                .isInstanceOf(IllegalStateException.class);
+        org.mockito.Mockito.verify(outboxEventRepository, org.mockito.Mockito.never()).save(any());
     }
 }

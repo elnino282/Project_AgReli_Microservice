@@ -1,9 +1,9 @@
-// Recent alerts panel with actions
+﻿// Recent alerts panel with actions
 
 import { AlertTriangle, Clock } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import type { Alert, AlertSeverity } from '../types';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 

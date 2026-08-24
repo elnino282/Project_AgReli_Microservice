@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
+﻿import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { cn } from "@/shared/lib";
@@ -32,7 +32,7 @@ import {
   useMarketplaceCartMergeBridge,
   useScrolled,
 } from "../hooks";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { ThemeToggle } from "@/shared/ui/theme-toggle";
 import { BuyerAiAssistantContext, type BuyerAiAssistantOpenInput } from "../ai/BuyerAiAssistantContext";
 import { BuyerAiAssistantDrawer } from "../ai/BuyerAiAssistantDrawer";
 import { SearchWindow } from "../search";

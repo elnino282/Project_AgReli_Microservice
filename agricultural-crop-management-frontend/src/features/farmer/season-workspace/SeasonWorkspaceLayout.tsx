@@ -121,9 +121,9 @@ const WORKSPACE_MODULE_TABS = [
   { key: "expenses", path: "expenses", labelKey: "nav.expenses", fallbackLabel: "Chi phi", icon: DollarSign },
   { key: "harvest", path: "harvest", labelKey: "nav.harvest", fallbackLabel: "Thu hoach", icon: Wheat },
   { key: "labor-management", path: "labor-management", labelKey: "nav.laborManagement", fallbackLabel: "Nhan cong", icon: Users },
-  // { key: "nutrient-inputs", path: "nutrient-inputs", labelKey: "nav.nutrientInputs", fallbackLabel: "Nutrient Inputs", icon: Beaker },
-  // { key: "irrigation-water-analyses", path: "irrigation-water-analyses", labelKey: "nav.irrigationWaterAnalysis", fallbackLabel: "Irrigation Analysis", icon: Droplets },
-  // { key: "soil-tests", path: "soil-tests", labelKey: "nav.soilTests", fallbackLabel: "Soil Tests", icon: TestTubeDiagonal },
+  { key: "nutrient-inputs", path: "nutrient-inputs", labelKey: "nav.nutrientInputs", fallbackLabel: "Dinh dưỡng", icon: Beaker },
+  { key: "irrigation-water-analyses", path: "irrigation-water-analyses", labelKey: "nav.irrigationWaterAnalysis", fallbackLabel: "Phân tích nước", icon: Droplets },
+  { key: "soil-tests", path: "soil-tests", labelKey: "nav.soilTests", fallbackLabel: "Kiểm tra đất", icon: TestTubeDiagonal },
   { key: "reports", path: "reports", labelKey: "nav.reports", fallbackLabel: "Bao cao", icon: BarChart3 },
   { key: "production-diary", path: "production-diary", labelKey: "nav.productionDiary", fallbackLabel: "Nhat ky SX", icon: FileText },
 ] as const;

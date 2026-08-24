@@ -1,16 +1,16 @@
-// Create incident ticket dialog
+﻿// Create incident ticket dialog
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/shared/ui/select";
+import { Textarea } from "@/shared/ui/textarea";
 import {
   Dialog,
   DialogContent,

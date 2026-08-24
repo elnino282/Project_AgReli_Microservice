@@ -1,7 +1,7 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { ClipboardList, ImageIcon, Loader2, SendHorizonal, Smile, Video } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/shared/ui/button";
+import { Textarea } from "@/shared/ui/textarea";
 
 type ChatWidgetInputProps = {
   disabled: boolean;

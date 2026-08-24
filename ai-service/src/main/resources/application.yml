@@ -17,7 +17,8 @@ spring:
     vectorstore:
       chroma:
         client:
-          host: ${SPRING_AI_CHROMADB_STORE_URL:http://localhost:8000}
+          host: ${SPRING_AI_CHROMA_HOST:http://localhost}
+          port: ${SPRING_AI_CHROMA_PORT:8000}
         collection-name: ${SPRING_AI_CHROMADB_STORE_COLLECTION_NAME:acm_knowledge}
         initialize-schema: true
     vertex:
@@ -42,6 +43,7 @@ app:
     baseUrl: ${APP_AI_BASE_URL:https://generativelanguage.googleapis.com}
     apiKey: ${APP_AI_API_KEY:}
     model: ${APP_AI_MODEL:gemini-2.5-flash}
+    embeddingModel: ${APP_AI_EMBEDDING_MODEL:text-embedding-004}
 
 management:
   tracing:

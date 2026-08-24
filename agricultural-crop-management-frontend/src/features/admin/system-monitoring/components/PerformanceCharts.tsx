@@ -1,6 +1,6 @@
-// Performance visualization charts section
+﻿// Performance visualization charts section
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import {
     ResponsiveContainer,
     LineChart,

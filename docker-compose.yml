@@ -205,7 +205,8 @@ services:
       APP_AI_API_KEY: ${APP_AI_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
-      SPRING_AI_CHROMADB_STORE_URL: "http://chroma:8000"
+      SPRING_AI_CHROMA_HOST: "http://chroma"
+      SPRING_AI_CHROMA_PORT: "8000"
       SPRING_AI_CHROMADB_STORE_COLLECTION_NAME: acm_knowledge
       MANAGEMENT_OTLP_TRACING_EXPORT_ENABLED: "false"
     volumes:
@@ -283,6 +284,7 @@ services:
       APP_INVENTORY_SERVICE_URL: http://inventory-service:8086
       APP_MONOLITH_SERVICE_URL: http://api-gateway:8080
       APP_AI_SERVICE_URL: http://ai-service:8083
+      APP_SUSTAINABILITY_SERVICE_URL: http://sustainability-service:8089
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbituser}
@@ -559,6 +561,10 @@ services:
       DB_PASS: ${MYSQL_PASSWORD:-springpass}
       JWT_JWKS_URI: http://identity-service:8081/api/v1/auth/.well-known/jwks.json
       EXTERNAL_SERVICES_MARKETPLACE_SERVICE_URL: http://marketplace-service:8090
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_DEFAULT_USER:-rabbituser}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-rabbitpass}
       MANAGEMENT_OTLP_TRACING_EXPORT_ENABLED: "false"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8092/actuator/health"]
@@ -570,6 +576,8 @@ services:
       mysql:
         condition: service_healthy
       identity-service:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   api-gateway:
@@ -655,13 +663,25 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus
+      - tempo
 
   tempo:
-    image: mailhog/mailhog:latest
+    image: grafana/tempo:2.7.2
     container_name: tempo_quanlymuavu
     restart: unless-stopped
+    command: ["-config.file=/etc/tempo.yaml"]
+    ports:
+      - "3200:3200"
+    expose:
+      - "4317"
+      - "4318"
+    volumes:
+      - ./observability/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo_data:/var/tempo
 
 volumes:
   mysql_data:
@@ -669,3 +689,4 @@ volumes:
   rabbitmq_data:
   redis_data:
   chroma_data:
+  tempo_data:

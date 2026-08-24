@@ -1,5 +1,5 @@
-import { Plus, Upload } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+﻿import { Plus, Upload } from 'lucide-react';
+import { Button } from '@/shared/ui/button';
 import { useEffect, useState } from 'react';
 import { useFarmerManagement } from './hooks/useFarmerManagement';
 import { FarmerFilters } from './components/FarmerFilters';

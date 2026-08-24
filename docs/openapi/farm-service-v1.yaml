@@ -950,6 +950,18 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseListNonconformityResponse"
+  /api/v1/admin/certification-audits:
+    get:
+      tags:
+      - certification-audit-controller
+      operationId: getAllAudits
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListCertificationAuditResponse"
   /api/v1/addresses/wards/{id}:
     get:
       tags:
@@ -1119,11 +1131,11 @@ components:
           format: double
         valid:
           type: boolean
-        coordinate:
-          $ref: "#/components/schemas/Coordinate"
         m:
           type: number
           format: double
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
     CoordinateSequence:
       type: object
       properties:
@@ -1140,28 +1152,28 @@ components:
       properties:
         "null":
           type: boolean
-        diameter:
-          type: number
-          format: double
-        maxY:
-          type: number
-          format: double
-        minX:
+        height:
           type: number
           format: double
         minY:
           type: number
           format: double
+        maxY:
+          type: number
+          format: double
         maxX:
+          type: number
+          format: double
+        minX:
           type: number
           format: double
         width:
           type: number
           format: double
-        area:
+        diameter:
           type: number
           format: double
-        height:
+        area:
           type: number
           format: double
     Geometry:
@@ -1180,46 +1192,46 @@ components:
           type: boolean
         valid:
           type: boolean
+        srid:
+          type: integer
+          format: int32
         simple:
           type: boolean
+        boundaryDimension:
+          type: integer
+          format: int32
+        envelopeInternal:
+          $ref: "#/components/schemas/Envelope"
+        area:
+          type: number
+          format: double
+        geometryType:
+          type: string
         dimension:
           type: integer
           format: int32
         numGeometries:
           type: integer
           format: int32
-        numPoints:
-          type: integer
-          format: int32
-        boundary:
-          $ref: "#/components/schemas/Geometry"
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
         coordinates:
           type: array
           items:
             $ref: "#/components/schemas/Coordinate"
-        coordinate:
-          $ref: "#/components/schemas/Coordinate"
-        interiorPoint:
-          $ref: "#/components/schemas/Point"
         rectangle:
           type: boolean
         centroid:
           $ref: "#/components/schemas/Point"
+        boundary:
+          $ref: "#/components/schemas/Geometry"
         precisionModel:
           $ref: "#/components/schemas/PrecisionModel"
-        srid:
+        numPoints:
           type: integer
           format: int32
-        area:
-          type: number
-          format: double
-        geometryType:
-          type: string
-        boundaryDimension:
-          type: integer
-          format: int32
-        envelopeInternal:
-          $ref: "#/components/schemas/Envelope"
+        interiorPoint:
+          $ref: "#/components/schemas/Point"
     GeometryFactory:
       type: object
       properties:
@@ -1281,16 +1293,11 @@ components:
           type: boolean
         simple:
           type: boolean
-        dimension:
+        boundaryDimension:
           type: integer
           format: int32
-        numPoints:
-          type: integer
-          format: int32
-        boundary:
-          $ref: "#/components/schemas/Geometry"
-        coordinate:
-          $ref: "#/components/schemas/Coordinate"
+        coordinateSequence:
+          $ref: "#/components/schemas/CoordinateSequence"
         "y":
           type: number
           format: double
@@ -1299,35 +1306,40 @@ components:
           format: double
         geometryType:
           type: string
-        boundaryDimension:
+        dimension:
           type: integer
           format: int32
-        coordinateSequence:
-          $ref: "#/components/schemas/CoordinateSequence"
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
+        boundary:
+          $ref: "#/components/schemas/Geometry"
+        numPoints:
+          type: integer
+          format: int32
         length:
           type: number
           format: double
         valid:
           type: boolean
+        srid:
+          type: integer
+          format: int32
+        envelopeInternal:
+          $ref: "#/components/schemas/Envelope"
+        area:
+          type: number
+          format: double
         numGeometries:
           type: integer
           format: int32
-        interiorPoint:
-          $ref: "#/components/schemas/Point"
         rectangle:
           type: boolean
         centroid:
           $ref: "#/components/schemas/Point"
         precisionModel:
           $ref: "#/components/schemas/PrecisionModel"
-        srid:
-          type: integer
-          format: int32
-        area:
-          type: number
-          format: double
-        envelopeInternal:
-          $ref: "#/components/schemas/Envelope"
+        interiorPoint:
+          $ref: "#/components/schemas/Point"
     PrecisionModel:
       type: object
       properties:
@@ -1338,15 +1350,15 @@ components:
           $ref: "#/components/schemas/Type"
         floating:
           type: boolean
+        maximumSignificantDigits:
+          type: integer
+          format: int32
         offsetX:
           type: number
           format: double
         offsetY:
           type: number
           format: double
-        maximumSignificantDigits:
-          type: integer
-          format: int32
     Type:
       type: object
     ApiResponsePlotResponse:
@@ -1593,6 +1605,17 @@ components:
         recordId:
           type: integer
           format: int32
+        farmId:
+          type: integer
+          format: int32
+        farmName:
+          type: string
+        standardCode:
+          type: string
+        complianceScore:
+          type: number
+        recordStatus:
+          type: string
         auditType:
           type: string
         scheduledDate:
@@ -1615,6 +1638,35 @@ components:
         createdAt:
           type: string
           format: date-time
+        nonconformities:
+          type: array
+          items:
+            $ref: "#/components/schemas/NonconformityResponse"
+    NonconformityResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        auditId:
+          type: integer
+          format: int64
+        checklistItemId:
+          type: integer
+          format: int32
+        severity:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        correctiveActions:
+          type: array
+          items:
+            $ref: "#/components/schemas/CorrectiveActionResponse"
     CompleteAuditRequest:
       type: object
       properties:
@@ -1888,31 +1940,6 @@ components:
           $ref: "#/components/schemas/NonconformityResponse"
         generatedAt:
           type: string
-    NonconformityResponse:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        auditId:
-          type: integer
-          format: int64
-        checklistItemId:
-          type: integer
-          format: int32
-        severity:
-          type: string
-        description:
-          type: string
-        status:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-        correctiveActions:
-          type: array
-          items:
-            $ref: "#/components/schemas/CorrectiveActionResponse"
     VerifyDocumentRequest:
       type: object
       properties:

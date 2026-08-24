@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+﻿import type { ComponentType } from "react";
 import {
   Hash,
   Info,
@@ -9,7 +9,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/ui/badge";
 import { cn } from "@/shared/lib";
 import {
   formatRole,

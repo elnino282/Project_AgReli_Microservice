@@ -40,7 +40,7 @@ public class MarkdownChunkingTests {
         assertEquals("data/vietgap/sample.md", waterChunk.getMetadata().get("source"));
         assertEquals("sample.md", waterChunk.getMetadata().get("file_name"));
         assertTrue(waterChunk.getMetadata().get("chunk_id").toString().startsWith("vietgap:data/vietgap/sample.md:"));
-        assertTrue(waterChunk.getContent().contains("Nuoc tuoi can an toan"));
+        assertTrue(waterChunk.getText().contains("Nuoc tuoi can an toan"));
     }
 
     @Test

@@ -73,4 +73,20 @@ class ShippingQuoteServiceTest {
         assertThrows(IllegalArgumentException.class, () -> shippingQuoteService.validateQuote(
                 new ValidateShippingQuoteRequest("quote", 11L, 20L, 30, "HCM")));
     }
+
+    @Test
+    void delayedConsumerCanUseQuoteThatWasValidWhenOrderWasAccepted() {
+        LocalDateTime orderCreatedAt = LocalDateTime.now().minusMinutes(2);
+        ShippingQuote quote = ShippingQuote.builder()
+                .quoteId("accepted").buyerUserId(1L).sellerUserId(2L).farmId(3)
+                .recipientProvince("HCM").weightKg(BigDecimal.ONE).shippingFeeVnd(BigDecimal.TEN)
+                .expiresAt(LocalDateTime.now().minusMinutes(1)).build();
+        when(shippingQuoteRepository.findForUpdateByQuoteId("accepted")).thenReturn(Optional.of(quote));
+        when(shippingQuoteRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        shippingQuoteService.consumeAcceptedQuote(
+                "accepted", 1L, 2L, 3, "HCM", 99L, orderCreatedAt);
+
+        verify(shippingQuoteRepository).save(quote);
+    }
 }

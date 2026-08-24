@@ -4,6 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.farm.dto.request.IssueCertificateRequest;
 import org.example.farm.dto.request.VerifyDocumentRequest;
 import org.example.farm.entity.CertificationRecord;
+import org.example.farm.entity.CertificationAudit;
+import org.example.farm.entity.CertificationNonconformity;
+import org.example.farm.entity.CertificationStandard;
+import org.example.farm.entity.Farm;
 import org.example.farm.entity.FarmDocument;
 import org.example.farm.exception.AppException;
 import org.example.farm.exception.ErrorCode;
@@ -12,7 +16,9 @@ import org.example.farm.repository.CertificationCorrectiveActionRepository;
 import org.example.farm.repository.CertificationNonconformityRepository;
 import org.example.farm.repository.CertificationRecordRepository;
 import org.example.farm.repository.FarmDocumentRepository;
+import org.example.farm.repository.FarmRepository;
 import org.example.farm.repository.OutboxEventRepository;
+import org.example.farm.repository.CertificationStandardRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -49,9 +56,42 @@ class CertificationAuditServiceTest {
     private ObjectMapper objectMapper;
     @Mock
     private CertificationService certificationService;
+    @Mock
+    private FarmRepository farmRepository;
+    @Mock
+    private CertificationStandardRepository standardRepository;
 
     @InjectMocks
     private CertificationAuditService service;
+
+    @Test
+    void adminAuditListContainsPersistedLifecycleContextWithoutMockData() {
+        CertificationAudit audit = CertificationAudit.builder()
+                .id(11L).recordId(7).status("PASSED").auditType("INITIAL").build();
+        CertificationRecord record = CertificationRecord.builder()
+                .id(7).farmId(3).standardId(5).status("AUDIT_PASSED")
+                .complianceScore(new java.math.BigDecimal("92.50")).build();
+        CertificationNonconformity nonconformity = CertificationNonconformity.builder()
+                .id(21L).auditId(11L).severity("MINOR").description("Thiếu nhãn")
+                .status("OPEN").build();
+        when(auditRepository.findAll()).thenReturn(List.of(audit));
+        when(recordRepository.findById(7)).thenReturn(Optional.of(record));
+        when(farmRepository.findById(3)).thenReturn(Optional.of(Farm.builder().id(3).name("Farm A").build()));
+        when(standardRepository.findById(5)).thenReturn(Optional.of(
+                CertificationStandard.builder().id(5).code("VIETGAP").build()));
+        when(nonconformityRepository.findByAuditId(11L)).thenReturn(List.of(nonconformity));
+
+        var result = service.getAllAuditsForAdmin();
+
+        assertThat(result).singleElement().satisfies(response -> {
+            assertThat(response.getFarmId()).isEqualTo(3);
+            assertThat(response.getFarmName()).isEqualTo("Farm A");
+            assertThat(response.getStandardCode()).isEqualTo("VIETGAP");
+            assertThat(response.getRecordStatus()).isEqualTo("AUDIT_PASSED");
+            assertThat(response.getComplianceScore()).isEqualByComparingTo("92.50");
+            assertThat(response.getNonconformities()).hasSize(1);
+        });
+    }
 
     @Test
     void issueCertificate_doesNotMutateWhenEvidenceIsUnavailable() {

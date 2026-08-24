@@ -56,7 +56,16 @@ export function useBuyerAiChatSession(options: BuyerAiChatSessionOptions = {}) {
                 buyerContext: buyerContext ?? undefined
             });
             const assistantText = response.assistantMessage?.trim() || fallbackMessage;
-            const assistantMessage = createMessage('assistant', assistantText, []);
+            const assistantMessage = createMessage(
+                'assistant',
+                assistantText,
+                response.sources.map((source) => ({
+                    file_name: source.file_name ?? '',
+                    heading: source.heading ?? '',
+                    ...(source.page ? { page: source.page } : {}),
+                    ...(source.snippet ? { snippet: source.snippet } : {}),
+                })),
+            );
             setMessages((prev) => [...prev, assistantMessage]);
             return assistantMessage;
         } catch {

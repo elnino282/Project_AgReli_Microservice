@@ -45,6 +45,13 @@ public class CertificationAuditController {
         return ResponseEntity.ok(ApiResponse.success(auditService.getAudits(farmId)));
     }
 
+    /** Admin: lấy danh sách tất cả đợt audit xuyên farm */
+    @GetMapping("/api/v1/admin/certification-audits")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<CertificationAuditResponse>>> getAllAudits() {
+        return ResponseEntity.ok(ApiResponse.success(auditService.getAllAuditsForAdmin()));
+    }
+
     /** Bắt đầu audit */
     @PutMapping("/api/v1/certification-audits/{auditId}/start")
     @PreAuthorize("hasAnyRole('ADMIN', 'AUDITOR')")

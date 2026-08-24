@@ -29,6 +29,7 @@ public class MarketplaceInternalOrderController {
         return new MarketplaceOrderDeliveryContext(
                 order.getId(), order.getBuyerUserId(), order.getFarmerUserId(), order.getFarmId(),
                 order.getShippingQuoteId(), order.getShippingFee(), order.getShippingRecipientName(),
-                order.getShippingPhone(), order.getShippingAddressLine(), order.getShippingDestinationProvince());
+                order.getShippingPhone(), order.getShippingAddressLine(), order.getShippingDestinationProvince(),
+                order.getCreatedAt());
     }
 }

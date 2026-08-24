@@ -18,6 +18,7 @@ import org.springframework.security.access.AccessDeniedException;
 
 import java.util.Optional;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -65,7 +66,7 @@ class DeliveryServiceAuthorizationTest {
         when(marketplaceOrderClient.getDeliveryContext(99L)).thenReturn(
                 new MarketplaceOrderDeliveryContext(
                         99L, 22L, 33L, 44, "quote-1", null,
-                        "Buyer", "0900000000", "Address", "Lam Dong"));
+                        "Buyer", "0900000000", "Address", "Lam Dong", LocalDateTime.now()));
 
         CreateDeliveryOrderRequest request = new CreateDeliveryOrderRequest(
                 99L,
@@ -75,7 +76,7 @@ class DeliveryServiceAuthorizationTest {
 
         assertThrows(AccessDeniedException.class,
                 () -> deliveryService.createDeliveryOrder(request));
-        verify(shippingQuoteService, never()).consumeQuote(any(), any(), any(), any(), any(), any());
+        verify(shippingQuoteService, never()).consumeAcceptedQuote(any(), any(), any(), any(), any(), any(), any());
         verify(deliveryOrderRepository, never()).save(any());
     }
 
@@ -85,13 +86,14 @@ class DeliveryServiceAuthorizationTest {
         when(marketplaceOrderClient.getDeliveryContext(99L)).thenReturn(
                 new MarketplaceOrderDeliveryContext(
                         99L, 11L, 33L, 44, "quote-1", new BigDecimal("45000"),
-                        "Buyer", "0900000000", "Address", "HCM"));
+                        "Buyer", "0900000000", "Address", "HCM", LocalDateTime.of(2026, 8, 21, 9, 0)));
         ShippingQuote quote = ShippingQuote.builder()
                 .quoteId("quote-1").buyerUserId(11L).sellerUserId(33L).farmId(44)
                 .providerId(2).shippingFeeVnd(new BigDecimal("45000"))
                 .weightKg(new BigDecimal("3.5")).estimatedHours(18)
                 .perishable(true).requiresColdChain(true).build();
-        when(shippingQuoteService.consumeQuote("quote-1", 11L, 33L, 44, "HCM", 99L))
+        when(shippingQuoteService.consumeAcceptedQuote(
+                "quote-1", 11L, 33L, 44, "HCM", 99L, LocalDateTime.of(2026, 8, 21, 9, 0)))
                 .thenReturn(quote);
         when(deliveryProviderRepository.findById(2))
                 .thenReturn(Optional.of(DeliveryProvider.builder().id(2).build()));

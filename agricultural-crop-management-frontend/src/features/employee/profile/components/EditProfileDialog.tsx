@@ -1,12 +1,12 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/shared/ui/button";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "@/shared/ui/form";
+import { Input } from "@/shared/ui/input";
 import { useProfileUpdate } from "@/entities/user";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
 import {

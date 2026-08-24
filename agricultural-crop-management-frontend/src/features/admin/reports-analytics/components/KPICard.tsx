@@ -1,6 +1,6 @@
-import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+﻿import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Badge } from '@/shared/ui/badge';
 import { ResponsiveContainer, AreaChart, Area } from 'recharts';
 import type { KPIData } from '../types';
 

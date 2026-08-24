@@ -1,6 +1,7 @@
 package org.example.delivery.client;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public record MarketplaceOrderDeliveryContext(
         Long orderId,
@@ -12,5 +13,6 @@ public record MarketplaceOrderDeliveryContext(
         String recipientName,
         String recipientPhone,
         String recipientAddress,
-        String recipientProvince) {
+        String recipientProvince,
+        LocalDateTime orderCreatedAt) {
 }

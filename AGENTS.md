@@ -49,7 +49,7 @@ File này là nguồn sự thật tĩnh cho các phiên Codex/Claude tiếp theo
 - Một backend service: `cd <service> && mvn test`; build jar bằng `mvn package -DskipTests`. Repo không có Maven wrapper và yêu cầu Java 23/Maven 3.9+.
 - Test đích danh: `mvn -Dtest=ClassName test`. Với thay đổi Flyway/integration, chạy profile/test DB đúng service thay vì chỉ unit test.
 - Frontend: `cd agricultural-crop-management-frontend && npm ci && npm run dev`; cổng Vite mặc định hiện là 3000. Kiểm tra chuẩn: `npm run typecheck`, `npm run lint`, `npm run test -- --run`, `npm run build`.
-- Cổng hiện hành lấy từ `docker-compose.yml`/`application.yml`: gateway là 8080. Một số nội dung trong `RUN_GUIDE.md` còn ghi 8000/5173 và không phải nguồn sự thật cho port hiện tại.
+- Cổng hiện hành lấy từ `docker-compose.yml`/`application.yml`: gateway là 8080, frontend dev là 3000; `RUN_GUIDE.md` đã đồng bộ các port này ngày 2026-08-21.
 
 ## Quy ước code
 
@@ -77,7 +77,7 @@ Quy ước chi tiết nằm ở `agricultural-crop-management-frontend/AGENTS.md
 
 ## Known issues / Audit findings (ưu tiên xử lý)
 
-Cập nhật trạng thái ngay khi audit thêm hoặc fix xong; không xóa lịch sử xác minh quan trọng nếu việc xóa làm phiên sau hiểu sai kiến trúc. Audit gần nhất: 2026-08-14.
+Cập nhật trạng thái ngay khi audit thêm hoặc fix xong; không xóa lịch sử xác minh quan trọng nếu việc xóa làm phiên sau hiểu sai kiến trúc. Audit gần nhất: 2026-08-21.
 
 1. **[FIXED 2026-08-14, AUD-S0-001] Compose readiness đã được xác minh lặp lại.** MySQL probe đăng nhập bằng application credential và kiểm tra đủ 11 schema; dependency bắt buộc dùng `service_healthy`. Hai cold-start độc lập từ volume `vietfuture_audit_*` mới đều hoàn tất khoảng 194 giây, đủ 22 container, 12 service healthy, gateway HTTP 200/`UP` và không có lỗi DB/dependency startup. Không chạy song song full dev/audit trên Docker Desktop nếu thiếu tài nguyên.
 2. **[FIXED 2026-08-14, AUD-S0-011] Marketplace PHI gate đã fail-closed.** PHI luôn được kiểm tra khi listing có `seasonId`, độc lập claim null/`NONE`; SeasonClient fallback không còn biến outage thành empty. Verified-empty vẫn tạo safe snapshot, còn violation/outage chặn cả `ACTIVE` và `PUBLISHED`. Targeted 17 test và full marketplace 40 test xanh.
@@ -87,15 +87,24 @@ Cập nhật trạng thái ngay khi audit thêm hoặc fix xong; không xóa l�
 6. **[FIXED 2026-08-14, AUD-S0-015] Variety delete guard đã fail-closed.** Season cung cấp internal `exists-by-variety`; crop-catalog chỉ xóa khi nhận `false` hợp lệ, còn null/outage trả typed 503. H2 DB, ADMIN security, boundary regression đều xanh; full crop-catalog 12 và season 17 test xanh.
 7. **[FIXED 2026-08-14, AUD-S0-016] Plot delete guard đã fail-closed.** Một internal response tổng hợp xác minh active season/task; null/outage trả typed 503 và không tạo outbox/delete. Ownership + anonymous/BUYER/FARMER regression xanh; full farm 23 và season 18 test xanh, boundary vẫn kín.
 8. **[FIXED 2026-08-14, AUD-S0-010] Auth refresh giữ đúng contract và storage provenance.** Interceptor parse `ApiResponse.result`, rotate token hiện hành, giữ user và ghi đúng local/session; record malformed không shadow, 401 clear cả hai, 5xx giữ auth, refresh 401 không recurse. Auth regression 12/12, typecheck/lint/build xanh.
-9. **[OPEN - HIGH, AUD-S0-013] Shipping/delivery tin dữ liệu browser.** FE dùng weight/origin/coords giả; marketplace persist fee mặc định riêng, delivery persist fee/weight/orderId do buyer gửi và chưa verify marketplace order owner.
+9. **[FIXED 2026-08-20, AUD-S0-013] Shipping/delivery đã server-authoritative.** ShippingQuoteService issue/validate/consume với TTL và identity check; DeliveryService lấy fee/weight từ quote server-side; ownership buyer/order/quote verified qua MarketplaceOrderClient. Delivery 17/17 + marketplace 48/48 test xanh.
 10. **[FIXED 2026-08-14, AUD-S0-002] Internal endpoint trust boundary đã đóng cho single-host Compose.** Boundary script xanh, host TCP 8081–8092 đều đóng, gateway không route internal và full dev health đã xanh. Multi-host/Kubernetes vẫn cần service authentication/mTLS.
 11. **[FIXED 2026-08-14, AUD-S0-003] Marketplace legacy trace đã được phân loại public có chủ đích.** Exact matcher, whitelist annotation audit và MockMvc anonymous test đã được thêm; full marketplace 35 test xanh.
-12. **[IN FIX - HIGH] `season-service` fallback/config downstream.** `AUD-S0-009` đã fix hai guard expense/inventory. Production diary vẫn mở ở `AUD-S1-002`: sustainability URL mặc định 8088 thay vì 8089 và Compose thiếu env.
+12. **[FIXED 2026-08-14, AUD-S0-009] `season-service` guard expense/inventory đã fail-closed.** Hai fallback ném typed 503.
 13. **[FIXED 2026-08-14, AUD-S3-008] CI matrix đã bao phủ đủ runtime service.** `admin-reporting-service` và `delivery-service` đã được thêm vào database microservice matrix.
 14. **[FIXED 2026-08-14, AUD-S0-004..008] Marketplace/public trace/delivery integrity — phạm vi đã xác minh.** Farmer publish, public snapshot schema/visibility và delivery read ownership đã có regression; các trust gap mới được tách thành `AUD-S0-011/013/017`.
 15. **[FIXED 2026-08-14, AUD-S1-006] Chroma healthcheck không còn chặn startup.** Probe dùng Bash TCP `/api/v2/healthcheck`; full build/up/wait xanh và gateway health HTTP 200.
-16. **[OPEN - MEDIUM, AUD-S2-006] `tempo` đang là MailHog giả danh.** Container “Up” không chứng minh tracing backend tồn tại.
-17. **[OPEN - LOW, AUD-S3-007] Tài liệu run có port cũ.** `RUN_GUIDE.md` còn mô tả gateway 8000/frontend 5173, trong khi config hiện tại là 8080/3000.
+16. **[FIXED 2026-08-21, AUD-S2-006] Tempo là tracing backend thật.** Compose dùng Tempo 2.7.2 single-binary, OTLP 4317/4318, query/readiness 3200 và volume riêng; synthetic OTLP trace đã ingest/query HTTP 200, Grafana datasource được provision.
+17. **[FIXED 2026-08-21, AUD-S3-007] Run guide và local smoke đã đồng bộ runtime.** Guide/Vite dùng frontend 3000, gateway 8080, liệt kê đủ 12 service và readiness không xóa volume; `npm run demo:smoke` pass qua đúng Vite proxy.
+18. **[FIXED 2026-08-21, AUD-S1-001] Admin certification dùng lifecycle thật.** List-all ADMIN-only trả farm/standard/record/nonconformity persisted; FE bỏ mock và wire start/complete/issue theo `SCHEDULED/IN_PROGRESS/PASSED/FAILED`. Farm 27/27, security 3/3, UI/typecheck/lint/build xanh.
+19. **[FIXED 2026-08-21, AUD-S1-002] Production diary gọi đúng sustainability-service.** Default và Compose URL đều là 8089; season runtime healthy.
+20. **[FIXED 2026-08-21, AUD-S1-003] Delivery provisioning không còn do browser điều phối.** Delivery consume durable `order.created`, ghi delivery + processed event idempotent; Flyway V13 và Rabbit consumer runtime xanh.
+21. **[FIXED 2026-08-21, AUD-S1-005] Export dossier dùng đúng persisted document contract.** FE unwrap typed `FarmDocumentResponse`, tải `fileUrl` text hiện hành và không còn serialize object JSON thành ZIP giả; URL thiếu/sai không báo thành công. S1 gate đã đóng, S2 được mở.
+22. **[FIXED 2026-08-21, AUD-S2-001] AI harvest dùng dữ liệu season thật.** Growth days lấy từ ngày persisted, recent logs lấy từ backend của đúng season; input thiếu/sai hoặc tải log lỗi không được gọi AI.
+23. **[FIXED 2026-08-21, AUD-S2-004/AUD-S2-007] RAG và provenance đã nối thật.** AI dùng Gemini embedding + Chroma v2, không còn dummy store/vector; controller, OpenAPI/Orval và hai hook giữ metadata nguồn từ document thực tế, fallback không bịa nguồn. AI 14/14 và frontend hook regression xanh.
+24. **[FIXED 2026-08-21, AUD-S2-008] Farmer self-assessment đã persist.** Route chỉ cho sửa checklist `MANUAL`, lưu status/notes qua backend và reload server truth trước khi báo thành công.
+25. **[S2 CLOSED 2026-08-21]** Cả 5 finding S2 đã FIXED; lịch sử/evidence giữ tại `docs/audit/AUDIT_BACKLOG.md`.
+26. **[S3 CLOSED 2026-08-21, AUD-S3-001..008]** Cả 8 finding S3 đã FIXED: dashboard/workspace FDN reachable với seed read-model được backfill qua outbox; duplicate page và legacy root đã dọn; architecture gates/run guide/smoke hoạt động. Full frontend 294 test và backend liên quan 62 test xanh; localhost smoke pass đủ FARMER/EMPLOYEE/BUYER/ADMIN.
 
 ## Quy tắc làm việc
 

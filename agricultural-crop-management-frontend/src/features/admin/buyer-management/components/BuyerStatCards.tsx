@@ -1,5 +1,5 @@
-import { ShoppingCart, CheckCircle, Clock, Ban } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+﻿import { ShoppingCart, CheckCircle, Clock, Ban } from 'lucide-react';
+import { Card, CardContent } from '@/shared/ui/card';
 import type { BuyerStats } from '../types';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 

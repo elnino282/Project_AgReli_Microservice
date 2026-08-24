@@ -84,10 +84,18 @@ export const AiChatRequestSchema = z.object({
 export type AiChatRequest = z.infer<typeof AiChatRequestSchema>;
 
 // FARMER AI CHAT RESPONSE
+export const AiChatSourceSchema = z.object({
+    file_name: z.string().nullable().optional(),
+    heading: z.string().nullable().optional(),
+    page: z.number().int().positive().nullable().optional(),
+    snippet: z.string().nullable().optional(),
+});
+
 export const AiChatResponseSchema = z.object({
     userMessage: z.string(),
     cropContext: z.string().nullable().optional(),
     assistantMessage: z.string(),
+    sources: z.array(AiChatSourceSchema).default([]),
 });
 
 export type AiChatResponse = z.infer<typeof AiChatResponseSchema>;
@@ -105,6 +113,7 @@ export const BuyerAiChatResponseSchema = z.object({
     userMessage: z.string(),
     buyerContext: z.string().nullable().optional(),
     assistantMessage: z.string(),
+    sources: z.array(AiChatSourceSchema).default([]),
 });
 
 export type BuyerAiChatResponse = z.infer<typeof BuyerAiChatResponseSchema>;

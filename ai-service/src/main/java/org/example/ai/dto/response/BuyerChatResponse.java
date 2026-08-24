@@ -1,5 +1,7 @@
 package org.example.ai.dto.response;
 
+import java.util.List;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,4 +21,6 @@ public class BuyerChatResponse {
     String userMessage;
     String buyerContext;
     String assistantMessage;
+    @Builder.Default
+    List<ChatSourceResponse> sources = List.of();
 }

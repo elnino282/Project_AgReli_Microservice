@@ -1,6 +1,6 @@
-import { ChevronDown, User, Settings, Sun, Moon, Globe, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+﻿import { ChevronDown, User, Settings, Sun, Moon, Globe, LogOut } from 'lucide-react';
+import { Button } from '@/shared/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-} from '@/components/ui/dropdown-menu';
+} from '@/shared/ui/dropdown-menu';
 import { ProfileMenuProps } from '../types';
 
 /**

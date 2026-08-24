@@ -539,9 +539,9 @@ export function AppRoutes() {
               <Route path="disease" element={<DiseaseTrackingPage />} />
               <Route path="harvest" element={<HarvestManagement />} />
               <Route path="labor-management" element={<LaborManagementPage />} />
-              {/* <Route path="nutrient-inputs" element={<SeasonNutrientInputsWorkspace />} /> */}
-              {/* <Route path="irrigation-water-analyses" element={<SeasonIrrigationWaterAnalysesWorkspace />} /> */}
-              {/* <Route path="soil-tests" element={<SeasonSoilTestsWorkspace />} /> */}
+              <Route path="nutrient-inputs" element={<SeasonNutrientInputsWorkspace />} />
+              <Route path="irrigation-water-analyses" element={<SeasonIrrigationWaterAnalysesWorkspace />} />
+              <Route path="soil-tests" element={<SeasonSoilTestsWorkspace />} />
               <Route path="reports" element={<SeasonReportsWorkspace />} />
               <Route path="production-diary" element={<ProductionDiaryWorkspace />} />
             </Route>

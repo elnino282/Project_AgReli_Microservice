@@ -9,8 +9,8 @@ export default defineConfig(({ mode }) => {
   const rawPort = env.PORT || env.VITE_PORT || '3000';
   const parsedPort = Number.parseInt(rawPort, 10);
   const port = Number.isFinite(parsedPort) ? parsedPort : 3000;
-  const proxyTarget = env.VITE_API_PROXY_TARGET || 'http://localhost:8000'; // Default to API Gateway
-  const aiProxyTarget = env.VITE_AI_API_PROXY_TARGET || 'http://localhost:8000';
+  const proxyTarget = env.VITE_API_PROXY_TARGET || 'http://localhost:8080';
+  const aiProxyTarget = env.VITE_AI_API_PROXY_TARGET || 'http://localhost:8080';
 
   return {
     plugins: [tailwindcss(), react()],

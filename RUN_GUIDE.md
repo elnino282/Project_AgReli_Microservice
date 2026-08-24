@@ -43,7 +43,7 @@ git --version
 openssl version
 ```
 
-**Kiểm tra các cổng không bị chiếm:** Các cổng 3307, 5672, 15672, 9000, 9001, 1025, 8025, 8000, 8081-8091, 9090, 3001, 5173 bắt buộc phải trống trước khi chạy.
+**Kiểm tra các cổng không bị chiếm:** Các cổng host 3000, 3001, 3200, 3307, 5672, 8000 (Chroma), 8025, 8080, 9000, 9001, 9090 và 15672 phải trống trước khi chạy. Các port service 8081–8092 chỉ dùng trong mạng Compose và không mở trực tiếp ra host.
 
 ---
 
@@ -93,17 +93,24 @@ Hệ thống sử dụng cơ chế chữ ký khóa bất đối xứng RSA (RS25
 
 Mở terminal tại thư mục gốc của dự án và chạy:
 ```bash
-docker compose up -d --build
+docker compose up -d --build --wait --wait-timeout 300
 ```
 *(Lần đầu tiên sẽ mất 5–15 phút để download Docker images và build Maven)*
 
-Đợi khoảng 60–90 giây sau khi tất cả containers đã `Started` để các Spring Boot services hoàn tất khởi tạo và Flyway chạy migrations.
+Lệnh chỉ trả về thành công khi các dependency/service có healthcheck đã ready; không cần đoán thời gian bằng cách sleep cố định.
 
 ---
 
 ## 5. Xác nhận Backend chạy thành công
 
-Sử dụng lệnh `docker compose ps` để kiểm tra trạng thái các container. Hãy chắc chắn tất cả hiển thị trạng thái `Up` hoặc `healthy`. Nếu hiển thị `Restarting`, hãy xem phần Xử lý sự cố.
+Sử dụng các lệnh sau để kiểm tra runtime và API Gateway:
+
+```bash
+docker compose ps
+curl http://localhost:8080/actuator/health
+```
+
+Gateway phải trả HTTP 200 với `"status":"UP"`; các container có healthcheck phải hiển thị `healthy`, không chỉ `Up`.
 
 ---
 
@@ -112,10 +119,19 @@ Sử dụng lệnh `docker compose ps` để kiểm tra trạng thái các conta
 Khởi chạy frontend cục bộ trên máy để kết nối trực tiếp đến API Gateway thông qua cấu hình phát triển:
 
 1. Di chuyển vào thư mục frontend: `cd agricultural-crop-management-frontend`
-2. Cài đặt thư viện: `npm install`
+2. Cài đặt đúng dependency lockfile: `npm ci`
 3. Khởi chạy: `npm run dev`
 
-Ứng dụng frontend sẽ hoạt động tại địa chỉ: **http://localhost:5173**.
+Ứng dụng frontend sẽ hoạt động tại địa chỉ: **http://localhost:3000** và proxy `/api` tới API Gateway **http://localhost:8080**.
+
+Trong terminal khác, chạy acceptance nhanh cho bốn tài khoản mẫu và các route demo chính:
+
+```bash
+cd agricultural-crop-management-frontend
+npm run demo:smoke
+```
+
+Kết quả cuối phải là `LOCAL_DEMO_SMOKE=PASS`. Script không in access token; có thể override tài khoản bằng các biến `DEMO_*_EMAIL`/`DEMO_*_PASSWORD` nếu không dùng seed mặc định.
 
 ---
 
@@ -146,15 +162,17 @@ Sau khi chạy thành công bước import dữ liệu mẫu, bạn có thể đ
 
 ## 9. Danh sách cổng dịch vụ
 
-* **Frontend (React)**: 5173
-* **API Gateway**: 8000
+* **Frontend (React/Vite)**: 3000
+* **API Gateway**: 8080
 * **MySQL**: 3307
+* **Chroma**: 8000
 * **RabbitMQ Console**: 15672 (rabbituser / rabbitpass)
 * **MinIO Console**: 9001 (minioadmin / minioadmin)
 * **MailHog**: 8025 (Hộp thư test)
 * **Grafana**: 3001
 * **Prometheus**: 9090
-* *(Các Microservices khác chạy ở port 8081 - 8091)*
+* **Tempo query/readiness**: 3200
+* *(12 microservice chạy nội bộ ở port 8081–8092; browser chỉ gọi qua Gateway 8080)*
 
 ---
 
@@ -162,9 +180,9 @@ Sau khi chạy thành công bước import dữ liệu mẫu, bạn có thể đ
 
 1. **Xem log chi tiết**: `docker compose logs -f [tên_service]` (Ví dụ: `identity-service`)
 2. **Dừng toàn bộ hệ thống**: `docker compose down`
-3. **Reset hoàn toàn dữ liệu**: `docker compose down -v` (Cảnh báo: Lệnh này xóa toàn bộ dữ liệu MySQL/RabbitMQ/MinIO).
+3. **Dừng nhưng giữ dữ liệu**: `docker compose down`. Chỉ dùng `docker compose down -v` sau khi đã backup và chủ động chấp nhận xóa toàn bộ MySQL/RabbitMQ/MinIO/Tempo.
 
 Lỗi phổ biến:
-* **Access denied for user 'springuser'@'%'**: MySQL chưa tạo databases hoặc chưa GRANT quyền. Xử lý bằng `docker compose down -v && docker compose up -d --build`.
+* **Access denied for user 'springuser'@'%'**: kiểm tra `.env`, `docker compose logs mysql` và credential healthcheck. Không xóa volume như bước xử lý mặc định vì có thể làm mất dữ liệu dev.
 * **keys/rsa-private.pem cannot be opened**: Chưa generate RSA keys.
 * **Connection refused (RabbitMQ/MySQL)**: Service phụ thuộc chưa sẵn sàng, đợi thêm một lát service sẽ tự retry.

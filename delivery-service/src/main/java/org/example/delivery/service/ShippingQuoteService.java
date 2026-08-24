@@ -78,7 +78,7 @@ public class ShippingQuoteService {
         ShippingQuote quote = shippingQuoteRepository.findById(request.quoteId())
                 .orElseThrow(() -> new IllegalArgumentException("Shipping quote not found"));
         validateIdentityAndState(quote, request.buyerUserId(), request.sellerUserId(),
-                request.farmId(), request.recipientProvince());
+                request.farmId(), request.recipientProvince(), null);
         String providerName = deliveryProviderRepository.findById(quote.getProviderId())
                 .map(DeliveryProvider::getName)
                 .orElseThrow(() -> new IllegalArgumentException("Shipping provider is unavailable"));
@@ -93,9 +93,22 @@ public class ShippingQuoteService {
             Integer farmId,
             String recipientProvince,
             Long marketplaceOrderId) {
+        return consumeAcceptedQuote(quoteId, buyerUserId, sellerUserId, farmId,
+                recipientProvince, marketplaceOrderId, null);
+    }
+
+    @Transactional
+    public ShippingQuote consumeAcceptedQuote(
+            String quoteId,
+            Long buyerUserId,
+            Long sellerUserId,
+            Integer farmId,
+            String recipientProvince,
+            Long marketplaceOrderId,
+            LocalDateTime orderCreatedAt) {
         ShippingQuote quote = shippingQuoteRepository.findForUpdateByQuoteId(quoteId)
                 .orElseThrow(() -> new IllegalArgumentException("Shipping quote not found"));
-        validateIdentityAndState(quote, buyerUserId, sellerUserId, farmId, recipientProvince);
+        validateIdentityAndState(quote, buyerUserId, sellerUserId, farmId, recipientProvince, orderCreatedAt);
         quote.setConsumedAt(LocalDateTime.now(clock));
         quote.setMarketplaceOrderId(marketplaceOrderId);
         return shippingQuoteRepository.save(quote);
@@ -106,7 +119,8 @@ public class ShippingQuoteService {
             Long buyerUserId,
             Long sellerUserId,
             Integer farmId,
-            String recipientProvince) {
+            String recipientProvince,
+            LocalDateTime acceptedAt) {
         if (!quote.getBuyerUserId().equals(buyerUserId)
                 || !quote.getSellerUserId().equals(sellerUserId)
                 || !quote.getFarmId().equals(farmId)
@@ -116,7 +130,8 @@ public class ShippingQuoteService {
         if (quote.getConsumedAt() != null || quote.getMarketplaceOrderId() != null) {
             throw new IllegalArgumentException("Shipping quote has already been consumed");
         }
-        if (!quote.getExpiresAt().isAfter(LocalDateTime.now(clock))) {
+        LocalDateTime expiryReference = acceptedAt == null ? LocalDateTime.now(clock) : acceptedAt;
+        if (!quote.getExpiresAt().isAfter(expiryReference)) {
             throw new IllegalArgumentException("Shipping quote has expired");
         }
         requirePositive(quote.getWeightKg(), "Shipping quote weight must be positive");

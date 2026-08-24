@@ -1,5 +1,5 @@
-import { Plus, Upload } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+﻿import { Plus, Upload } from 'lucide-react';
+import { Button } from '@/shared/ui/button';
 import { useBuyerManagement } from './hooks/useBuyerManagement';
 import { BuyerStatCards } from './components/BuyerStatCards';
 import { BuyerFilters } from './components/BuyerFilters';

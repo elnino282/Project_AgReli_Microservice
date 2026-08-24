@@ -1,8 +1,8 @@
-import { Upload, AlertCircle, CheckCircle } from 'lucide-react';
+﻿import { Upload, AlertCircle, CheckCircle } from 'lucide-react';
 import type { BuyerRole } from '../types';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Button } from '@/shared/ui/button';
+import { Badge } from '@/shared/ui/badge';
+import { Progress } from '@/shared/ui/progress';
 import {
     Dialog,
     DialogContent,
@@ -10,7 +10,7 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/shared/ui/dialog';
 import {
     Table,
     TableBody,
@@ -18,7 +18,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table';
+} from '@/shared/ui/table';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface ImportCSVWizardProps {

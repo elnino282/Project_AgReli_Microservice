@@ -1,8 +1,8 @@
-import { Upload, AlertCircle, XCircle, CheckCircle } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+﻿import { Upload, AlertCircle, XCircle, CheckCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/shared/ui/dialog';
+import { Button } from '@/shared/ui/button';
+import { Badge } from '@/shared/ui/badge';
+import { Progress } from '@/shared/ui/progress';
 import {
     Table,
     TableBody,
@@ -10,7 +10,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table';
+} from '@/shared/ui/table';
 import { CSVPreviewRow, ValidationError } from '../types';
 import { ROLE_BADGE_COLORS, STATUS_BADGE_COLORS } from '../constants';
 import { useI18n } from '@/shared/lib/hooks/useI18n';

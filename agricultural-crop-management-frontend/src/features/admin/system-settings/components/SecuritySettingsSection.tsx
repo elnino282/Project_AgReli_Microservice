@@ -1,10 +1,10 @@
-import { Save, LogOut } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
+﻿import { Save, LogOut } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Badge } from '@/shared/ui/badge';
+import { Label } from '@/shared/ui/label';
+import { Switch } from '@/shared/ui/switch';
+import { Separator } from '@/shared/ui/separator';
 import type { SecuritySettings as SecuritySettingsType, Device } from '../types';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 

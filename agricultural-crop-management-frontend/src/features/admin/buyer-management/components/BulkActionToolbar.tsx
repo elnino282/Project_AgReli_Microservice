@@ -1,7 +1,7 @@
-import { CheckCircle, Ban, Trash2 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+﻿import { CheckCircle, Ban, Trash2 } from 'lucide-react';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Checkbox } from '@/shared/ui/checkbox';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface BulkActionToolbarProps {

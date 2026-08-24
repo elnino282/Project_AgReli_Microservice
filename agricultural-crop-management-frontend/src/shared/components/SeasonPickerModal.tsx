@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+﻿import { Button } from "@/shared/ui/button";
 import type { Season } from "@/entities/season";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
 import {

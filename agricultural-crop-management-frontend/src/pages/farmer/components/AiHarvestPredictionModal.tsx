@@ -6,14 +6,25 @@ import { aiApi } from "@/entities/ai/api/client";
 import type { PredictHarvestResponse, PredictHarvestRequest } from "@/entities/ai/model/types";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
+import { dashboardApi } from "@/features/farmer/dashboard/api/dashboardApi";
 
 interface AiHarvestPredictionModalProps {
+  seasonId: string;
   seasonName: string;
   plantingDate: string;
-  expectedGrowthDays: number;
+  plannedHarvestDate: string;
 }
 
-export function AiHarvestPredictionModal({ seasonName, plantingDate, expectedGrowthDays }: AiHarvestPredictionModalProps) {
+function calculateGrowthDays(plantingDate: string, plannedHarvestDate: string): number | null {
+  const start = Date.parse(`${plantingDate}T00:00:00Z`);
+  const plannedHarvest = Date.parse(`${plannedHarvestDate}T00:00:00Z`);
+  if (!Number.isFinite(start) || !Number.isFinite(plannedHarvest) || plannedHarvest <= start) {
+    return null;
+  }
+  return Math.round((plannedHarvest - start) / (24 * 60 * 60 * 1000));
+}
+
+export function AiHarvestPredictionModal({ seasonId, seasonName, plantingDate, plannedHarvestDate }: AiHarvestPredictionModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [prediction, setPrediction] = useState<PredictHarvestResponse | null>(null);
@@ -21,25 +32,24 @@ export function AiHarvestPredictionModal({ seasonName, plantingDate, expectedGro
   const handlePredict = async () => {
     setIsLoading(true);
     try {
+      const expectedGrowthDays = calculateGrowthDays(plantingDate, plannedHarvestDate);
+      if (expectedGrowthDays == null) {
+        throw new Error("Season does not have a valid persisted growth period");
+      }
+      const farmingLogs = await dashboardApi.getFarmingLogs(seasonId);
       const payload: PredictHarvestRequest = {
         cropName: seasonName,
-        plantingDate: plantingDate,
-        expectedGrowthDays: expectedGrowthDays,
-        recentLogs: [
-          // Mocking some logs for demo purposes
-          {
-            date: new Date().toISOString().split('T')[0],
-            activityType: "PESTICIDE",
-            materialName: "Thuốc trừ sâu sinh học Neem",
-            phiDays: 7
-          },
-          {
-            date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            activityType: "FERTILIZER",
-            materialName: "Phân đạm Ure",
-            phiDays: null
-          }
-        ]
+        plantingDate,
+        expectedGrowthDays,
+        recentLogs: farmingLogs
+          .filter((log) => log.status === "COMPLETED")
+          .slice(0, 10)
+          .map((log) => ({
+            date: log.date,
+            activityType: log.activityType,
+            materialName: log.materialName || log.description,
+            phiDays: log.quarantineDays ?? null,
+          })),
       };
       
       const response = await aiApi.predictHarvest(payload);

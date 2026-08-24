@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+﻿import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { Bot, Leaf, RotateCcw, Send, Sparkles } from 'lucide-react';
 import {
     Button,
@@ -12,7 +12,7 @@ import {
 } from '@/shared/ui';
 import { cn } from '@/shared/lib';
 import { AiChatSources, useAiChatSession } from '@/features/ai';
-import { MarkdownMessage } from '@/components/MarkdownMessage';
+import { MarkdownMessage } from '@/shared/ui/markdown-message';
 import type { AiDrawerProps } from '../model/types';
 
 const QUICK_CHIPS = [

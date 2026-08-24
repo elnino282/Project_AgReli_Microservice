@@ -1,4 +1,4 @@
-import {
+﻿import {
     MoreVertical,
     Eye,
     Ban,
@@ -11,11 +11,11 @@ import {
     Phone,
     Calendar,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Badge } from '@/shared/ui/badge';
+import { Checkbox } from '@/shared/ui/checkbox';
+import { Avatar, AvatarFallback } from '@/shared/ui/avatar';
 import {
     Table,
     TableBody,
@@ -23,14 +23,14 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table';
+} from '@/shared/ui/table';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/shared/ui/dropdown-menu';
 import type { Buyer, BuyerRole, KYCStatus, AccountStatus } from '../types';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 

@@ -1,7 +1,7 @@
-import type { RefObject } from "react";
+﻿import type { RefObject } from "react";
 import { ArrowLeft, Star, Store } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { useMarketplaceFarmDetail } from "@/features/marketplace/hooks";
 import {
   getChatDisplayName,

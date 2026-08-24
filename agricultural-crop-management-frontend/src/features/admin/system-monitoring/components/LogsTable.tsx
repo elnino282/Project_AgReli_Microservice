@@ -1,17 +1,17 @@
-// System logs table with search and pagination
+﻿// System logs table with search and pagination
 
 import { Terminal, Search, Copy } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
+} from '@/shared/ui/select';
 import type { LogEntry, LogLevel } from '../types';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 

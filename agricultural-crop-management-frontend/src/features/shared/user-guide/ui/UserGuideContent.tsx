@@ -1,9 +1,9 @@
-import React from 'react';
+﻿import React from 'react';
 import { PortalType } from '@/widgets/layout/model/types';
 // Removed card imports
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion';
 import { BookOpen, Sprout, ShieldAlert, Briefcase, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import { useNavigate } from 'react-router-dom';
 
 interface UserGuideContentProps {

@@ -1,22 +1,24 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { sendAiChatMessage } from '@/entities/ai/api/aiChatService';
+import { aiApi } from '@/entities/ai/api/client';
 import { useAiChatSession } from './useAiChatSession';
 
-vi.mock('@/entities/ai/api/aiChatService', () => ({
-    sendAiChatMessage: vi.fn(),
+vi.mock('@/entities/ai/api/client', () => ({
+    aiApi: { chat: vi.fn() },
 }));
 
-const sendAiChatMessageMock = vi.mocked(sendAiChatMessage);
+const chatMock = vi.mocked(aiApi.chat);
 
 describe('useAiChatSession', () => {
     beforeEach(() => {
-        sendAiChatMessageMock.mockReset();
+        chatMock.mockReset();
     });
 
     it('sends crop context to local RAG and stores sources on assistant messages', async () => {
-        sendAiChatMessageMock.mockResolvedValue({
-            answer: 'Use clean irrigation water.',
+        chatMock.mockResolvedValue({
+            userMessage: 'What water is allowed?',
+            cropContext: 'rice plot A',
+            assistantMessage: 'Use clean irrigation water.',
             sources: [{ file_name: 'vietgap.md', heading: 'Water', snippet: 'Check water.' }],
         });
 
@@ -28,8 +30,10 @@ describe('useAiChatSession', () => {
             await result.current.sendMessage('  What water is allowed?  ', ' rice plot A ');
         });
 
-        expect(sendAiChatMessageMock).toHaveBeenCalledWith(expect.stringContaining('rice plot A'));
-        expect(sendAiChatMessageMock).toHaveBeenCalledWith(expect.stringContaining('What water is allowed?'));
+        expect(chatMock).toHaveBeenCalledWith({
+            userMessage: 'What water is allowed?',
+            cropContext: ' rice plot A ',
+        });
 
         await waitFor(() => {
             expect(result.current.messages).toHaveLength(3);

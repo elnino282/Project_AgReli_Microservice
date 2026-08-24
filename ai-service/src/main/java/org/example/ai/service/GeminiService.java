@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -124,27 +125,41 @@ public class GeminiService {
     }
 
     public String chatAsAgriculturalExpert(String userMessage, String cropContext) {
-        return chatWithPrompt(
+        return chatAsAgriculturalExpertWithSources(userMessage, cropContext).assistantMessage();
+    }
+
+    public RagChatResult chatAsAgriculturalExpertWithSources(String userMessage, String cropContext) {
+        List<RagChatResult.RagSource> sources = new ArrayList<>();
+        String assistantMessage = chatWithPrompt(
                 userMessage,
                 cropContext,
                 SYSTEM_PROMPT,
                 CROP_CONTEXT_LABEL,
                 USER_QUESTION_LABEL,
                 CONNECTION_FALLBACK_MESSAGE,
-                EMPTY_RESPONSE_FALLBACK_MESSAGE
+                EMPTY_RESPONSE_FALLBACK_MESSAGE,
+                sources
         );
+        return groundedResult(assistantMessage, sources, CONNECTION_FALLBACK_MESSAGE, EMPTY_RESPONSE_FALLBACK_MESSAGE);
     }
 
     public String chatAsBuyerProcurementExpert(String userMessage, String buyerContext) {
-        return chatWithPrompt(
+        return chatAsBuyerProcurementExpertWithSources(userMessage, buyerContext).assistantMessage();
+    }
+
+    public RagChatResult chatAsBuyerProcurementExpertWithSources(String userMessage, String buyerContext) {
+        List<RagChatResult.RagSource> sources = new ArrayList<>();
+        String assistantMessage = chatWithPrompt(
                 userMessage,
                 buyerContext,
                 BUYER_SYSTEM_PROMPT,
                 BUYER_CONTEXT_LABEL,
                 BUYER_QUESTION_LABEL,
                 BUYER_CONNECTION_FALLBACK_MESSAGE,
-                BUYER_EMPTY_RESPONSE_FALLBACK_MESSAGE
+                BUYER_EMPTY_RESPONSE_FALLBACK_MESSAGE,
+                sources
         );
+        return groundedResult(assistantMessage, sources, BUYER_CONNECTION_FALLBACK_MESSAGE, BUYER_EMPTY_RESPONSE_FALLBACK_MESSAGE);
     }
 
     public String analyzeMarketplaceImage(byte[] imageBytes, String mimeType) {
@@ -337,7 +352,8 @@ public class GeminiService {
                                   String contextLabel,
                                   String questionLabel,
                                   String connectionFallbackMessage,
-                                  String emptyResponseFallbackMessage) {
+                                  String emptyResponseFallbackMessage,
+                                  List<RagChatResult.RagSource> sources) {
         Objects.requireNonNull(userMessage, "userMessage must not be null");
         if (userMessage.isBlank()) {
             throw new IllegalArgumentException("userMessage must not be blank");
@@ -357,12 +373,19 @@ public class GeminiService {
         if (this.vectorStore != null) {
             try {
                 List<Document> documents = this.vectorStore.similaritySearch(
-                        SearchRequest.query(userMessage).withTopK(5)
+                        SearchRequest.builder().query(userMessage).topK(5).build()
                 );
+                if (documents == null) {
+                    documents = List.of();
+                }
+                sources.addAll(documents.stream()
+                        .map(GeminiService::toRagSource)
+                        .distinct()
+                        .toList());
                 String ragContext = documents.stream()
                         .map(doc -> {
                             String heading = doc.getMetadata().containsKey("heading") ? doc.getMetadata().get("heading").toString() : "Tài liệu";
-                            return "[TÀI LIỆU]\nTiêu đề: " + heading + "\n" + doc.getContent();
+                            return "[TÀI LIỆU]\nTiêu đề: " + heading + "\n" + doc.getText();
                         })
                         .collect(Collectors.joining("\n\n"));
                 combinedContext += "\n\nThông tin tham khảo từ hệ thống (RAG):\n" + ragContext;
@@ -391,6 +414,72 @@ public class GeminiService {
             logUnexpectedException(requestId, ex);
             return connectionFallbackMessage;
         }
+    }
+
+    private static RagChatResult groundedResult(
+            String assistantMessage,
+            List<RagChatResult.RagSource> sources,
+            String connectionFallbackMessage,
+            String emptyResponseFallbackMessage) {
+        if (assistantMessage.equals(connectionFallbackMessage)
+                || assistantMessage.equals(emptyResponseFallbackMessage)) {
+            return new RagChatResult(assistantMessage, List.of());
+        }
+        return new RagChatResult(assistantMessage, sources);
+    }
+
+    static RagChatResult.RagSource toRagSource(Document document) {
+        Map<String, Object> metadata = document.getMetadata();
+        String fileName = metadataValue(metadata, "file_name");
+        if (fileName == null) {
+            fileName = safeFileName(metadataValue(metadata, "source"));
+        }
+        return new RagChatResult.RagSource(
+                fileName,
+                metadataValue(metadata, "heading"),
+                positiveInteger(metadata.get("page")),
+                compactSnippet(document.getText(), 240));
+    }
+
+    private static String metadataValue(Map<String, Object> metadata, String key) {
+        Object value = metadata.get(key);
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.toString().trim();
+        return normalized.isEmpty() ? null : normalized;
+    }
+
+    private static String safeFileName(String source) {
+        if (source == null) {
+            return null;
+        }
+        String normalized = source.replace('\\', '/');
+        int separator = normalized.lastIndexOf('/');
+        return separator >= 0 ? normalized.substring(separator + 1) : normalized;
+    }
+
+    private static Integer positiveInteger(Object value) {
+        if (value instanceof Number number && number.intValue() > 0) {
+            return number.intValue();
+        }
+        if (value instanceof String text) {
+            try {
+                int parsed = Integer.parseInt(text);
+                return parsed > 0 ? parsed : null;
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private static String compactSnippet(String text, int maxLength) {
+        if (text == null || text.isBlank()) {
+            return null;
+        }
+        String compact = text.replaceAll("\\s+", " ").trim();
+        return compact.length() <= maxLength ? compact : compact.substring(0, maxLength).trim() + "...";
     }
 
     private String buildPrompt(String userMessage,

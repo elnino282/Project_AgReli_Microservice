@@ -1,5 +1,5 @@
-import { Settings } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+﻿import { Settings } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import type { SettingsSection } from '../types';
 import { SECTION_NAV } from '../constants';
 import { useI18n } from '@/shared/lib/hooks/useI18n';

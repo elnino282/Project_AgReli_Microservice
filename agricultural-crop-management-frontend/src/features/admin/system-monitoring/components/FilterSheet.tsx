@@ -1,16 +1,16 @@
-// Filter drawer for advanced log filtering
+﻿// Filter drawer for advanced log filtering
 
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/shared/ui/button';
+import { Label } from '@/shared/ui/label';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+} from '@/shared/ui/select';
+import { Separator } from '@/shared/ui/separator';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui/sheet';
 import type { LogLevel } from '../types';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 

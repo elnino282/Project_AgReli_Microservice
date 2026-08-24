@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, MessageSquare } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import "./ChatPage.css";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { cn } from "@/shared/lib";
 import { ChatComposer } from "@/features/chat/components/ChatComposer";
 import { ChatConversationList } from "@/features/chat/components/ChatConversationList";

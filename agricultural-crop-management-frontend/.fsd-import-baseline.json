@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "violations": [
+    "src/entities/preferences/api/hooks.ts: entities không được import features ('@/features/auth')",
+    "src/entities/user/api/hooks.ts: entities không được import features ('@/features/auth')",
+    "src/features/admin/portal/components/AdminPortalContent.tsx: features không được import pages ('@/pages/admin/AdminAlertsPage')",
+    "src/features/admin/portal/components/AdminPortalContent.tsx: features không được import pages ('@/pages/admin/AdminAuditLogsPage')",
+    "src/features/admin/portal/components/AdminPortalContent.tsx: features không được import pages ('@/pages/admin/AdminCertAuditsPage')",
+    "src/features/admin/portal/components/AdminPortalContent.tsx: features không được import pages ('@/pages/admin/AdminDocumentsPage')",
+    "src/features/admin/portal/components/AdminPortalContent.tsx: features không được import pages ('@/pages/admin/AdminFarmDocumentsPage')",
+    "src/features/admin/portal/components/AdminPortalContent.tsx: features không được import pages ('@/pages/admin/AdminIncidentsPage')",
+    "src/features/admin/portal/components/AdminPortalContent.tsx: features không được import pages ('@/pages/admin/AdminInventoryPage')",
+    "src/features/admin/portal/components/AdminPortalContent.tsx: features không được import pages ('@/pages/admin/AdminSearchPage')",
+    "src/features/admin/portal/components/AdminPortalContent.tsx: features không được import pages ('@/pages/admin/CropsVarietiesPage')",
+    "src/features/admin/portal/components/AdminPortalContent.tsx: features không được import pages ('@/pages/admin/FarmsPlotsPage')",
+    "src/features/admin/portal/components/AdminPortalContent.tsx: features không được import pages ('@/pages/admin/UsersRolesPage')",
+    "src/features/admin/portal/components/AdminPortalContent.tsx: features không được import pages ('@/pages/marketplace')",
+    "src/features/chat/pages/ChatPage.tsx: features không được import pages ('@/pages/chat/ChatPage')",
+    "src/features/farmer/harvests/components/HarvestTable.tsx: features không được import pages ('@/pages/farmer/components/ReceiveToWarehouseModal')",
+    "src/features/shared/layout/components/Header.tsx: features không được import widgets ('@/widgets/layout/ui/DashboardHeader')",
+    "src/features/shared/layout/components/Header.tsx: features không được import widgets ('@/widgets/layout/ui/ProfileMenu')",
+    "src/features/shared/layout/components/Header.tsx: features không được import widgets ('@/widgets/layout/ui/SearchBar')",
+    "src/features/shared/layout/components/SearchBar.tsx: features không được import widgets ('@/widgets/layout/ui/SearchBar')",
+    "src/features/shared/layout/index.tsx: features không được import widgets ('@/widgets/layout')",
+    "src/features/shared/layout/types.ts: features không được import widgets ('@/widgets/layout/model/types')",
+    "src/features/shared/user-guide/ui/UserGuideContent.tsx: features không được import widgets ('@/widgets/layout/model/types')",
+    "src/shared/components/SearchWindow.tsx: shared không được import entities ('@/entities/search')",
+    "src/shared/components/SeasonPickerModal.tsx: shared không được import entities ('@/entities/season')",
+    "src/shared/contexts/PreferencesContext.tsx: shared không được import entities ('@/entities/preferences')",
+    "src/shared/contexts/SeasonContext.tsx: shared không được import entities ('@/entities/season')",
+    "src/shared/lib/formatters.ts: shared không được import entities ('@/entities/preferences')"
+  ]
+}

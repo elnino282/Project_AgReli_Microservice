@@ -1,10 +1,10 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
+﻿import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Label } from "@/shared/ui/label";
+import { Separator } from "@/shared/ui/separator";
+import { Switch } from "@/shared/ui/switch";
 import { useProfileMe } from "@/entities/user";
 import { useAuth } from "@/features/auth";
 import { useI18n } from "@/shared/lib/hooks/useI18n";

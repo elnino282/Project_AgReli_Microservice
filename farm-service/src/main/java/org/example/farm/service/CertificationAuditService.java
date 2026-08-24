@@ -37,6 +37,8 @@ public class CertificationAuditService {
     private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
     private final CertificationService certificationService;
+    private final FarmRepository farmRepository;
+    private final CertificationStandardRepository standardRepository;
 
     // === VALID TRANSITIONS (state machine guard) ===
     private static final Map<String, Set<String>> VALID_TRANSITIONS = Map.ofEntries(
@@ -405,6 +407,29 @@ public class CertificationAuditService {
         return audits.stream().map(this::toAuditResponse).toList();
     }
 
+    /**
+     * Admin: list all audits across all farms.
+     */
+    @Transactional(readOnly = true)
+    public List<CertificationAuditResponse> getAllAuditsForAdmin() {
+        List<CertificationAudit> audits = auditRepository.findAll();
+        return audits.stream().map(audit -> {
+            CertificationAuditResponse resp = toAuditResponse(audit);
+            recordRepository.findById(audit.getRecordId()).ifPresent(record -> {
+                resp.setFarmId(record.getFarmId());
+                resp.setComplianceScore(record.getComplianceScore());
+                resp.setRecordStatus(record.getStatus());
+                farmRepository.findById(record.getFarmId())
+                        .ifPresent(farm -> resp.setFarmName(farm.getName()));
+                standardRepository.findById(record.getStandardId())
+                        .ifPresent(standard -> resp.setStandardCode(standard.getCode()));
+            });
+            resp.setNonconformities(nonconformityRepository.findByAuditId(audit.getId())
+                    .stream().map(this::toNonconformityResponse).toList());
+            return resp;
+        }).toList();
+    }
+
     // ==========================================
     // Helper: find record by farmId (latest)
     // ==========================================
@@ -511,4 +536,3 @@ public class CertificationAuditService {
         }
     }
 }
-

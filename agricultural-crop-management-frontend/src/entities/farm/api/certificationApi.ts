@@ -36,6 +36,54 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+export interface CertificationNonconformity {
+  id: number;
+  auditId: number;
+  checklistItemId?: number;
+  severity: 'MINOR' | 'MAJOR' | 'CRITICAL';
+  description: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface CertificationAudit {
+  id: number;
+  recordId: number;
+  farmId?: number;
+  farmName?: string;
+  standardCode?: string;
+  complianceScore?: number;
+  recordStatus?: string;
+  auditType: string;
+  scheduledDate?: string;
+  auditorUserId?: number;
+  auditorOrgName?: string;
+  status: 'SCHEDULED' | 'IN_PROGRESS' | 'PASSED' | 'FAILED' | string;
+  interviewNotes?: string;
+  sampleCollectionNotes?: string;
+  conductedAt?: string;
+  createdAt: string;
+  nonconformities: CertificationNonconformity[];
+}
+
+export interface FarmDocumentResponse {
+  id: number;
+  farmId: number;
+  documentType: string;
+  documentTypeLabel: string;
+  title: string;
+  description?: string;
+  fileUrl?: string;
+  issuedDate?: string;
+  expiryDate?: string;
+  isExpired: boolean;
+  isExpiringSoon: boolean;
+  verificationStatus: string;
+  verifiedByName?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const certificationApi = {
   async getCertificationDetails(farmId: number): Promise<CertificationDetails> {
     const response = await httpClient.get<ApiResponse<CertificationDetails>>(`/api/v1/farms/${farmId}/certification`);
@@ -56,22 +104,51 @@ export const certificationApi = {
     return response.data.result;
   },
 
-  async exportDossier(farmId: number, seasonIds?: number[]): Promise<any> {
-    const response = await httpClient.post(`/api/v1/farms/${farmId}/certification/export-dossier`, {
+  async exportDossier(farmId: number, seasonIds?: number[]): Promise<FarmDocumentResponse> {
+    const response = await httpClient.post<ApiResponse<FarmDocumentResponse>>(`/api/v1/farms/${farmId}/certification/export-dossier`, {
       seasonIds: seasonIds || []
-    }, {
-      responseType: 'blob' // Assuming the endpoint returns a PDF or ZIP file
     });
-    return response.data;
+    return response.data.result;
   },
 
-  async getAllAudits(): Promise<any[]> {
-    const response = await httpClient.get(`/api/v1/certification-audits`);
-    return response.data.result || response.data.data || [];
+  async getAllAudits(): Promise<CertificationAudit[]> {
+    const response = await httpClient.get<ApiResponse<CertificationAudit[]>>(`/api/v1/admin/certification-audits`);
+    return response.data.result || [];
   },
 
-  async approveAudit(auditId: number): Promise<any> {
-    const response = await httpClient.post(`/api/v1/certification-audits/${auditId}/approve`);
+  async startAudit(auditId: number): Promise<CertificationAudit> {
+    const response = await httpClient.put<ApiResponse<CertificationAudit>>(`/api/v1/certification-audits/${auditId}/start`);
+    return response.data.result;
+  },
+
+  async completeAudit(auditId: number, data: {
+    result: 'PASSED' | 'FAILED';
+    interviewNotes?: string;
+    sampleCollectionNotes?: string;
+  }): Promise<CertificationAudit> {
+    const response = await httpClient.put<ApiResponse<CertificationAudit>>(`/api/v1/certification-audits/${auditId}/complete`, data);
+    return response.data.result;
+  },
+
+  async createNonconformity(auditId: number, data: {
+    checklistItemId?: number;
+    severity: 'MINOR' | 'MAJOR' | 'CRITICAL';
+    description: string;
+  }): Promise<CertificationNonconformity> {
+    const response = await httpClient.post<ApiResponse<CertificationNonconformity>>(
+      `/api/v1/certification-audits/${auditId}/nonconformities`,
+      data,
+    );
+    return response.data.result;
+  },
+
+  async issueCertificate(farmId: number, data: {
+    certificateNumber: string;
+    issuedDate: string;
+    expiryDate: string;
+    certificateDocumentId?: number;
+  }): Promise<string> {
+    const response = await httpClient.post<ApiResponse<string>>(`/api/v1/farms/${farmId}/certification/issue`, data);
     return response.data.result;
   }
 };

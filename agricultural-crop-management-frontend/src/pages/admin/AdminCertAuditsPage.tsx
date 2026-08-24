@@ -1,195 +1,181 @@
-import { useState, useEffect } from "react";
-import { certificationApi } from "@/entities/farm/api/certificationApi";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
-import { Button } from "@/shared/ui/button";
-import { Badge } from "@/shared/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
-import { toast } from "sonner";
-import { CheckCircle2, XCircle, Search, RefreshCw, ClipboardCheck, ArrowLeft, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { certificationApi, type CertificationAudit } from "@/entities/farm/api/certificationApi";
 import { PageContainer } from "@/shared/ui";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Input } from "@/shared/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { Textarea } from "@/shared/ui/textarea";
+import { AlertCircle, ArrowLeft, CheckCircle2, ClipboardCheck, Play, RefreshCw, XCircle } from "lucide-react";
+import { toast } from "sonner";
+
+const today = () => new Date().toISOString().slice(0, 10);
+const nextYear = () => {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() + 1);
+  return date.toISOString().slice(0, 10);
+};
+
+const errorMessage = (error: unknown, fallback: string) => {
+  const candidate = error as { response?: { data?: { message?: string } } };
+  return candidate.response?.data?.message || fallback;
+};
+
+const statusClass = (status: string) => {
+  if (status === "PASSED") return "bg-emerald-100 text-emerald-800";
+  if (status === "FAILED") return "bg-rose-100 text-rose-800";
+  if (status === "IN_PROGRESS") return "bg-amber-100 text-amber-800";
+  return "bg-blue-100 text-blue-800";
+};
 
 export function AdminCertAuditsPage() {
-  const [audits, setAudits] = useState<any[]>([]);
+  const [audits, setAudits] = useState<CertificationAudit[]>([]);
+  const [selectedAudit, setSelectedAudit] = useState<CertificationAudit | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedAudit, setSelectedAudit] = useState<any | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [ncDescription, setNcDescription] = useState("");
+  const [ncSeverity, setNcSeverity] = useState<"MINOR" | "MAJOR" | "CRITICAL">("MAJOR");
+  const [certificateNumber, setCertificateNumber] = useState("");
+  const [issuedDate, setIssuedDate] = useState(today);
+  const [expiryDate, setExpiryDate] = useState(nextYear);
 
-  const fetchAudits = async () => {
+  const fetchAudits = async (selectedId?: number) => {
     try {
       setLoading(true);
       const data = await certificationApi.getAllAudits();
       setAudits(data);
+      if (selectedId !== undefined) setSelectedAudit(data.find((audit) => audit.id === selectedId) ?? null);
     } catch (error) {
-      toast.error("Không thể tải danh sách audit");
-      setAudits([
-        {
-          id: 1,
-          farmId: 101,
-          farmName: "Nông trại Mộc Châu",
-          standardCode: "VIETGAP-TC-01",
-          status: "IN_PROGRESS",
-          auditDate: "2026-07-20",
-          complianceScore: 85,
-          checklist: [
-            { id: 10, criteria: "Sử dụng phân bón đúng danh mục", status: "PASS" },
-            { id: 11, criteria: "Ghi chép nhật ký đầy đủ", status: "FAIL", nonConformity: "Thiếu ghi chép tháng 6" },
-          ],
-          nonconformities: [
-            { id: 101, description: "Thiếu ghi chép tháng 6", severity: "MAJOR", status: "OPEN" }
-          ]
-        },
-        {
-          id: 2,
-          farmId: 102,
-          farmName: "Nông trại Hữu cơ Đà Lạt",
-          standardCode: "GLOBALGAP-01",
-          status: "PENDING_APPROVAL",
-          auditDate: "2026-07-22",
-          complianceScore: 95,
-          checklist: [
-            { id: 12, criteria: "Quản lý nguồn nước tưới", status: "PASS" },
-          ],
-          nonconformities: []
-        }
-      ]);
+      toast.error(errorMessage(error, "Không thể tải danh sách audit"));
+      setAudits([]);
+      if (selectedId !== undefined) setSelectedAudit(null);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchAudits();
-  }, []);
+  useEffect(() => { void fetchAudits(); }, []);
 
-  const handleApprove = async (auditId: number) => {
+  const runAuditAction = async (action: () => Promise<unknown>, success: string) => {
+    if (!selectedAudit) return;
     try {
-      await certificationApi.approveAudit(auditId);
-      toast.success("Cấp chứng nhận thành công!");
-      fetchAudits();
-      setSelectedAudit(null);
+      setSubmitting(true);
+      await action();
+      toast.success(success);
+      await fetchAudits(selectedAudit.id);
     } catch (error) {
-      toast.error("Lỗi khi cấp chứng nhận");
+      toast.error(errorMessage(error, "Không thể hoàn tất thao tác"));
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const [ncDescription, setNcDescription] = useState("");
-  const handleAddNonConformity = () => {
-    if (!ncDescription) {
+  const handleAddNonconformity = async () => {
+    const description = ncDescription.trim();
+    if (!selectedAudit || !description) {
       toast.error("Vui lòng nhập mô tả lỗi");
       return;
     }
-    toast.success("Đã ghi nhận Non-Conformity thành công!");
+    await runAuditAction(
+      () => certificationApi.createNonconformity(selectedAudit.id, { severity: ncSeverity, description }),
+      "Đã ghi nhận lỗi không phù hợp",
+    );
     setNcDescription("");
   };
 
+  const handleIssueCertificate = async () => {
+    if (!selectedAudit?.farmId || !certificateNumber.trim()) {
+      toast.error("Vui lòng nhập số chứng nhận và xác minh Farm ID");
+      return;
+    }
+    await runAuditAction(
+      () => certificationApi.issueCertificate(selectedAudit.farmId!, {
+        certificateNumber: certificateNumber.trim(), issuedDate, expiryDate,
+      }),
+      "Cấp chứng nhận thành công",
+    );
+  };
+
   if (selectedAudit) {
+    const nonconformities = selectedAudit.nonconformities ?? [];
     return (
       <PageContainer>
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" onClick={() => setSelectedAudit(null)}>
-            <ArrowLeft className="w-4 h-4 mr-2" /> Quay lại
-          </Button>
+        <div className="mb-6 flex items-center gap-4">
+          <Button variant="ghost" onClick={() => setSelectedAudit(null)}><ArrowLeft className="mr-2 h-4 w-4" /> Quay lại</Button>
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Chi tiết Audit #{selectedAudit.id}</h1>
-            <p className="text-slate-500 text-sm">Nông trại: {selectedAudit.farmName}</p>
+            <p className="text-sm text-slate-500">Nông trại: {selectedAudit.farmName ?? `Farm #${selectedAudit.farmId}`}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="space-y-6 md:col-span-2">
             <Card>
-              <CardHeader>
-                <CardTitle>Checklist Đánh giá</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Tiêu chí</TableHead>
-                      <TableHead>Đánh giá</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedAudit.checklist?.map((item: any) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.criteria}</TableCell>
-                        <TableCell>
-                          <Badge className={item.status === 'PASS' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}>
-                            {item.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <CardHeader><CardTitle>Trạng thái đánh giá</CardTitle></CardHeader>
+              <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
+                <div><span className="text-slate-500">Loại audit:</span> {selectedAudit.auditType}</div>
+                <div><span className="text-slate-500">Tiêu chuẩn:</span> {selectedAudit.standardCode ?? "Chưa xác định"}</div>
+                <div><span className="text-slate-500">Ngày dự kiến:</span> {selectedAudit.scheduledDate ? new Date(selectedAudit.scheduledDate).toLocaleDateString("vi-VN") : "-"}</div>
+                <div><span className="text-slate-500">Điểm tuân thủ:</span> {selectedAudit.complianceScore ?? "-"}%</div>
+                <div className="sm:col-span-2"><span className="text-slate-500">Trạng thái hồ sơ:</span> {selectedAudit.recordStatus ?? "-"}</div>
               </CardContent>
             </Card>
-            
+
             <Card>
-              <CardHeader>
-                <CardTitle>Lỗi đã ghi nhận (Non-Conformities)</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>Lỗi đã ghi nhận</CardTitle></CardHeader>
               <CardContent>
-                {selectedAudit.nonconformities?.length > 0 ? (
-                  <div className="space-y-4">
-                    {selectedAudit.nonconformities.map((nc: any) => (
-                      <div key={nc.id} className="p-4 border rounded-lg flex justify-between items-start">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <AlertCircle className="w-4 h-4 text-amber-500" />
-                            <span className="font-semibold text-sm">Lỗi #{nc.id}</span>
-                            <Badge variant="outline" className="bg-rose-100 text-rose-800">{nc.severity}</Badge>
-                            <Badge variant="outline" className="bg-slate-100 text-slate-800">{nc.status}</Badge>
-                          </div>
-                          <p className="text-sm text-slate-600">{nc.description}</p>
-                        </div>
-                        {nc.status === 'OPEN' && (
-                          <Button size="sm" variant="outline" className="text-emerald-600 border-emerald-200">
-                            Duyệt khắc phục
-                          </Button>
-                        )}
+                {nonconformities.length > 0 ? <div className="space-y-4">
+                  {nonconformities.map((nc) => <div key={nc.id} className="flex items-start justify-between rounded-lg border p-4">
+                    <div>
+                      <div className="mb-1 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-500" />
+                        <span className="text-sm font-semibold">Lỗi #{nc.id}</span>
+                        <Badge variant="outline" className="bg-rose-100 text-rose-800">{nc.severity}</Badge>
+                        <Badge variant="outline">{nc.status}</Badge>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-500">Không có lỗi nào.</p>
-                )}
+                      <p className="text-sm text-slate-600">{nc.description}</p>
+                    </div>
+                  </div>)}
+                </div> : <p className="text-sm text-slate-500">Không có lỗi nào được ghi nhận.</p>}
               </CardContent>
             </Card>
           </div>
 
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Ghi nhận lỗi mới</CardTitle>
-              </CardHeader>
+            {selectedAudit.status === "IN_PROGRESS" && <Card>
+              <CardHeader><CardTitle>Ghi nhận lỗi mới</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <Textarea 
-                  placeholder="Mô tả chi tiết lỗi..." 
-                  value={ncDescription} 
-                  onChange={(e) => setNcDescription(e.target.value)} 
-                />
-                <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white" onClick={handleAddNonConformity}>
-                  Tạo Non-Conformity
-                </Button>
+                <select aria-label="Mức độ lỗi" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={ncSeverity} onChange={(event) => setNcSeverity(event.target.value as typeof ncSeverity)}>
+                  <option value="MINOR">MINOR</option><option value="MAJOR">MAJOR</option><option value="CRITICAL">CRITICAL</option>
+                </select>
+                <Textarea placeholder="Mô tả chi tiết lỗi..." value={ncDescription} onChange={(event) => setNcDescription(event.target.value)} />
+                <Button className="w-full" disabled={submitting} onClick={handleAddNonconformity}>Tạo Non-Conformity</Button>
               </CardContent>
-            </Card>
+            </Card>}
 
             <Card>
-              <CardHeader>
-                <CardTitle>Hành động</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button 
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" 
-                  disabled={selectedAudit.status !== 'PENDING_APPROVAL'}
-                  onClick={() => handleApprove(selectedAudit.id)}
-                >
-                  <CheckCircle2 className="w-4 h-4 mr-2" /> Cấp Chứng Nhận
-                </Button>
-                <Button variant="outline" className="w-full">
-                  Kết thúc Audit
-                </Button>
+              <CardHeader><CardTitle>Hành động theo trạng thái</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                {selectedAudit.status === "SCHEDULED" && <Button className="w-full" disabled={submitting} onClick={() => runAuditAction(
+                  () => certificationApi.startAudit(selectedAudit.id), "Đã bắt đầu audit",
+                )}><Play className="mr-2 h-4 w-4" /> Bắt đầu Audit</Button>}
+                {selectedAudit.status === "IN_PROGRESS" && <>
+                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={submitting} onClick={() => runAuditAction(
+                    () => certificationApi.completeAudit(selectedAudit.id, { result: "PASSED" }), "Đã kết luận audit đạt",
+                  )}><CheckCircle2 className="mr-2 h-4 w-4" /> Kết luận Đạt</Button>
+                  <Button variant="destructive" className="w-full" disabled={submitting || nonconformities.length === 0} onClick={() => runAuditAction(
+                    () => certificationApi.completeAudit(selectedAudit.id, { result: "FAILED" }), "Đã kết luận audit không đạt",
+                  )}><XCircle className="mr-2 h-4 w-4" /> Kết luận Không đạt</Button>
+                </>}
+                {selectedAudit.status === "PASSED" && selectedAudit.recordStatus === "AUDIT_PASSED" && <>
+                  <Input aria-label="Số chứng nhận" placeholder="Số chứng nhận" value={certificateNumber} onChange={(event) => setCertificateNumber(event.target.value)} />
+                  <Input aria-label="Ngày cấp" type="date" value={issuedDate} onChange={(event) => setIssuedDate(event.target.value)} />
+                  <Input aria-label="Ngày hết hạn" type="date" value={expiryDate} onChange={(event) => setExpiryDate(event.target.value)} />
+                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={submitting} onClick={handleIssueCertificate}><CheckCircle2 className="mr-2 h-4 w-4" /> Cấp Chứng Nhận</Button>
+                </>}
+                {!["SCHEDULED", "IN_PROGRESS"].includes(selectedAudit.status) && !(selectedAudit.status === "PASSED" && selectedAudit.recordStatus === "AUDIT_PASSED") &&
+                  <p className="text-sm text-slate-500">Không có hành động hợp lệ cho trạng thái hiện tại.</p>}
               </CardContent>
             </Card>
           </div>
@@ -198,71 +184,24 @@ export function AdminCertAuditsPage() {
     );
   }
 
-  return (
-    <PageContainer>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Quản lý Audit</h1>
-          <p className="text-slate-500 text-sm">Theo dõi, đánh giá checklist và cấp chứng nhận VietGAP.</p>
-        </div>
-        <Button onClick={fetchAudits} variant="outline" className="gap-2">
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Làm mới
-        </Button>
-      </div>
-
-      <Card className="border border-slate-200 shadow-sm rounded-xl overflow-hidden">
-        <Table>
-          <TableHeader className="bg-slate-50">
-            <TableRow>
-              <TableHead>Mã Audit</TableHead>
-              <TableHead>Nông trại</TableHead>
-              <TableHead>Tiêu chuẩn</TableHead>
-              <TableHead>Ngày Audit</TableHead>
-              <TableHead>Điểm số</TableHead>
-              <TableHead>Trạng thái</TableHead>
-              <TableHead className="text-right">Hành động</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {audits.map((audit) => (
-              <TableRow key={audit.id}>
-                <TableCell className="font-mono text-sm">#{audit.id}</TableCell>
-                <TableCell className="font-semibold">{audit.farmName || `Farm ID: ${audit.farmId}`}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="bg-slate-100">{audit.standardCode}</Badge>
-                </TableCell>
-                <TableCell>{audit.auditDate ? new Date(audit.auditDate).toLocaleDateString("vi-VN") : "-"}</TableCell>
-                <TableCell>
-                  <span className={`font-bold ${audit.complianceScore >= 80 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    {audit.complianceScore ?? 0}%
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <Badge className={
-                    audit.status === 'PENDING_APPROVAL' ? "bg-amber-100 text-amber-800" :
-                    audit.status === 'APPROVED' || audit.status === 'CERTIFIED' ? "bg-emerald-100 text-emerald-800" :
-                    "bg-blue-100 text-blue-800"
-                  }>
-                    {audit.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button size="sm" variant="outline" onClick={() => setSelectedAudit(audit)}>
-                    <ClipboardCheck className="w-4 h-4 mr-1" /> Chi tiết
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-            {audits.length === 0 && !loading && (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-slate-500">
-                  Không có dữ liệu Audit.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </Card>
-    </PageContainer>
-  );
+  return <PageContainer>
+    <div className="mb-6 flex items-center justify-between">
+      <div><h1 className="text-2xl font-bold text-slate-800">Quản lý Audit</h1><p className="text-sm text-slate-500">Theo dõi vòng đời đánh giá và cấp chứng nhận VietGAP.</p></div>
+      <Button onClick={() => void fetchAudits()} variant="outline" className="gap-2"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Làm mới</Button>
+    </div>
+    <Card className="overflow-hidden rounded-xl border border-slate-200 shadow-sm"><Table>
+      <TableHeader className="bg-slate-50"><TableRow>
+        <TableHead>Mã Audit</TableHead><TableHead>Nông trại</TableHead><TableHead>Tiêu chuẩn</TableHead><TableHead>Ngày Audit</TableHead><TableHead>Điểm số</TableHead><TableHead>Trạng thái</TableHead><TableHead className="text-right">Hành động</TableHead>
+      </TableRow></TableHeader>
+      <TableBody>
+        {audits.map((audit) => <TableRow key={audit.id}>
+          <TableCell className="font-mono text-sm">#{audit.id}</TableCell><TableCell className="font-semibold">{audit.farmName ?? `Farm #${audit.farmId}`}</TableCell>
+          <TableCell><Badge variant="outline">{audit.standardCode ?? "-"}</Badge></TableCell><TableCell>{audit.scheduledDate ? new Date(audit.scheduledDate).toLocaleDateString("vi-VN") : "-"}</TableCell>
+          <TableCell>{audit.complianceScore ?? "-"}%</TableCell><TableCell><Badge className={statusClass(audit.status)}>{audit.status}</Badge></TableCell>
+          <TableCell className="text-right"><Button size="sm" variant="outline" onClick={() => setSelectedAudit(audit)}><ClipboardCheck className="mr-1 h-4 w-4" /> Chi tiết</Button></TableCell>
+        </TableRow>)}
+        {audits.length === 0 && !loading && <TableRow><TableCell colSpan={7} className="py-8 text-center text-slate-500">Không có dữ liệu Audit.</TableCell></TableRow>}
+      </TableBody>
+    </Table></Card>
+  </PageContainer>;
 }

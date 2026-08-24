@@ -1,5 +1,5 @@
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+﻿import { Button } from '@/shared/ui/button';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui/sheet';
 import { Download, Filter, History, Info } from 'lucide-react';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 

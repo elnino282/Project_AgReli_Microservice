@@ -1,4 +1,4 @@
-import { useIsMobile } from "@/components/ui/use-mobile";
+﻿import { useIsMobile } from "@/shared/lib/hooks/useIsMobile";
 import type { Farm } from "@/entities/farm";
 import { AddressDisplay, Badge } from "@/shared/ui";
 import { Checkbox } from "@/shared/ui/checkbox";

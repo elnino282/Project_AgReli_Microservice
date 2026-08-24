@@ -11,24 +11,24 @@ Ngày chốt Discovery: 2026-08-14. Tài liệu này chỉ mô tả code trên `
 - Runtime gồm 12 service: identity, crop-catalog, ai, farm, season, inventory, finance, incident, sustainability, marketplace, admin-reporting và delivery; `service-template` và `shared-config` không phải runtime service.
 - MySQL/Flyway là nguồn persistence hiện tại. PostgreSQL và Kubernetes mới là định hướng.
 - MinIO được dùng cho tài liệu/ảnh; Redis hiện tập trung ở farm-service.
-- Chroma có container nhưng ai-service đang loại Chroma auto-configuration và dùng dummy vector store, nên RAG chưa hoạt động thật.
-- `tempo` trong Compose hiện trỏ nhầm tới image `mailhog/mailhog:latest`; tracing backend chưa tồn tại dù service mang tên Tempo.
+- Chroma v2 là vector store thật của ai-service; Gemini embedding và metadata nguồn đi xuyên backend/OpenAPI/frontend. Khi AI key hoặc vector backend unavailable, luồng fail rõ thay vì trả nguồn giả.
+- Tempo 2.7.2 chạy single-binary, nhận OTLP 4317/4318 và query/readiness ở 3200; Grafana datasource đã provision.
 
 ## Ma trận route sống và nguồn dữ liệu
 
 | Persona | Route/luồng | Component sống | Nguồn dữ liệu thực tế | Trạng thái |
 |---|---|---|---|---|
-| Farmer | `/farmer/dashboard` | `FarmerDashboardPage` | season-service dashboard API; modal dự báo AI gửi recent logs hard-code | Lai thật/giả |
-| Farmer | `/farmer/farms/**` | Farm/plot/certification pages | farm-service + season lookups | Thật; plot delete guard và certification PHI scoring có fail-open; self-assessment chỉ local state |
-| Farmer | `/farmer/seasons/:id/workspace/**` | Season workspace | season, finance, inventory, sustainability services | Thật; soil/water/nutrient route đang bị comment |
-| Farmer/Employee | disease/field-log workspace | `DiseaseTrackingPage` và field log UI | season-service + inventory + ai-service | Thật một phần; field log SPRAY có thể sinh PHI 0 khi thuốc không match reference |
+| Farmer | `/farmer/dashboard` | `FarmerDashboardPage` | season dashboard API + sustainability FDN overview; AI harvest dùng season/log persisted | Thật; runtime demo verified |
+| Farmer | `/farmer/farms/**` | Farm/plot/certification pages | farm-service + season lookups | Thật; destructive/PHI guards fail-closed và self-assessment persist/reload server truth |
+| Farmer | `/farmer/seasons/:id/workspace/**` | Season workspace | season, finance, inventory, sustainability services | Thật; soil/water/nutrient route/tab đã mở và seed snapshot được backfill qua outbox |
+| Farmer/Employee | disease/field-log workspace | `DiseaseTrackingPage` và field log UI | season-service + inventory + ai-service | Thật; unknown pesticide không còn sinh PHI 0 và mutation rollback khi reference thiếu |
 | Employee | tasks/progress/payroll | Employee portal pages | season-service | Thật; chưa enforce chu kỳ báo cáo 24 giờ |
-| Admin | `/admin/cert-audits` | `AdminCertAuditsPage` | Client gọi contract không tồn tại rồi fallback mock | Core bị chặn/giả |
+| Admin | `/admin/cert-audits` | `AdminCertAuditsPage` | farm certification audit state machine persisted | Thật; ADMIN-only contract và runtime dashboard verified |
 | Farmer | marketplace products/orders/deliveries | Seller pages | marketplace-service + delivery-service | Thật một phần |
-| Buyer | marketplace/cart/checkout/orders | Buyer marketplace pages | marketplace + inventory; frontend tự tạo delivery sau order | Thật nhưng orchestration không nguyên tử; quote/fee/weight/order association tin browser và lệch giữa hai DB |
-| Admin | crop catalog variety delete | Admin variety route/controller | crop-catalog -> season lookup | Route thật; lookup URL chưa có controller và fallback false nên destructive guard fail-open |
+| Buyer | marketplace/cart/checkout/orders | Buyer marketplace pages | marketplace authoritative quote/order + delivery event consumer | Thật; browser không còn tự tạo delivery, quote/ownership/idempotency server-authoritative |
+| Admin | crop catalog variety delete | Admin variety route/controller | crop-catalog -> internal season reference guard | Route thật; downstream null/outage fail-closed |
 | Public | `/trace/:slug` | `PublicTracePage` | marketplace snapshot API | API thật; certification/PHI null hiển thị unknown, chỉ sellable lookup |
-| Public | farm store | `FarmStorePage` | farm/product API trộn `MOCK_STANDARDS` và activity log hard-code | Claim hữu cơ/nước/an toàn giả; phân loại S0 |
+| Public | farm store | `FarmStorePage` | farm/product API | Thật; mock standards/activity claims đã gỡ, thiếu dữ liệu hiển thị unknown/empty rõ |
 
 ## Contract xuyên service quan trọng
 
@@ -36,17 +36,15 @@ Ngày chốt Discovery: 2026-08-14. Tài liệu này chỉ mô tả code trên `
 - season -> farm/crop-catalog/identity/inventory/sustainability/ai: workspace enrichment, product lot, production diary và AI disease suggestion.
 - farm -> season: production diary khi export dossier.
 - sustainability/admin-reporting/incident/inventory: kết hợp REST và event-fed read model.
-- checkout hiện tạo marketplace order trước rồi để frontend gọi delivery-service; đây không phải transaction/saga backend. Marketplace dùng fee mặc định riêng, còn delivery tin quote fields từ browser.
-- farm/crop-catalog dùng season-service làm reference guard khi xóa plot/variety; các lookup URL hiện không được expose và fallback `false`, nên database-per-service không giữ được referential integrity khi downstream lỗi.
-- certification auto-populate ở farm-service đọc season/PHI qua Feign; empty fallback đang được diễn giải thành PHI PASS và persist vào score/status.
+- Checkout ghi marketplace order + outbox; delivery consumer xử lý `order.created` idempotent, lookup persisted context và consume quote authoritative.
+- farm/crop-catalog dùng internal season reference guard khi xóa plot/variety; downstream null/outage trả typed 503 và không mutate.
+- certification auto-populate đọc season/PHI qua Feign; chỉ verified-empty được PASS, outage trả typed 503 và không persist score/status.
 
 ## Phần có code nhưng chưa reachable hoặc chưa thật
 
-- `src/entities/dashboard` có hooks overview/today tasks/incidents/completeness/FDN nhưng không được dashboard route sống sử dụng; một số endpoint client chỉ còn trong legacy spec.
-- Season nutrient input, irrigation water analysis và soil test có component/API nhưng route/tab bị comment.
-- Admin certification backend có audit/nonconformity/corrective action/issue certificate, nhưng UI admin chưa dùng đúng contract.
-- AI chat gọi Gemini, nhưng vector search luôn rỗng do dummy vector store.
-- Delivery backend có công thức khoảng cách/cân nặng/cold-chain, nhưng checkout gửi trọng lượng và tọa độ giả định; create API còn nhận fee/weight/orderId trực tiếp từ buyer.
+- Các dashboard hook không có controller hiện hành vẫn không được wire chỉ vì tồn tại trong legacy spec; FDN overview có backend thật đã được route sống dùng.
+- Duplicate `src/pages/farmer/SeasonsPage.tsx` đã xóa; route canonical là `features/farmer/seasons/SeasonManagement`.
+- Các module chỉ có trong tài liệu ý tưởng vẫn ở product backlog; audit S3 không xây chen feature mới.
 
 ## Quy tắc cập nhật
 

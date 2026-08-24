@@ -1,6 +1,6 @@
-import type { LucideIcon } from 'lucide-react';
+﻿import type { LucideIcon } from 'lucide-react';
 import { CardHeader, CardTitle } from '@/shared/ui/card';
-import { cn } from '@/components/ui/utils';
+import { cn } from '@/shared/lib';
 
 export type SectionCardHeaderProps = {
   icon: LucideIcon;

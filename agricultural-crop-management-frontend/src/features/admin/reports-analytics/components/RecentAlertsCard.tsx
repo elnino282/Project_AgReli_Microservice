@@ -1,6 +1,6 @@
-import { AlertCircle, Clock } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+﻿import { AlertCircle, Clock } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Badge } from '@/shared/ui/badge';
 import type { SystemAlert } from '../types';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 

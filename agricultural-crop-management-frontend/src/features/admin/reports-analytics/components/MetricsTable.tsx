@@ -1,6 +1,6 @@
-import { Download, TrendingUp, TrendingDown } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+﻿import { Download, TrendingUp, TrendingDown } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
 import {
     Table,
     TableBody,
@@ -8,7 +8,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table';
+} from '@/shared/ui/table';
 import type { MetricData } from '../types';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 

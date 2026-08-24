@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+﻿import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Bot, RotateCcw, Send, ShieldCheck, ShoppingBasket, Sparkles } from 'lucide-react';
-import { MarkdownMessage } from '@/components/MarkdownMessage';
+import { MarkdownMessage } from '@/shared/ui/markdown-message';
 import { AiChatSources, useBuyerAiChatSession } from '@/features/ai';
 import { cn } from '@/shared/lib';
 import {

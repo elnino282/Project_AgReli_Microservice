@@ -1,10 +1,10 @@
-import { Save, TestTube2, Eye, EyeOff, Copy, Cloud, DollarSign, Cpu, Zap } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+﻿import { Save, TestTube2, Eye, EyeOff, Copy, Cloud, DollarSign, Cpu, Zap } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Badge } from '@/shared/ui/badge';
+import { Label } from '@/shared/ui/label';
+import { Input } from '@/shared/ui/input';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion';
 import type { Integration } from '../types';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 

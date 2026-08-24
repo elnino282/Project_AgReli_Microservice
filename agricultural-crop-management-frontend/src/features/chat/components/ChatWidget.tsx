@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { Maximize2, Minus, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { cn } from "@/shared/lib";
 import { useChatWidget } from "../hooks/useChatWidget";
 import { ChatWidgetConversationList } from "./ChatWidgetConversationList";

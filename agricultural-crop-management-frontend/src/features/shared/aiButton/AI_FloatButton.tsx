@@ -6,7 +6,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "../../../components/ui/tooltip";
+} from "@/shared/ui/tooltip";
 
 interface AI_FloatButtonProps {
   onClick: () => void;

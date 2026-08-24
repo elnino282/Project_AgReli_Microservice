@@ -1,22 +1,24 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { sendAiChatMessage } from '@/entities/ai/api/aiChatService';
+import { aiApi } from '@/entities/ai/api/client';
 import { useBuyerAiChatSession } from './useBuyerAiChatSession';
 
-vi.mock('@/entities/ai/api/aiChatService', () => ({
-    sendAiChatMessage: vi.fn(),
+vi.mock('@/entities/ai/api/client', () => ({
+    aiApi: { buyerChat: vi.fn() },
 }));
 
-const sendAiChatMessageMock = vi.mocked(sendAiChatMessage);
+const buyerChatMock = vi.mocked(aiApi.buyerChat);
 
 describe('useBuyerAiChatSession', () => {
     beforeEach(() => {
-        sendAiChatMessageMock.mockReset();
+        buyerChatMock.mockReset();
     });
 
     it('stores user and assistant messages when buyer chat succeeds', async () => {
-        sendAiChatMessageMock.mockResolvedValue({
-            answer: 'Check traceability first.',
+        buyerChatMock.mockResolvedValue({
+            userMessage: 'Should I buy this lot?',
+            buyerContext: 'black beans',
+            assistantMessage: 'Check traceability first.',
             sources: [{ file_name: 'buyer.md', heading: 'Traceability', page: 2 }],
         });
 
@@ -28,8 +30,10 @@ describe('useBuyerAiChatSession', () => {
             await result.current.sendMessage('  Should I buy this lot?  ', ' black beans ');
         });
 
-        expect(sendAiChatMessageMock).toHaveBeenCalledWith(expect.stringContaining('black beans'));
-        expect(sendAiChatMessageMock).toHaveBeenCalledWith(expect.stringContaining('Should I buy this lot?'));
+        expect(buyerChatMock).toHaveBeenCalledWith({
+            userMessage: 'Should I buy this lot?',
+            buyerContext: ' black beans ',
+        });
 
         await waitFor(() => {
             expect(result.current.messages).toHaveLength(3);
@@ -45,7 +49,7 @@ describe('useBuyerAiChatSession', () => {
     });
 
     it('adds the configured fallback message when buyer chat fails', async () => {
-        sendAiChatMessageMock.mockRejectedValue(new Error('network'));
+        buyerChatMock.mockRejectedValue(new Error('network'));
 
         const { result } = renderHook(() =>
             useBuyerAiChatSession({

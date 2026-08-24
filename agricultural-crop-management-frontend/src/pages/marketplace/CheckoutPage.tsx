@@ -13,7 +13,7 @@ import type {
   MarketplaceCart,
   MarketplaceCartItem,
 } from "@/shared/api";
-import { deliveryApi, marketplaceApi } from "@/shared/api";
+import { marketplaceApi } from "@/shared/api";
 import {
   useCheckoutValidation,
   useMarketplaceAddresses,
@@ -1024,15 +1024,7 @@ export function CheckoutPage() {
                       })),
                     });
 
-                    // Register delivery orders for each split order
-                    for (const orderQuote of result.orderShippingQuotes) {
-                      await deliveryApi.createDeliveryOrder({
-                        marketplaceOrderId: orderQuote.orderId,
-                        shippingQuoteId: orderQuote.shippingQuoteId,
-                      });
-                    }
-
-                    toast.success('Đặt hàng thành công.');
+                    toast.success('Đơn hàng đã được tiếp nhận. Hệ thống đang khởi tạo vận chuyển.');
                     const firstOrderId = result.orderIds[0];
                     if (firstOrderId) {
                       navigate(`/marketplace/orders/${firstOrderId}`);

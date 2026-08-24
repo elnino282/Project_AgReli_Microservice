@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+﻿import type { ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -24,7 +24,7 @@ vi.mock('sonner', () => ({
     },
 }));
 
-vi.mock('@/components/ui/select', () => {
+vi.mock('@/shared/ui/select', () => {
     const Select = ({
         value,
         onValueChange,

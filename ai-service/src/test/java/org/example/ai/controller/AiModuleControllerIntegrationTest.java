@@ -11,7 +11,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.example.ai.service.GeminiService;
+import org.example.ai.service.RagChatResult;
 import org.junit.jupiter.api.Test;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -40,8 +42,11 @@ class AiModuleControllerIntegrationTest {
     @Test
     @WithMockUser(roles = "FARMER")
     void chat_returnsAssistantReply() throws Exception {
-        when(geminiService.chatAsAgriculturalExpert(eq("How to improve soil?"), eq("rice")))
-                .thenReturn("Use compost and rotate crops.");
+        when(geminiService.chatAsAgriculturalExpertWithSources(eq("How to improve soil?"), eq("rice")))
+                .thenReturn(new RagChatResult(
+                        "Use compost and rotate crops.",
+                        List.of(new RagChatResult.RagSource(
+                                "vietgap.md", "Soil", 3, "Use mature compost."))));
 
         mockMvc.perform(post("/api/v1/farmer/ai/chat")
                         .with(csrf())
@@ -55,14 +60,21 @@ class AiModuleControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.userMessage").value("How to improve soil?"))
                 .andExpect(jsonPath("$.result.cropContext").value("rice"))
-                .andExpect(jsonPath("$.result.assistantMessage").value("Use compost and rotate crops."));
+                .andExpect(jsonPath("$.result.assistantMessage").value("Use compost and rotate crops."))
+                .andExpect(jsonPath("$.result.sources[0].file_name").value("vietgap.md"))
+                .andExpect(jsonPath("$.result.sources[0].heading").value("Soil"))
+                .andExpect(jsonPath("$.result.sources[0].page").value(3))
+                .andExpect(jsonPath("$.result.sources[0].snippet").value("Use mature compost."));
     }
 
     @Test
     @WithMockUser(roles = "BUYER")
     void buyerChat_returnsAssistantReply() throws Exception {
-        when(geminiService.chatAsBuyerProcurementExpert(eq("Should I buy this lot?"), eq("black beans")))
-                .thenReturn("Check traceability and delivery terms.");
+        when(geminiService.chatAsBuyerProcurementExpertWithSources(eq("Should I buy this lot?"), eq("black beans")))
+                .thenReturn(new RagChatResult(
+                        "Check traceability and delivery terms.",
+                        List.of(new RagChatResult.RagSource(
+                                "traceability.md", "Lot verification", null, "Verify the public trace."))));
 
         mockMvc.perform(post("/api/v1/buyer/ai/chat")
                         .with(csrf())
@@ -76,7 +88,8 @@ class AiModuleControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.userMessage").value("Should I buy this lot?"))
                 .andExpect(jsonPath("$.result.buyerContext").value("black beans"))
-                .andExpect(jsonPath("$.result.assistantMessage").value("Check traceability and delivery terms."));
+                .andExpect(jsonPath("$.result.assistantMessage").value("Check traceability and delivery terms."))
+                .andExpect(jsonPath("$.result.sources[0].file_name").value("traceability.md"));
     }
 
     @Test

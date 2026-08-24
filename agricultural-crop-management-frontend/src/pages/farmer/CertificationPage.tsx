@@ -132,11 +132,21 @@ export default function CertificationPage() {
     if (!farmId) return;
     try {
       setExporting(true);
-      const blob = await certificationApi.exportDossier(parseInt(farmId));
-      const url = window.URL.createObjectURL(new Blob([blob]));
+      const dossierDocument = await certificationApi.exportDossier(parseInt(farmId));
+      const fileUrl = dossierDocument.fileUrl?.trim();
+      const isPersistedDocumentUrl = fileUrl != null && (
+        fileUrl.startsWith("data:text/plain;base64,") ||
+        fileUrl.startsWith("https://") ||
+        fileUrl.startsWith("http://") ||
+        (fileUrl.startsWith("/") && !fileUrl.startsWith("//"))
+      );
+      if (!isPersistedDocumentUrl) {
+        throw new Error("Backend did not return a downloadable dossier URL");
+      }
+
       const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `HoSoVietGAP_${farmId}.zip`); // Assuming zip, could be pdf
+      link.href = fileUrl;
+      link.setAttribute("download", `HoSoVietGAP_${farmId}_${dossierDocument.id}.txt`);
       document.body.appendChild(link);
       link.click();
       link.remove();

@@ -19,5 +19,6 @@ public class AppProperties {
         private String baseUrl;
         private String apiKey;
         private String model;
+        private String embeddingModel;
     }
 }

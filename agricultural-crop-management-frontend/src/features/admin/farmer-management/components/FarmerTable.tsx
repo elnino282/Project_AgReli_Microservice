@@ -1,11 +1,11 @@
-import {
+﻿import {
     MoreVertical, Edit, Trash2, Lock, Key, History,
     ChevronDown, Mail, Phone, Calendar, Clock,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Badge } from '@/shared/ui/badge';
+import { Checkbox } from '@/shared/ui/checkbox';
 import {
     Table,
     TableBody,
@@ -13,15 +13,15 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table';
+} from '@/shared/ui/table';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+} from '@/shared/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
 import { Farmer } from '../types';
 import { ROLE_BADGE_COLORS, STATUS_BADGE_COLORS } from '../constants';
 import { useI18n } from '@/shared/lib/hooks/useI18n';

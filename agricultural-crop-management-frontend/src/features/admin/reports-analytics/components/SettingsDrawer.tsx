@@ -1,11 +1,11 @@
-import { Settings, Check } from 'lucide-react';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
+﻿import { Settings, Check } from 'lucide-react';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui/sheet';
+import { Button } from '@/shared/ui/button';
+import { Label } from '@/shared/ui/label';
+import { Switch } from '@/shared/ui/switch';
+import { Input } from '@/shared/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
+import { Separator } from '@/shared/ui/separator';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 
 interface SettingsDrawerProps {

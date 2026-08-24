@@ -1,4 +1,4 @@
-import { MarkdownMessage } from '@/components/MarkdownMessage';
+﻿import { MarkdownMessage } from '@/shared/ui/markdown-message';
 import { AiChatSources, useAiChatSession } from '@/features/ai';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 import { cn } from '@/shared/lib';

@@ -1,8 +1,8 @@
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+﻿import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table';
+import { Badge } from '@/shared/ui/badge';
+import { Skeleton } from '@/shared/ui/skeleton';
 import { usePreferences } from '@/shared/contexts';
 import { convertWeight, getWeightUnitLabel } from '@/shared/lib';
 import type { YieldReport } from '@/entities/user/api/api.admin';

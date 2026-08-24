@@ -1,11 +1,11 @@
-import { Button } from '@/components/ui/button';
+﻿import { Button } from '@/shared/ui/button';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
+} from '@/shared/ui/select';
 import { ITEMS_PER_PAGE_OPTIONS } from '../constants';
 import { useI18n } from '@/shared/lib/hooks/useI18n';
 
