@@ -16,13 +16,27 @@ import {
   Building,
   Download,
   ClipboardList,
+  ShieldCheck,
+  Clock3,
+  Microscope,
+  MapPin,
+  Sprout,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   certificationApi,
+  CertificationAudit,
   CertificationDetails,
+  FarmDocumentResponse,
   CertificationItemDetail,
 } from "@/entities/farm/api/certificationApi";
+import { seasonsApi } from "@/entities/season/api/seasonsApi";
+import type { Season } from "@/entities/season/model/types";
+import {
+  CERTIFICATION_STATUS_META,
+  CERTIFICATION_WORKFLOW_STEPS,
+  getWorkflowStepState,
+} from "@/entities/farm/model/certificationWorkflow";
 import {
   Button,
   Card,
@@ -59,6 +73,8 @@ export default function CertificationPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [details, setDetails] = useState<CertificationDetails | null>(null);
+  const [audits, setAudits] = useState<CertificationAudit[]>([]);
+  const [documents, setDocuments] = useState<FarmDocumentResponse[]>([]);
   const [activeTab, setActiveTab] = useState<string>("all");
   
   // Dialog state
@@ -68,13 +84,24 @@ export default function CertificationPage() {
   const [editNotes, setEditNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [scopeDialogOpen, setScopeDialogOpen] = useState(false);
+  const [availableSeasons, setAvailableSeasons] = useState<Season[]>([]);
+  const [selectedScopeAreas, setSelectedScopeAreas] = useState<Record<number, string>>({});
+  const [scopeLoading, setScopeLoading] = useState(false);
 
   const fetchCertificationDetails = async (showToast = false) => {
     if (!farmId) return;
     try {
       if (showToast) setLoading(true);
-      const data = await certificationApi.getCertificationDetails(parseInt(farmId));
+      const farmIdNumber = parseInt(farmId);
+      const data = await certificationApi.getCertificationDetails(farmIdNumber);
       setDetails(data);
+      const [auditResult, documentResult] = await Promise.allSettled([
+        certificationApi.getFarmAudits(farmIdNumber),
+        certificationApi.getFarmDocuments(farmIdNumber),
+      ]);
+      setAudits(auditResult.status === "fulfilled" ? auditResult.value : []);
+      setDocuments(documentResult.status === "fulfilled" ? documentResult.value : []);
       if (showToast) toast.success("Đã đồng bộ dữ liệu VietGAP mới nhất.");
     } catch (error) {
       console.error("Failed to load certification details", error);
@@ -203,22 +230,72 @@ export default function CertificationPage() {
     }
   };
 
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case "IN_PROGRESS":
-        return { label: "Đang đánh giá", color: "text-amber-600 bg-amber-50 border-amber-200" };
-      case "READY_TO_APPLY":
-        return { label: "Đủ điều kiện nộp đơn", color: "text-emerald-600 bg-emerald-50 border-emerald-200" };
-      case "APPLIED":
-        return { label: "Đã nộp đơn - Chờ thẩm định", color: "text-blue-600 bg-blue-50 border-blue-200" };
-      case "CERTIFIED":
-        return { label: "Đã được chứng nhận VietGAP", color: "text-emerald-700 bg-emerald-100 border-emerald-300" };
-      default:
-        return { label: "Chưa kích hoạt", color: "text-slate-600 bg-slate-50 border-slate-200" };
+  const statusMeta = CERTIFICATION_STATUS_META[details.status] ?? {
+    label: details.status,
+    tone: "text-slate-600 bg-slate-50 border-slate-200",
+  };
+
+  const openScopeDialog = async () => {
+    if (!farmId) return;
+    setScopeLoading(true);
+    try {
+      const page = await seasonsApi.searchSeasons({
+        farmId: Number(farmId), page: 0, size: 100,
+      });
+      setAvailableSeasons(Array.isArray(page.items) ? page.items : []);
+      setSelectedScopeAreas(Object.fromEntries(
+        (details?.scopes ?? []).map((scope) => [scope.seasonId, String(scope.registeredAreaHa)]),
+      ));
+      setScopeDialogOpen(true);
+    } catch (error) {
+      toast.error("Không thể tải danh sách mùa vụ để thiết lập phạm vi chứng nhận.");
+    } finally {
+      setScopeLoading(false);
     }
   };
 
-  const statusInfo = getStatusInfo(details.status);
+  const handleSaveScopes = async () => {
+    if (!farmId) return;
+    const scopes = Object.entries(selectedScopeAreas)
+      .filter(([, area]) => Number(area) > 0)
+      .map(([seasonId, area]) => ({ seasonId: Number(seasonId), registeredAreaHa: Number(area) }));
+    if (scopes.length === 0) {
+      toast.error("Hãy chọn ít nhất một mùa vụ và nhập diện tích đăng ký.");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      await certificationApi.updateScopes(Number(farmId), scopes);
+      toast.success("Đã lưu phạm vi sản phẩm và vùng sản xuất được đăng ký.");
+      setScopeDialogOpen(false);
+      await fetchCertificationDetails();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Không thể cập nhật phạm vi chứng nhận.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  const mandatoryItems = details.items.filter((item) => item.isMandatory);
+  const mandatoryPassed = mandatoryItems.filter((item) => item.status === "PASS").length;
+  const latestAudit = [...audits].sort((a, b) =>
+    (b.createdAt || "").localeCompare(a.createdAt || "")
+  )[0];
+  const recommendedDocuments = [
+    { type: "SOIL_TEST_REPORT", label: "Kết quả xét nghiệm đất" },
+    { type: "WATER_TEST_REPORT", label: "Kết quả xét nghiệm nước" },
+    { type: "INTERNAL_AUDIT", label: "Biên bản đánh giá nội bộ" },
+  ].map((requirement) => ({
+    ...requirement,
+    document: documents.find((document) => document.documentType === requirement.type),
+  }));
+
+  const getApplicationButtonLabel = () => {
+    if (submitting) return "Đang xử lý...";
+    if (["IN_PROGRESS", "READY_TO_APPLY"].includes(details.status)) return "Nộp đơn chứng nhận VietGAP";
+    if (details.status === "CERTIFIED") return "Đã được cấp chứng nhận";
+    if (details.status === "PUBLISHED") return "Chứng nhận đã được công khai";
+    return statusMeta.label;
+  };
 
   // Circular progress helper
   const radius = 60;
@@ -248,6 +325,14 @@ export default function CertificationPage() {
             className="min-h-[44px] flex items-center gap-2 shadow-sm transition hover:opacity-90 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
           >
             <AlertCircle className="w-4 h-4 text-amber-500" /> Quản lý lỗi
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/farmer/farm-documents?farmId=${farmId}`)}
+            className="min-h-[44px] flex items-center gap-2 shadow-sm"
+          >
+            <FileText className="w-4 h-4 text-emerald-600" /> Hồ sơ nông trại
           </Button>
           <Button
             variant="outline"
@@ -285,8 +370,8 @@ export default function CertificationPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-center md:justify-start gap-2">
                   <span className="text-sm font-medium text-slate-600">Trạng thái hồ sơ:</span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusInfo.color}`}>
-                    {statusInfo.label}
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusMeta.tone}`}>
+                    {statusMeta.label}
                   </span>
                 </div>
                 {details.appliedAt && (
@@ -297,6 +382,14 @@ export default function CertificationPage() {
                 {details.certifiedAt && (
                   <p className="text-xs text-slate-500 flex items-center justify-center md:justify-start gap-1">
                     <Calendar className="w-3.5 h-3.5" /> Ngày cấp: {new Date(details.certifiedAt).toLocaleDateString("vi-VN")} - Hết hạn: {details.expiryDate}
+                  </p>
+                )}
+                {details.certificateNumber && (
+                  <p className="text-xs text-slate-500">Số chứng nhận: <strong>{details.certificateNumber}</strong></p>
+                )}
+                {details.nextPeriodicReviewDate && (
+                  <p className="text-xs text-slate-500 flex items-center justify-center md:justify-start gap-1">
+                    <Clock3 className="w-3.5 h-3.5" /> Kiểm tra định kỳ tiếp theo: {new Date(details.nextPeriodicReviewDate).toLocaleDateString("vi-VN")}
                   </p>
                 )}
               </div>
@@ -341,9 +434,9 @@ export default function CertificationPage() {
                 </div>
               </div>
 
-              {details.complianceScore < 80 ? (
+              {!details.isEligible ? (
                 <div className="flex items-center gap-1.5 text-rose-600 bg-rose-50 px-3 py-1 rounded-full text-xs font-semibold border border-rose-100">
-                  <AlertCircle className="w-3.5 h-3.5" /> Yêu cầu tối thiểu 80%
+                  <AlertCircle className="w-3.5 h-3.5" /> Chưa đủ điểm hoặc minh chứng bắt buộc
                 </div>
               ) : (
                 <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full text-xs font-semibold border border-emerald-100">
@@ -380,13 +473,7 @@ export default function CertificationPage() {
               disabled={!details.isEligible || !["IN_PROGRESS", "READY_TO_APPLY"].includes(details.status) || submitting}
               onClick={handleApply}
             >
-              {details.status === "APPLIED"
-                ? "Đã gửi đơn đăng ký"
-                : details.status === "CERTIFIED"
-                ? "Nông trại đã đạt chứng nhận"
-                : submitting
-                ? "Đang xử lý..."
-                : "Nộp Đơn Chứng Nhận VietGAP"}
+              {getApplicationButtonLabel()}
             </Button>
             <p className="text-[10px] text-center text-slate-400">
               * Mọi thông tin sai lệch sẽ chịu trách nhiệm hoàn toàn trước pháp luật.
@@ -394,6 +481,203 @@ export default function CertificationPage() {
           </div>
         </Card>
       </div>
+
+      <Card className="mb-6 border border-emerald-200 shadow-sm rounded-2xl overflow-hidden">
+        <CardHeader className="border-b border-emerald-100 bg-emerald-50/70 md:flex-row md:items-center md:justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <MapPin className="h-5 w-5 text-emerald-700" /> Phạm vi được đăng ký chứng nhận
+            </CardTitle>
+            <CardDescription className="mt-1">
+              VietGAP chỉ áp dụng cho đúng sản phẩm, mùa vụ, thửa đất và diện tích dưới đây; không áp dụng chung cho toàn bộ nông trại.
+            </CardDescription>
+          </div>
+          {['IN_PROGRESS', 'READY_TO_APPLY'].includes(details.status) && (
+            <Button variant="outline" disabled={scopeLoading} onClick={openScopeDialog}>
+              {scopeLoading ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <ClipboardList className="mr-2 h-4 w-4" />}
+              Thiết lập phạm vi
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="p-5">
+          {(details.scopes ?? []).length > 0 ? (
+            <div className="grid gap-3 md:grid-cols-2">
+              {details.scopes.map((scope) => (
+                <div key={scope.id} className="rounded-xl border border-slate-200 bg-white p-4">
+                  <div className="mb-2 flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2 font-semibold text-slate-800">
+                      <Sprout className="h-4 w-4 text-emerald-600" />
+                      {scope.cropName}{scope.varietyName ? ` – ${scope.varietyName}` : ''}
+                    </div>
+                    <Badge className="bg-emerald-100 text-emerald-800">Trong phạm vi</Badge>
+                  </div>
+                  <div className="space-y-1 text-sm text-slate-600">
+                    <p>Thửa đất: <strong>{scope.plotName}</strong> (#{scope.plotId})</p>
+                    <p>Mùa vụ: #{scope.seasonId}</p>
+                    <p>Diện tích chứng nhận: <strong>{scope.registeredAreaHa} ha</strong></p>
+                    <p>Sản lượng dự kiến: {scope.expectedYieldKg != null ? `${scope.expectedYieldKg.toLocaleString('vi-VN')} kg` : 'Chưa khai báo'}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              Chưa có sản phẩm hoặc vùng sản xuất nào trong phạm vi. Hồ sơ chưa được phép đăng ký dù checklist đạt 100%.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-6 border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+        <CardHeader className="bg-slate-50/80 border-b border-slate-100">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <ShieldCheck className="w-5 h-5 text-emerald-700" /> Lộ trình chứng nhận của nông trại
+          </CardTitle>
+          <CardDescription>
+            Trạng thái được cập nhật từ checklist, lịch đánh giá và kết quả xác minh thực tế trên hệ thống.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-5">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {CERTIFICATION_WORKFLOW_STEPS.map((step, index) => {
+              const state = getWorkflowStepState(index, details.status);
+              return (
+                <div
+                  key={step.id}
+                  className={`rounded-xl border p-4 ${
+                    state === "completed"
+                      ? "border-emerald-200 bg-emerald-50/70"
+                      : state === "current"
+                        ? "border-blue-300 bg-blue-50 ring-2 ring-blue-100"
+                        : "border-slate-200 bg-white"
+                  }`}
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+                      state === "completed"
+                        ? "bg-emerald-600 text-white"
+                        : state === "current"
+                          ? "bg-blue-600 text-white"
+                          : "bg-slate-100 text-slate-500"
+                    }`}>
+                      {state === "completed" ? <Check className="h-4 w-4" /> : index + 1}
+                    </span>
+                    <span className="text-sm font-semibold text-slate-800">{step.label}</span>
+                  </div>
+                  <p className="text-xs leading-5 text-slate-500">{step.description}</p>
+                </div>
+              );
+            })}
+          </div>
+          {CERTIFICATION_STATUS_META[details.status]?.terminal && (
+            <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+              Hồ sơ đang ở trạng thái <strong>{statusMeta.label}</strong>. Hãy xem ghi chú đánh giá và liên hệ đơn vị chứng nhận trước khi lập hồ sơ mới.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="mb-6 grid gap-6 xl:grid-cols-3">
+        <Card className="border border-slate-200 shadow-sm rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-lg">Khi nào nên đăng ký?</CardTitle>
+            <CardDescription>Chỉ nộp khi cả hai điều kiện bắt buộc đều hoàn thành.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <ReadinessRow
+              passed={(details.scopes ?? []).length > 0}
+              label={`${(details.scopes ?? []).length} phạm vi sản phẩm/thửa đất đã đăng ký`}
+            />
+            <ReadinessRow
+              passed={details.complianceScore >= 80}
+              label={`Điểm tuân thủ ≥ 80% (${details.complianceScore.toFixed(0)}%)`}
+            />
+            <ReadinessRow
+              passed={details.missingMandatoryEvidenceCount === 0}
+              label={`${mandatoryPassed}/${mandatoryItems.length} tiêu chí bắt buộc đã đạt`}
+            />
+            {details.missingMandatoryEvidenceCount > 0 && (
+              <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
+                Còn {details.missingMandatoryEvidenceCount} tiêu chí bắt buộc cần hoàn thiện. Mở bảng checklist bên dưới để xem chi tiết.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border border-slate-200 shadow-sm rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-lg">Bộ hồ sơ hỗ trợ</CardTitle>
+            <CardDescription>Chuẩn bị trước khi đánh giá; trạng thái xác minh do Admin cập nhật.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {recommendedDocuments.map(({ type, label, document }) => (
+              <div key={type} className="flex items-center justify-between gap-3 text-sm">
+                <span className="text-slate-700">{label}</span>
+                <Badge variant="outline" className={document ? "border-blue-200 bg-blue-50 text-blue-700" : "border-slate-200 text-slate-500"}>
+                  {document ? document.verificationStatus : "Chưa tải lên"}
+                </Badge>
+              </div>
+            ))}
+            <Button
+              variant="outline"
+              className="mt-2 w-full gap-2"
+              onClick={() => navigate(`/farmer/farm-documents?farmId=${farmId}`)}
+            >
+              <Upload className="h-4 w-4" /> Quản lý hồ sơ nông trại
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-slate-200 shadow-sm rounded-2xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Microscope className="h-5 w-5 text-indigo-600" /> Đánh giá gần nhất
+            </CardTitle>
+            <CardDescription>Phỏng vấn, lấy mẫu và điểm không phù hợp.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {latestAudit ? (
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center justify-between"><span className="text-slate-500">Trạng thái</span><Badge variant="outline">{latestAudit.status}</Badge></div>
+                <div className="flex items-center justify-between"><span className="text-slate-500">Lịch đánh giá</span><span>{latestAudit.scheduledDate ? new Date(latestAudit.scheduledDate).toLocaleDateString("vi-VN") : "Chưa có"}</span></div>
+                <div className="flex items-center justify-between"><span className="text-slate-500">Tổ chức</span><span className="text-right">{latestAudit.auditorOrgName || "Chưa phân công"}</span></div>
+                <div className="flex items-center justify-between"><span className="text-slate-500">Điểm không phù hợp</span><span>{latestAudit.nonconformities?.length || 0}</span></div>
+                {latestAudit.interviewNotes && <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600"><strong>Phỏng vấn:</strong> {latestAudit.interviewNotes}</p>}
+                {latestAudit.sampleCollectionNotes && <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600"><strong>Lấy mẫu:</strong> {latestAudit.sampleCollectionNotes}</p>}
+              </div>
+            ) : (
+              <div className="flex min-h-32 flex-col items-center justify-center text-center text-sm text-slate-500">
+                <Clock3 className="mb-2 h-7 w-7 text-slate-300" />
+                Chưa có lịch đánh giá từ tổ chức chứng nhận.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {details.status === "CERTIFIED" && (
+        <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="font-semibold text-emerald-900">Đã được cấp giấy – còn một bước trước khi công khai</p>
+            <p className="text-sm text-emerald-800">Tải bản giấy chứng nhận lên Hồ sơ nông trại để Admin đối chiếu và duyệt public.</p>
+          </div>
+          <Button onClick={() => navigate(`/farmer/farm-documents?farmId=${farmId}&openUpload=1&type=CERTIFICATE`)} className="gap-2 bg-emerald-700 hover:bg-emerald-800">
+            <Upload className="h-4 w-4" /> Tải giấy chứng nhận
+          </Button>
+        </div>
+      )}
+
+      {details.status === "PERIODIC_REVIEW_DUE" && (
+        <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-orange-200 bg-orange-50 p-5 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="font-semibold text-orange-900">Đến hạn kiểm tra định kỳ</p>
+            <p className="text-sm text-orange-800">Bổ sung biên bản kiểm tra để nhân viên và Admin tiếp tục đối chiếu hồ sơ.</p>
+          </div>
+          <Button onClick={() => navigate(`/farmer/farm-documents?farmId=${farmId}&openUpload=1&type=PERIODIC_INSPECTION`)} className="gap-2 bg-orange-700 hover:bg-orange-800">
+            <Upload className="h-4 w-4" /> Tải biên bản định kỳ
+          </Button>
+        </div>
+      )}
 
       {/* Checklist items table */}
       <Card className="border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
@@ -491,6 +775,86 @@ export default function CertificationPage() {
         </CardContent>
       </Card>
 
+      <Dialog open={scopeDialogOpen} onOpenChange={setScopeDialogOpen}>
+        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-emerald-700" />
+              Thiết lập phạm vi xin chứng nhận
+            </DialogTitle>
+            <DialogDescription>
+              Chọn đúng mùa vụ đại diện cho sản phẩm và thửa đất được đánh giá. Diện tích đăng ký không được vượt quá diện tích thửa đất.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            {availableSeasons.length === 0 ? (
+              <div className="rounded-xl border border-dashed p-8 text-center text-sm text-slate-500">
+                Nông trại chưa có mùa vụ đủ thông tin cây trồng và thửa đất để đăng ký.
+              </div>
+            ) : availableSeasons.map((season) => {
+              const selected = selectedScopeAreas[season.id] !== undefined;
+              return (
+                <div
+                  key={season.id}
+                  className={`grid gap-4 rounded-xl border p-4 md:grid-cols-[auto_1fr_180px] md:items-center ${selected ? "border-emerald-300 bg-emerald-50/50" : "border-slate-200"}`}
+                >
+                  <input
+                    aria-label={`Chọn ${season.seasonName}`}
+                    type="checkbox"
+                    className="h-5 w-5 accent-emerald-700"
+                    checked={selected}
+                    onChange={(event) => setSelectedScopeAreas((current) => {
+                      const next = { ...current };
+                      if (event.target.checked) next[season.id] = next[season.id] || "1";
+                      else delete next[season.id];
+                      return next;
+                    })}
+                  />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-slate-800">{season.seasonName}</p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {season.cropName || `Cây trồng #${season.cropId}`}
+                      {season.varietyName ? ` · ${season.varietyName}` : ""}
+                    </p>
+                    <p className="mt-1 flex flex-wrap gap-x-3 text-xs text-slate-500">
+                      <span>Thửa đất: {season.plotName || `#${season.plotId}`}</span>
+                      <span>Sản lượng dự kiến: {season.expectedYieldKg?.toLocaleString("vi-VN") ?? "Chưa khai báo"} kg</span>
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor={`scope-area-${season.id}`}>Diện tích đăng ký (ha)</Label>
+                    <Input
+                      id={`scope-area-${season.id}`}
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      disabled={!selected}
+                      value={selectedScopeAreas[season.id] ?? ""}
+                      onChange={(event) => setSelectedScopeAreas((current) => ({
+                        ...current,
+                        [season.id]: event.target.value,
+                      }))}
+                      placeholder="Ví dụ: 5"
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+            Sau khi nộp hồ sơ, phạm vi bị khóa để đảm bảo hồ sơ đánh giá không bị thay đổi. Muốn mở rộng sản phẩm hoặc thửa đất cần thực hiện đánh giá bổ sung theo quy trình chứng nhận.
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" onClick={() => setScopeDialogOpen(false)}>Hủy</Button>
+            <Button className="bg-emerald-700 hover:bg-emerald-800" disabled={submitting} onClick={handleSaveScopes}>
+              <Save className="mr-2 h-4 w-4" /> {submitting ? "Đang lưu..." : "Lưu phạm vi"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit Evidence Dialog */}
       <Dialog open={editingItem !== null} onOpenChange={(open) => !open && setEditingItem(null)}>
         <DialogContent className="max-w-md rounded-2xl">
@@ -565,5 +929,18 @@ export default function CertificationPage() {
         </DialogContent>
       </Dialog>
     </PageContainer>
+  );
+}
+
+function ReadinessRow({ passed, label }: { passed: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-slate-100 p-3 text-sm">
+      {passed ? (
+        <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+      ) : (
+        <AlertCircle className="h-5 w-5 shrink-0 text-amber-500" />
+      )}
+      <span className={passed ? "text-slate-700" : "text-slate-600"}>{label}</span>
+    </div>
   );
 }

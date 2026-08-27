@@ -394,6 +394,7 @@ public class ProductWarehouseService {
                 .productId(lot.getProductId())
                 .productName(lot.getProductName())
                 .productVariant(lot.getProductVariant())
+                .seasonId(lot.getSeasonId())
                 .farmId(lot.getFarmId())
                 .plotId(lot.getPlotId())
                 .harvestId(lot.getHarvestId())
@@ -416,6 +417,9 @@ public class ProductWarehouseService {
                 .cropCategory(lot.getCropCategory())
                 .hasTemperatureAlert(hasTemperatureAlert)
                 .expiryDate(lot.getExpiryDate())
+                .packagingType(lot.getPackagingType())
+                .packagingCount(lot.getPackagingCount())
+                .processingType(lot.getProcessingType())
                 .build();
     }
 }

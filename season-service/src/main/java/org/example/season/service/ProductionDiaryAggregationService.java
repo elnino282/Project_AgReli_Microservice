@@ -1,6 +1,7 @@
 package org.example.season.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.season.client.SustainabilityServiceClient;
 import org.example.season.dto.response.ProductionDiaryEventDto;
 import org.example.season.entity.FieldLog;
@@ -9,6 +10,8 @@ import org.example.season.entity.PesticideRecord;
 import org.example.season.repository.FieldLogRepository;
 import org.example.season.repository.HarvestRepository;
 import org.example.season.repository.PesticideRecordRepository;
+import org.example.season.exception.AppException;
+import org.example.season.exception.ErrorCode;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -17,6 +20,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductionDiaryAggregationService {
 
     private final FieldLogRepository fieldLogRepository;
@@ -69,6 +73,7 @@ public class ProductionDiaryAggregationService {
         // 4. Lấy từ sustainability-service
         try {
             List<SustainabilityServiceClient.NutrientInputEventInternalDto> nutrients = sustainabilityServiceClient.getNutrientInputs(seasonId);
+            requireCompleteSource(nutrients, "nutrient inputs", seasonId);
             for (var nutrient : nutrients) {
                 events.add(ProductionDiaryEventDto.builder()
                         .eventDate(nutrient.getAppliedDate())
@@ -80,11 +85,12 @@ public class ProductionDiaryAggregationService {
                         .build());
             }
         } catch (Exception e) {
-            // Log error
+            throw sourceUnavailable("nutrient inputs", seasonId, e);
         }
 
         try {
             List<SustainabilityServiceClient.SoilTestInternalDto> soilTests = sustainabilityServiceClient.getSoilTests(seasonId);
+            requireCompleteSource(soilTests, "soil tests", seasonId);
             for (var soil : soilTests) {
                 events.add(ProductionDiaryEventDto.builder()
                         .eventDate(soil.getSampleDate())
@@ -96,11 +102,12 @@ public class ProductionDiaryAggregationService {
                         .build());
             }
         } catch (Exception e) {
-            // Log error
+            throw sourceUnavailable("soil tests", seasonId, e);
         }
 
         try {
             List<SustainabilityServiceClient.IrrigationWaterAnalysisInternalDto> waterAnalyses = sustainabilityServiceClient.getWaterAnalyses(seasonId);
+            requireCompleteSource(waterAnalyses, "water analyses", seasonId);
             for (var water : waterAnalyses) {
                 events.add(ProductionDiaryEventDto.builder()
                         .eventDate(water.getSampleDate())
@@ -112,13 +119,27 @@ public class ProductionDiaryAggregationService {
                         .build());
             }
         } catch (Exception e) {
-            // Log error
+            throw sourceUnavailable("water analyses", seasonId, e);
         }
 
         // Sắp xếp theo ngày (mới nhất lên đầu hoặc cũ nhất lên đầu tuỳ vào requirements. Sẽ sort mới nhất lên đầu)
         events.sort(Comparator.comparing(ProductionDiaryEventDto::getEventDate, Comparator.nullsLast(Comparator.reverseOrder())));
 
         return events;
+    }
+
+    private void requireCompleteSource(List<?> records, String source, Integer seasonId) {
+        if (records == null) {
+            throw new IllegalStateException(source + " returned null for season " + seasonId);
+        }
+    }
+
+    private AppException sourceUnavailable(String source, Integer seasonId, Exception cause) {
+        if (cause instanceof AppException appException) {
+            return appException;
+        }
+        log.error("Cannot load {} for production diary of season {}", source, seasonId, cause);
+        return new AppException(ErrorCode.PRODUCTION_DIARY_SOURCE_UNAVAILABLE);
     }
 }
 

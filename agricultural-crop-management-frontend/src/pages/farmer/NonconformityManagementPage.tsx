@@ -1,6 +1,11 @@
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useGetNonconformities, useCreateCorrectiveAction } from "@/entities/farm/api/generated/farm-service";
+import {
+  useGetNonconformities,
+  useCreateCorrectiveAction,
+  useSubmitCorrectiveAction,
+  useUpdateCorrectiveAction,
+} from "@/entities/farm/api/generated/farm-service";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { AsyncState } from "@/shared/ui/async-state";
 import { Button } from "@/shared/ui/button";
@@ -8,9 +13,10 @@ import { Input } from "@/shared/ui/input";
 import { Textarea } from "@/shared/ui/textarea";
 import { Badge } from "@/shared/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/shared/ui/dialog";
-import { AlertCircle, FileText, CheckCircle2, ArrowLeft, Send } from "lucide-react";
+import { AlertCircle, FileText, CheckCircle2, ArrowLeft, Send, Pencil, UploadCloud, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import httpClient from "@/shared/api/http";
 
 export function NonconformityManagementPage() {
   const { farmId } = useParams<{ farmId: string }>();
@@ -29,40 +35,102 @@ export function NonconformityManagementPage() {
   const createActionMutation = useCreateCorrectiveAction({
     mutation: {
       onSuccess: () => {
-        toast.success("Đã gửi báo cáo khắc phục thành công");
+        toast.success("Đã lưu bản nháp kế hoạch khắc phục");
         queryClient.invalidateQueries({ queryKey: ["getNonconformities"] });
+        refetch();
         setOpenDialog(false);
         setPlanDescription("");
         setEvidenceUrl("");
+        setAppliesFromSeasonId("");
+        setEditingActionId(null);
       },
       onError: (err: any) => {
-        toast.error(err?.response?.data?.message || "Gửi báo cáo thất bại");
+        toast.error(err?.response?.data?.message || "Không thể lưu kế hoạch khắc phục");
       }
     }
   });
 
+  const updateActionMutation = useUpdateCorrectiveAction({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Đã cập nhật bản nháp khắc phục");
+        queryClient.invalidateQueries({ queryKey: ["getNonconformities"] });
+        refetch();
+        setOpenDialog(false);
+        setEditingActionId(null);
+      },
+      onError: (err: any) => toast.error(err?.response?.data?.message || "Không thể cập nhật bản nháp"),
+    },
+  });
+
+  const submitActionMutation = useSubmitCorrectiveAction({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Đã nộp kế hoạch và bằng chứng cho đơn vị đánh giá");
+        queryClient.invalidateQueries({ queryKey: ["getNonconformities"] });
+        refetch();
+      },
+      onError: (err: any) => toast.error(err?.response?.data?.message || "Không thể nộp kế hoạch khắc phục"),
+    },
+  });
+
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedNcId, setSelectedNcId] = useState<number | null>(null);
+  const [editingActionId, setEditingActionId] = useState<number | null>(null);
   const [planDescription, setPlanDescription] = useState("");
   const [evidenceUrl, setEvidenceUrl] = useState("");
+  const [appliesFromSeasonId, setAppliesFromSeasonId] = useState("");
+  const [uploadingEvidence, setUploadingEvidence] = useState(false);
 
-  const handleOpenDialog = (id: number) => {
+  const handleOpenDialog = (id: number, action?: any) => {
     setSelectedNcId(id);
+    setEditingActionId(action?.id ?? null);
+    setPlanDescription(action?.planDescription ?? "");
+    setEvidenceUrl(action?.evidenceUrls?.[0] ?? "");
+    setAppliesFromSeasonId(action?.appliesFromSeasonId?.toString() ?? "");
     setOpenDialog(true);
   };
 
-  const handleSubmit = () => {
+  const handleSaveDraft = () => {
     if (!selectedNcId || !planDescription) {
       toast.error("Vui lòng nhập phương án khắc phục");
       return;
     }
-    createActionMutation.mutate({
-      nonconformityId: selectedNcId,
-      data: {
-        planDescription,
-        evidenceUrls: evidenceUrl ? [evidenceUrl] : [],
-      }
-    });
+    const data = {
+      planDescription,
+      evidenceUrls: evidenceUrl ? [evidenceUrl] : [],
+      appliesFromSeasonId: appliesFromSeasonId ? Number(appliesFromSeasonId) : undefined,
+    };
+    if (editingActionId) {
+      updateActionMutation.mutate({ actionId: editingActionId, data });
+    } else {
+      createActionMutation.mutate({ nonconformityId: selectedNcId, data });
+    }
+  };
+
+  const handleEvidenceUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Tệp minh chứng không được vượt quá 10MB");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      setUploadingEvidence(true);
+      const response = await httpClient.post<{ result: string }>(
+        `/api/v1/farms/${farmIdNumber}/documents/upload`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+      setEvidenceUrl(response.data.result);
+      toast.success("Đã tải tệp minh chứng lên kho hồ sơ");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Không thể tải tệp minh chứng");
+    } finally {
+      setUploadingEvidence(false);
+    }
   };
 
   if (!isValidFarmId) return <div className="p-4 text-destructive">Invalid Farm ID</div>;
@@ -126,10 +194,13 @@ export function NonconformityManagementPage() {
                     {nc.correctiveActions.map((ca: any) => (
                       <div key={ca.id} className="bg-emerald-50 border border-emerald-100 p-3 rounded-lg text-sm">
                         <div className="flex justify-between text-xs text-emerald-800 mb-2 font-medium">
-                          <span>Ngày báo cáo: {ca.submittedAt ? new Date(ca.submittedAt).toLocaleDateString("vi-VN") : "-"}</span>
-                          <span>Kết quả duyệt: {ca.reviewResult || "Đang chờ"}</span>
+                          <span>{ca.submittedAt ? `Đã nộp: ${new Date(ca.submittedAt).toLocaleDateString("vi-VN")}` : "Bản nháp – chưa nộp"}</span>
+                          <span>Kết quả duyệt: {ca.reviewResult || (ca.submittedAt ? "Đang chờ" : "Chưa gửi")}</span>
                         </div>
                         <p className="text-slate-700"><strong>Phương án:</strong> {ca.planDescription}</p>
+                        {ca.appliesFromSeasonId && (
+                          <p className="mt-1 text-slate-600"><strong>Áp dụng từ mùa vụ:</strong> #{ca.appliesFromSeasonId}</p>
+                        )}
                         {ca.evidenceUrls && ca.evidenceUrls.length > 0 && (
                           <div className="mt-2">
                             <strong>Minh chứng:</strong>
@@ -141,8 +212,30 @@ export function NonconformityManagementPage() {
                             <strong>Ghi chú Auditor:</strong> {ca.reviewNote}
                           </div>
                         )}
+                        {!ca.submittedAt && (
+                          <div className="mt-3 flex flex-wrap justify-end gap-2 border-t border-emerald-200 pt-3">
+                            <Button variant="outline" size="sm" onClick={() => handleOpenDialog(nc.id, ca)} className="gap-2">
+                              <Pencil className="h-4 w-4" /> Sửa bản nháp
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => submitActionMutation.mutate({ actionId: ca.id })}
+                              disabled={submitActionMutation.isPending}
+                              className="gap-2 bg-emerald-700 hover:bg-emerald-800"
+                            >
+                              <Send className="h-4 w-4" /> Nộp đánh giá
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     ))}
+                    {nc.correctiveActions.some((ca: any) => ca.reviewResult === "REJECTED") && (
+                      <div className="flex justify-end">
+                        <Button onClick={() => handleOpenDialog(nc.id)} className="gap-2 bg-amber-600 hover:bg-amber-700">
+                          <FileText className="h-4 w-4" /> Lập phương án khắc phục mới
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex justify-end pt-2">
@@ -150,7 +243,7 @@ export function NonconformityManagementPage() {
                       onClick={() => handleOpenDialog(nc.id)}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
                     >
-                      <FileText className="w-4 h-4" /> Báo cáo Khắc phục
+                      <FileText className="w-4 h-4" /> Lập kế hoạch khắc phục
                     </Button>
                   </div>
                 )}
@@ -163,9 +256,9 @@ export function NonconformityManagementPage() {
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Gửi báo cáo khắc phục lỗi</DialogTitle>
+            <DialogTitle>{editingActionId ? "Sửa kế hoạch khắc phục" : "Lập kế hoạch khắc phục"}</DialogTitle>
             <DialogDescription>
-              Vui lòng mô tả chi tiết phương án và cung cấp tài liệu minh chứng để Auditor xem xét.
+              Lưu nháp để tiếp tục chỉnh sửa. Khi đầy đủ phương án và minh chứng, dùng nút “Nộp đánh giá” ở danh sách.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -179,22 +272,40 @@ export function NonconformityManagementPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Tài liệu minh chứng (URL)</label>
+              <label className="text-sm font-medium">Mùa vụ bắt đầu áp dụng</label>
+              <Input
+                type="number"
+                min="1"
+                value={appliesFromSeasonId}
+                onChange={e => setAppliesFromSeasonId(e.target.value)}
+                placeholder="ID mùa vụ hiện tại hoặc mùa vụ kế tiếp"
+              />
+              <p className="text-xs text-slate-500">Dùng khi biện pháp khắc phục chỉ có thể áp dụng từ mùa vụ sau.</p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Tài liệu minh chứng</label>
               <Input 
                 value={evidenceUrl}
                 onChange={e => setEvidenceUrl(e.target.value)}
-                placeholder="https://example.com/evidence.pdf"
+                placeholder="URL sẽ tự điền sau khi tải tệp"
               />
+              <label className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-emerald-300 bg-emerald-50 px-4 text-sm font-medium text-emerald-800 hover:bg-emerald-100">
+                <UploadCloud className="h-4 w-4" />
+                {uploadingEvidence ? "Đang tải lên..." : "Chọn tệp ảnh/PDF minh chứng"}
+                <input type="file" className="sr-only" accept="image/*,.pdf,.doc,.docx" onChange={handleEvidenceUpload} disabled={uploadingEvidence} />
+              </label>
             </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpenDialog(false)}>Hủy</Button>
             <Button 
-              onClick={handleSubmit} 
-              disabled={createActionMutation.isPending || !planDescription}
+              onClick={handleSaveDraft}
+              disabled={createActionMutation.isPending || updateActionMutation.isPending || uploadingEvidence || !planDescription}
               className="bg-emerald-600 hover:bg-emerald-700 gap-2"
             >
-              {createActionMutation.isPending ? "Đang gửi..." : <><Send className="w-4 h-4" /> Gửi báo cáo</>}
+              {createActionMutation.isPending || updateActionMutation.isPending
+                ? "Đang lưu..."
+                : <><Save className="w-4 h-4" /> Lưu bản nháp</>}
             </Button>
           </DialogFooter>
         </DialogContent>

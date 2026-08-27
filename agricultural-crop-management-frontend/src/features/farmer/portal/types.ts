@@ -23,6 +23,7 @@ export type FarmerView =
   | 'marketplace-products'
   | 'marketplace-orders'
   | 'documents'
+  | 'vietgap-workspace'
   | 'farm-documents'
   | 'incidents'
   | 'notifications'

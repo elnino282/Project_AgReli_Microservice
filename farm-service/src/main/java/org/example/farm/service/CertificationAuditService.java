@@ -39,6 +39,7 @@ public class CertificationAuditService {
     private final CertificationService certificationService;
     private final FarmRepository farmRepository;
     private final CertificationStandardRepository standardRepository;
+    private final CertificationScopeRepository scopeRepository;
 
     // === VALID TRANSITIONS (state machine guard) ===
     private static final Map<String, Set<String>> VALID_TRANSITIONS = Map.ofEntries(
@@ -428,6 +429,49 @@ public class CertificationAuditService {
                     .stream().map(this::toNonconformityResponse).toList());
             return resp;
         }).toList();
+    }
+
+    public List<CertificationApplicationResponse> getApplicationsForAdmin() {
+        return recordRepository.findAll().stream()
+                .map(record -> {
+                    String previousStatus = record.getStatus();
+                    certificationService.refreshDateBasedLifecycleStatus(record);
+                    if (!Objects.equals(previousStatus, record.getStatus())) {
+                        recordRepository.save(record);
+                    }
+                    Farm farm = farmRepository.findById(record.getFarmId()).orElse(null);
+                    CertificationStandard standard = standardRepository.findById(record.getStandardId()).orElse(null);
+                    return CertificationApplicationResponse.builder()
+                            .recordId(record.getId())
+                            .farmId(record.getFarmId())
+                            .farmName(farm != null ? farm.getName() : null)
+                            .standardCode(standard != null ? standard.getCode() : null)
+                            .standardName(standard != null ? standard.getName() : null)
+                            .scopes(scopeRepository.findByRecordIdOrderById(record.getId()).stream()
+                                    .map(scope -> CertificationScopeResponse.builder()
+                                            .id(scope.getId())
+                                            .seasonId(scope.getSeasonId())
+                                            .plotId(scope.getPlotId())
+                                            .plotName(scope.getPlotName())
+                                            .cropId(scope.getCropId())
+                                            .cropName(scope.getCropName())
+                                            .varietyId(scope.getVarietyId())
+                                            .varietyName(scope.getVarietyName())
+                                            .registeredAreaHa(scope.getRegisteredAreaHa())
+                                            .expectedYieldKg(scope.getExpectedYieldKg())
+                                            .build())
+                                    .toList())
+                            .complianceScore(record.getComplianceScore())
+                            .status(record.getStatus())
+                            .appliedAt(record.getAppliedAt())
+                            .nextPeriodicReviewDate(record.getNextPeriodicReviewDate())
+                            .expiryDate(record.getExpiryDate())
+                            .build();
+                })
+                .sorted(Comparator.comparing(
+                        CertificationApplicationResponse::getAppliedAt,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
     }
 
     // ==========================================

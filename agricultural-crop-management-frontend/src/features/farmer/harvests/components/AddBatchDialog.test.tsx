@@ -110,7 +110,10 @@ describe("AddBatchDialog", () => {
     expect(screen.getByText(/Harvest From Plot/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Crop \/ Product/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Quantity \(kg\)/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Grade/i)).toBeInTheDocument();
     expect(screen.getByText(/^Warehouse/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Quality notes/i)).toBeInTheDocument();
+    expect(screen.getByText(/Packaging & processing/i)).toBeInTheDocument();
     expect(screen.queryByLabelText("Batch ID Preview")).not.toBeInTheDocument();
   });
 

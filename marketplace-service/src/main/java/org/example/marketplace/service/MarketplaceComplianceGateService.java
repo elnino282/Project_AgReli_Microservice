@@ -44,12 +44,19 @@ public class MarketplaceComplianceGateService {
             if (product.getFarmId() == null) {
                 isEligible = false;
                 reasons.add("Sản phẩm chưa liên kết với nông trại.");
+            } else if (product.getSeasonId() == null) {
+                isEligible = false;
+                reasons.add("Sản phẩm phải liên kết với mùa vụ thuộc phạm vi chứng nhận VietGAP.");
             } else {
                 try {
-                    String standardCode = "VIETGAP".equalsIgnoreCase(claim) ? "VIETGAP-PLANTING-2024" : "ORGANIC";
-                    FarmCertificationDto cert = farmClient.getFarmCertification(product.getFarmId(), standardCode);
+                    String standardCode = "VIETGAP".equalsIgnoreCase(claim) ? "VIETGAP-PLANTING-2026" : "ORGANIC";
+                    FarmCertificationDto cert = farmClient.getFarmCertification(
+                            product.getFarmId(), standardCode, product.getSeasonId());
                     
-                    if (cert == null || !"PUBLISHED".equalsIgnoreCase(cert.status())) {
+                    if (cert == null || !Boolean.TRUE.equals(cert.scopeMatched())) {
+                        isEligible = false;
+                        reasons.add("Sản phẩm/mùa vụ/thửa đất nằm ngoài phạm vi được chứng nhận " + claim + ".");
+                    } else if (!"PUBLISHED".equalsIgnoreCase(cert.status())) {
                         isEligible = false;
                         reasons.add("Chứng nhận " + claim + " chưa được cấp hoặc chưa được công bố (PUBLISHED).");
                         if (cert != null && cert.missingMandatoryEvidenceCount() != null && cert.missingMandatoryEvidenceCount() > 0) {

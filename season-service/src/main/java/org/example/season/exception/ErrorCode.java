@@ -10,6 +10,7 @@ public enum ErrorCode {
         KEY_INVALID("ERR_KEY_INVALID", "Invalid key", HttpStatus.BAD_REQUEST),
         INTERNAL_SERVER_ERROR("ERR_INTERNAL_SERVER_ERROR", "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),
         DOWNSTREAM_GUARD_UNAVAILABLE("ERR_DOWNSTREAM_GUARD_UNAVAILABLE", "Cannot verify related data because a downstream service is unavailable", HttpStatus.SERVICE_UNAVAILABLE),
+        PRODUCTION_DIARY_SOURCE_UNAVAILABLE("ERR_PRODUCTION_DIARY_SOURCE_UNAVAILABLE", "Production diary cannot be completed because a source service is unavailable", HttpStatus.SERVICE_UNAVAILABLE),
         BAD_REQUEST("ERR_BAD_REQUEST", "Bad request", HttpStatus.BAD_REQUEST),
         UNAUTHORIZED("ERR_UNAUTHORIZED", "Unauthorized", HttpStatus.UNAUTHORIZED),
         FORBIDDEN("ERR_FORBIDDEN", "Forbidden", HttpStatus.FORBIDDEN),

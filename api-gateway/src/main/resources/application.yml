@@ -56,6 +56,10 @@ spring:
               uri: ${FARM_SERVICE_URI:http://localhost:8084}
               predicates:
                 - Path=/api/v1/farms, /api/v1/farms/**, /api/v1/plots, /api/v1/plots/**, /api/v1/addresses, /api/v1/addresses/**, /api/v1/locations, /api/v1/locations/**
+            - id: farm-certification-route
+              uri: ${FARM_SERVICE_URI:http://localhost:8084}
+              predicates:
+                - Path=/api/v1/admin/certification-audits, /api/v1/admin/certification-audits/**, /api/v1/admin/certification-applications, /api/v1/certification-audits/**, /api/v1/certification-nonconformities/**, /api/v1/certification-corrective-actions/**
             - id: finance-route
               uri: ${FINANCE_SERVICE_URI:http://localhost:8087}
               order: 1

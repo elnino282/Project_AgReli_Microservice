@@ -50,7 +50,8 @@ public class InternalFarmController {
     @GetMapping("/{farmId}/certification")
     public ResponseEntity<CertificationInfoDto> getFarmCertification(
             @PathVariable Integer farmId,
-            @RequestParam(value = "standardCode", defaultValue = "VIETGAP-PLANTING-2024") String standardCode) {
+            @RequestParam(value = "standardCode", defaultValue = "VIETGAP-PLANTING-2026") String standardCode,
+            @RequestParam(value = "seasonId", required = false) Integer seasonId) {
         Optional<CertificationStandard> standardOpt = certificationStandardRepository.findByCode(standardCode);
         if (standardOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -64,6 +65,8 @@ public class InternalFarmController {
                     .certificationName(standard.getName())
                     .certificationType(standard.getType())
                     .status("IN_PROGRESS")
+                    .scopeMatched(false)
+                    .scopes(List.of())
                     .complianceScore(java.math.BigDecimal.ZERO)
                     .build());
         }
@@ -72,14 +75,19 @@ public class InternalFarmController {
         org.example.farm.dto.response.CertificationDetailsResponse details = certificationService.getCertificationDetails(farmId, standardCode);
 
         CertificationRecord record = recordOpt.get();
+        List<org.example.farm.dto.response.CertificationScopeResponse> scopes = details.getScopes();
+        boolean scopeMatched = seasonId != null && scopes.stream()
+                .anyMatch(scope -> seasonId.equals(scope.getSeasonId()));
         return ResponseEntity.ok(CertificationInfoDto.builder()
                 .certificationName(standard.getName())
                 .certificationType(standard.getType())
-                .status(details.getStatus())
+                .status(scopeMatched ? details.getStatus() : "OUT_OF_SCOPE")
                 .issuedDate(details.getCertifiedAt() != null ? details.getCertifiedAt().toLocalDate() : null)
                 .expiryDate(details.getExpiryDate())
                 .complianceScore(details.getComplianceScore())
                 .certificateNumber(details.getCertificateNumber())
+                .scopeMatched(scopeMatched)
+                .scopes(scopes)
                 .missingMandatoryEvidenceCount(details.getMissingMandatoryEvidenceCount())
                 .missingEvidenceItems(details.getMissingEvidenceItems())
                 .build());

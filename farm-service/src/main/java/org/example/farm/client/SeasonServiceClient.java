@@ -20,6 +20,26 @@ public interface SeasonServiceClient {
     @GetMapping("/api/v1/internal/plots/{plotId}/seasons")
     java.util.List<SeasonSummaryDto> getSeasonsByPlotId(@PathVariable("plotId") Integer plotId);
 
+    @GetMapping("/api/v1/internal/seasons/{seasonId}")
+    SeasonInternalDto getSeasonInternal(@PathVariable("seasonId") Integer seasonId);
+
+    @lombok.Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    class SeasonInternalDto {
+        private Integer id;
+        private String seasonName;
+        private Integer plotId;
+        private Integer cropId;
+        private Integer varietyId;
+        private String status;
+        private java.time.LocalDate startDate;
+        private java.time.LocalDate plannedHarvestDate;
+        private java.time.LocalDate endDate;
+        private java.math.BigDecimal expectedYieldKg;
+    }
+
     @lombok.Data
     @lombok.Builder
     @lombok.NoArgsConstructor
@@ -60,6 +80,9 @@ public interface SeasonServiceClient {
     @GetMapping("/api/v1/internal/seasons/{seasonId}/training-stats")
     java.util.Map<Long, java.util.List<EmployeeTrainingRecordDto>> getTrainingStatsInternal(@PathVariable("seasonId") Integer seasonId);
 
+    @GetMapping("/api/v1/internal/seasons/{seasonId}/training-compliance")
+    TrainingComplianceSnapshotDto getTrainingComplianceInternal(@PathVariable("seasonId") Integer seasonId);
+
     @lombok.Data
     @lombok.Builder
     @lombok.NoArgsConstructor
@@ -72,5 +95,19 @@ public interface SeasonServiceClient {
         private String trainerName;
         private java.time.LocalDate certifiedUntil;
         private String status;
+    }
+
+    @lombok.Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    class TrainingComplianceSnapshotDto {
+        private Integer seasonId;
+        private Integer totalMembers;
+        private Integer compliantMembers;
+        private java.util.List<Integer> requiredProgramIds;
+        private java.util.List<String> requiredCategories;
+        private java.util.Map<Long, Boolean> memberCompliance;
+        private Boolean compliant;
     }
 }

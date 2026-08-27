@@ -39,4 +39,18 @@ public class SeasonServiceClientFallback implements SeasonServiceClient {
         log.error("Fallback triggered: Failed to get training stats for season {} via season-service", seasonId);
         return java.util.Collections.emptyMap();
     }
+
+    @Override
+    public SeasonServiceClient.SeasonInternalDto getSeasonInternal(Integer seasonId) {
+        log.error("Fallback triggered: Failed to get season {} via season-service", seasonId);
+        throw new IllegalStateException(
+                "season-service is unavailable; certification scope cannot be verified");
+    }
+
+    @Override
+    public SeasonServiceClient.TrainingComplianceSnapshotDto getTrainingComplianceInternal(Integer seasonId) {
+        log.error("Fallback triggered: Failed to verify training compliance for season {} via season-service", seasonId);
+        throw new IllegalStateException(
+                "season-service is unavailable; training compliance cannot be verified");
+    }
 }

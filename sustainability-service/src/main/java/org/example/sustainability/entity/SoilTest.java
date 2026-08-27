@@ -44,6 +44,12 @@ public class SoilTest {
     @Column(name = "sample_date", nullable = false)
     LocalDate sampleDate;
 
+    @Column(name = "soil_ph", precision = 5, scale = 2)
+    BigDecimal soilPh;
+
+    @Column(name = "electrical_conductivity_ds_m", precision = 12, scale = 4)
+    BigDecimal electricalConductivityDsM;
+
     @Column(name = "soil_organic_matter_pct", precision = 12, scale = 4)
     BigDecimal soilOrganicMatterPct;
 

@@ -1,4 +1,6 @@
+import { useState } from "react";
 import {
+  ArrowRight,
   DollarSign,
   Package,
   Plus,
@@ -7,10 +9,18 @@ import {
   Store,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-// eslint-disable-next-line no-restricted-imports
 import { useI18n } from "@/shared/lib/hooks/useI18n";
 import type { MarketplaceStatsUnavailableReason } from "@/shared/api";
-import { AsyncState, Button, Card, CardContent, PageContainer } from "@/shared/ui";
+import {
+  AsyncState,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  ImagePlaceholder,
+  PageContainer,
+} from "@/shared/ui";
 import { useMarketplaceFarmerDashboard, useMarketplaceFarmerProducts } from "@/features/marketplace/hooks";
 import { SellerMarketplaceTabs } from "@/features/marketplace/layout";
 import { formatDateTime, formatVnd } from "@/features/marketplace/lib/format";
@@ -24,49 +34,51 @@ function MetricCard({
   value,
   tone,
   helperText,
-  layout = "editorial-stat",
 }: {
   icon: typeof DollarSign;
   label: string;
   value: string | number;
   tone: string;
   helperText?: string;
-  layout?: "editorial-hero" | "editorial-stat";
 }) {
-  if (layout === "editorial-hero") {
-    return (
-      <Card className="group relative overflow-hidden border border-primary/20 bg-primary/5 shadow-sm transition-colors duration-300 hover:bg-primary/10">
-        <CardContent className="relative z-10 flex h-full min-h-[200px] flex-col justify-between p-8">
-          <div className="flex items-center gap-2">
-            <Icon size={20} className="text-primary" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
-          </div>
-          <div className="mt-8 animate-in slide-in-from-bottom-2 fade-in duration-700 delay-150 fill-mode-both">
-            <p className="font-display text-4xl font-semibold leading-none tracking-tight text-foreground md:text-5xl">
-              {value}
-            </p>
-            {helperText ? <p className="mt-3 text-sm font-medium text-muted-foreground">{helperText}</p> : null}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="group flex h-full flex-col justify-between overflow-hidden border border-border/50 bg-card shadow-sm transition-colors duration-300 hover:bg-muted/30">
-      <CardContent className="flex h-full flex-col justify-between p-8">
-        <div className="mb-6 flex items-center gap-2 text-muted-foreground">
-          <Icon size={18} className={tone} />
-          <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
+    <Card variant="metric" className="group h-full overflow-hidden border-border/70 bg-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+      <CardContent className="flex min-h-36 flex-col justify-between p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            {label}
+          </span>
+          <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${tone}`}>
+            <Icon size={20} aria-hidden="true" />
+          </span>
         </div>
-        <div>
-          <p className="font-display text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+        <div className="mt-5 min-w-0">
+          <p className="break-words font-display text-3xl font-semibold leading-none tracking-tight text-foreground">
             {value}
           </p>
-          {helperText ? <p className="mt-2 text-sm text-muted-foreground">{helperText}</p> : null}
+          {helperText ? <p className="mt-2 line-clamp-1 text-xs text-muted-foreground">{helperText}</p> : null}
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function DashboardProductImage({ src, alt }: { src?: string | null; alt: string }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (!src || hasError) {
+    return <ImagePlaceholder label={alt} />;
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+      referrerPolicy="no-referrer"
+      onError={() => setHasError(true)}
+    />
   );
 }
 
@@ -197,73 +209,75 @@ export function SellerDashboardPage() {
             </Card>
           ) : null}
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 xl:grid-cols-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="md:col-span-2 xl:col-span-1">
-              <MetricCard
-                icon={DollarSign}
-                label={t("marketplaceSeller.dashboard.metrics.revenue", "Revenue")}
-                value={
-                  hasRevenueData && dashboard?.totalRevenue != null
-                    ? formatVnd(dashboard.totalRevenue, locale)
-                    : "--"
-                }
-                helperText={
-                  hasRevenueData
-                    ? undefined
-                    : t("marketplaceSeller.dashboard.metrics.revenueEmpty", "No completed orders yet.")
-                }
-                tone="text-primary-foreground"
-                layout="editorial-hero"
-              />
-            </div>
+          <div className="grid grid-cols-1 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 sm:grid-cols-2 xl:grid-cols-4">
+            <MetricCard
+              icon={DollarSign}
+              label={t("marketplaceSeller.dashboard.metrics.revenue", "Revenue")}
+              value={
+                hasRevenueData && dashboard?.totalRevenue != null
+                  ? formatVnd(dashboard.totalRevenue, locale)
+                  : "--"
+              }
+              helperText={
+                hasRevenueData
+                  ? undefined
+                  : t("marketplaceSeller.dashboard.metrics.revenueEmpty", "No completed orders yet.")
+              }
+              tone="bg-primary/10 text-primary"
+            />
             <MetricCard
               icon={ShoppingBag}
               label={t("marketplaceSeller.dashboard.metrics.pendingOrders", "Pending orders")}
               value={dashboard?.pendingOrders ?? "--"}
-              tone="text-destructive"
-              layout="editorial-stat"
+              tone="bg-destructive/10 text-destructive"
             />
             <MetricCard
               icon={Store}
               label={t("marketplaceSeller.dashboard.metrics.pendingReview", "Pending review")}
               value={dashboard?.pendingReviewProducts ?? "--"}
-              tone="text-info"
-              layout="editorial-stat"
+              tone="bg-warning/15 text-warning-foreground"
             />
             <MetricCard
               icon={Package}
               label={t("marketplaceSeller.dashboard.metrics.publishedProducts", "Published products")}
               value={dashboard?.publishedProducts ?? "--"}
-              tone="text-muted-foreground"
-              layout="editorial-stat"
+              tone="bg-info/10 text-info"
             />
           </div>
 
-          <div className="mt-10 grid grid-cols-1 gap-10 xl:grid-cols-2 xl:gap-12">
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both">
-              <div className="flex items-baseline justify-between border-b border-border/60 pb-3">
-                <h3 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-                  {t("marketplaceSeller.dashboard.recentOrders.title", "Recent orders")}
-                </h3>
-                <Link 
-                  to="/farmer/marketplace-orders" 
-                  className="rounded-sm text-xs font-medium uppercase tracking-wider text-primary transition-all duration-200 hover:text-primary/80 active:text-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
-                >
-                  {t("marketplaceSeller.dashboard.recentOrders.seeAll", "See all")}
-                </Link>
-              </div>
-              
-              <div className="space-y-0">
+          <div className="grid grid-cols-1 gap-5 pt-1 animate-in fade-in slide-in-from-bottom-4 duration-500 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
+            <Card variant="content" className="min-w-0 gap-0 overflow-hidden border-border/70 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-border/70 px-5 py-4 sm:px-6">
+                <div className="min-w-0">
+                  <CardTitle className="font-display text-xl font-semibold tracking-tight text-foreground">
+                    {t("marketplaceSeller.dashboard.recentOrders.title", "Recent orders")}
+                  </CardTitle>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {dashboard?.recentOrders?.length ?? 0} {t("marketplaceSeller.tabs.items.orders.label", "orders")}
+                  </p>
+                </div>
+                <Button asChild variant="ghost" size="sm" className="shrink-0 text-primary">
+                  <Link to="/farmer/marketplace-orders">
+                    {t("marketplaceSeller.dashboard.recentOrders.seeAll", "See all")}
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                </Button>
+              </CardHeader>
+
+              <CardContent className="p-0">
                 {(dashboard?.recentOrders?.length ?? 0) > 0 ? (
                   dashboard!.recentOrders.map((order) => (
                     <Link
                       key={order.id}
                       to={`/farmer/marketplace-orders/${order.id}`}
-                      className="group flex items-center justify-between border-b border-border/40 py-4 px-3 -mx-3 sm:px-4 sm:-mx-4 transition-all duration-200 hover:bg-muted/50 active:bg-muted rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ring-offset-background"
+                      className="group flex min-h-20 items-center gap-3 border-b border-border/60 px-5 py-3.5 transition-colors last:border-b-0 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:px-6"
                     >
-                      <div>
-                        <p className="font-medium text-foreground transition-colors group-hover:text-primary">{order.orderCode}</p>
-                        <p className="mt-1 text-sm text-muted-foreground">
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <ShoppingBag className="size-4" aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold text-foreground transition-colors group-hover:text-primary">{order.orderCode}</p>
+                        <p className="mt-1 truncate text-xs text-muted-foreground">
                           {t("marketplaceSeller.dashboard.recentOrders.itemCount", {
                             count: order.items.length,
                             defaultValue: "{{count}} items",
@@ -271,14 +285,16 @@ export function SellerDashboardPage() {
                           <span className="opacity-50">•</span> {formatDateTime(order.createdAt, locale)}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium text-foreground">{formatVnd(order.totalAmount, locale)}</p>
-                        <p className="mt-1 text-xs font-medium text-muted-foreground">{orderStatusLabel(order.status, t)}</p>
+                      <div className="shrink-0 text-right">
+                        <p className="text-sm font-semibold text-foreground">{formatVnd(order.totalAmount, locale)}</p>
+                        <span className="mt-1 inline-flex rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                          {orderStatusLabel(order.status, t)}
+                        </span>
                       </div>
                     </Link>
                   ))
                 ) : (
-                  <div className="py-12 text-center text-sm font-medium text-muted-foreground">
+                  <div className="flex min-h-52 items-center justify-center px-6 py-10 text-center text-sm font-medium text-muted-foreground">
                     {hasProducts
                       ? t("marketplaceSeller.dashboard.recentOrders.emptyWithProducts", "No buyer orders yet.")
                       : t(
@@ -287,60 +303,59 @@ export function SellerDashboardPage() {
                         )}
                   </div>
                 )}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
-              <div className="flex items-baseline justify-between border-b border-border/60 pb-3">
-                <h3 className="font-display text-2xl font-semibold tracking-tight text-foreground">
-                  {t("marketplaceSeller.dashboard.topProducts.title", "Top products")}
-                </h3>
-                <Link 
-                  to="/farmer/marketplace-products" 
-                  className="rounded-sm text-xs font-medium uppercase tracking-wider text-primary transition-all duration-200 hover:text-primary/80 active:text-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background"
-                >
-                  {t("marketplaceSeller.dashboard.topProducts.manageProducts", "Manage products")}
-                </Link>
-              </div>
-              
-              <div className="space-y-0">
+            <Card variant="content" className="min-w-0 gap-0 overflow-hidden border-border/70 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-border/70 px-5 py-4 sm:px-6">
+                <div className="min-w-0">
+                  <CardTitle className="font-display text-xl font-semibold tracking-tight text-foreground">
+                    {t("marketplaceSeller.dashboard.topProducts.title", "Top products")}
+                  </CardTitle>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {topProducts.length} {t("marketplaceSeller.tabs.items.products.label", "products")}
+                  </p>
+                </div>
+                <Button asChild variant="ghost" size="sm" className="shrink-0 text-primary">
+                  <Link to="/farmer/marketplace-products">
+                    {t("marketplaceSeller.dashboard.topProducts.manageProducts", "Manage products")}
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                </Button>
+              </CardHeader>
+
+              <CardContent className="p-0">
                 {topProducts.length > 0 ? (
                   topProducts.map((product) => (
-                    <div key={product.id} className="group flex items-center gap-5 border-b border-border/40 py-4 px-3 -mx-3 sm:px-4 sm:-mx-4 transition-all duration-200 hover:bg-muted/40 rounded-lg">
-                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded bg-muted/60 shadow-sm ring-1 ring-border/50">
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name}
-                          loading="lazy"
-                          className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105 group-hover:opacity-90"
-                          referrerPolicy="no-referrer"
-                        />
+                    <div key={product.id} className="group flex min-h-20 items-center gap-3 border-b border-border/60 px-5 py-3.5 transition-colors last:border-b-0 hover:bg-muted/40 sm:px-6">
+                      <div className="size-11 shrink-0 overflow-hidden rounded-xl bg-muted ring-1 ring-border/60">
+                        <DashboardProductImage src={product.imageUrl} alt={product.name} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium text-foreground transition-colors group-hover:text-primary">{product.name}</p>
-                        <p className="mt-1 text-sm text-muted-foreground">
+                        <p className="truncate text-sm font-semibold text-foreground transition-colors group-hover:text-primary">{product.name}</p>
+                        <p className="mt-1 truncate text-xs text-muted-foreground">
                           {formatVnd(product.price, locale)} / {product.unit}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs font-medium text-muted-foreground">
+                      <div className="shrink-0 text-right">
+                        <p className="text-[11px] font-medium text-muted-foreground">
                           {t("marketplaceSeller.table.available", "Available")}
                         </p>
-                        <p className="mt-1 font-medium text-foreground">
+                        <p className="mt-1 text-sm font-semibold text-foreground">
                           {product.availableQuantity} <span className="text-xs text-muted-foreground">{product.unit}</span>
                         </p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="py-12 text-center text-sm font-medium text-muted-foreground">
+                  <div className="flex min-h-52 items-center justify-center px-6 py-10 text-center text-sm font-medium text-muted-foreground">
                     {hasProducts
                       ? t("marketplaceSeller.dashboard.topProducts.emptyWithProducts", "No published products yet.")
                       : t("marketplaceSeller.dashboard.topProducts.emptyNoProducts", "No products available yet.")}
                   </div>
                 )}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </AsyncState>
       </div>

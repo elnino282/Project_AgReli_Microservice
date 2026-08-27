@@ -54,4 +54,26 @@ class CertificationAuditControllerSecurityTest {
         mockMvc.perform(get("/api/v1/admin/certification-audits"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void anonymousCannotListCertificationApplications() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/certification-applications"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithMockUser(roles = "FARMER")
+    void farmerCannotListCertificationApplications() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/certification-applications"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void adminCanListCertificationApplications() throws Exception {
+        when(auditService.getApplicationsForAdmin()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/admin/certification-applications"))
+                .andExpect(status().isOk());
+    }
 }

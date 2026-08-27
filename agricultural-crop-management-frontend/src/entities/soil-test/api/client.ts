@@ -3,6 +3,7 @@ import { parseApiResponse } from '@/shared/api/types';
 import { z } from 'zod';
 import {
   CreateSoilTestRequestSchema,
+  LatestSoilTestsQuerySchema,
   SoilTestListQuerySchema,
   SoilTestResponseSchema,
 } from '../model/schemas';
@@ -26,6 +27,14 @@ export const soilTestApi = {
     const query = params ? SoilTestListQuerySchema.parse(params) : undefined;
     const response = await httpClient.get(`/api/v1/seasons/${seasonId}/soil-tests`, {
       params: query,
+    });
+    return parseApiResponse(response.data, z.array(SoilTestResponseSchema));
+  },
+
+  latestByPlots: async (plotIds: number[]): Promise<SoilTestResponse[]> => {
+    const query = LatestSoilTestsQuerySchema.parse({ plotIds });
+    const response = await httpClient.get('/api/v1/soil-tests/latest', {
+      params: { plotIds: query.plotIds.join(',') },
     });
     return parseApiResponse(response.data, z.array(SoilTestResponseSchema));
   },

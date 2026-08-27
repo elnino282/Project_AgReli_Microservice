@@ -43,4 +43,6 @@ public class UpdateHarvestDetailRequest {
     String packagingType;
     Integer packagingCount;
     String processingType;
+
+    BigDecimal grossWetWeight;
 }

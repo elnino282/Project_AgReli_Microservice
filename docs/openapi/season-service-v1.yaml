@@ -2916,6 +2916,25 @@ paths:
                   type: array
                   items:
                     $ref: "#/components/schemas/EmployeeTrainingRecordDto"
+  /api/v1/internal/seasons/{seasonId}/training-compliance:
+    get:
+      tags:
+      - internal-season-controller
+      operationId: getTrainingComplianceInternal
+      parameters:
+      - name: seasonId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TrainingComplianceSnapshotDto"
   /api/v1/internal/seasons/{seasonId}/production-diary:
     get:
       tags:
@@ -4017,6 +4036,8 @@ components:
           format: int32
         processingType:
           type: string
+        grossWetWeight:
+          type: number
       required:
       - harvestDate
       - quantity
@@ -4741,15 +4762,26 @@ components:
           format: int32
         seasonName:
           type: string
+        farmId:
+          type: integer
+          format: int32
+        farmName:
+          type: string
         plotId:
           type: integer
           format: int32
+        plotName:
+          type: string
         cropId:
           type: integer
           format: int32
+        cropName:
+          type: string
         varietyId:
           type: integer
           format: int32
+        varietyName:
+          type: string
         startDate:
           type: string
           format: date
@@ -5707,6 +5739,33 @@ components:
           format: int64
         status:
           type: string
+    TrainingComplianceSnapshotDto:
+      type: object
+      properties:
+        seasonId:
+          type: integer
+          format: int32
+        totalMembers:
+          type: integer
+          format: int32
+        compliantMembers:
+          type: integer
+          format: int32
+        requiredProgramIds:
+          type: array
+          items:
+            type: integer
+            format: int32
+        requiredCategories:
+          type: array
+          items:
+            type: string
+        memberCompliance:
+          type: object
+          additionalProperties:
+            type: boolean
+        compliant:
+          type: boolean
     ProductionDiaryEventDto:
       type: object
       properties:

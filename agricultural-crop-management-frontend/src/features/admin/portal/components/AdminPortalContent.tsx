@@ -26,7 +26,6 @@ import { AdminSearchPage } from "@/pages/admin/AdminSearchPage";
 import { UserGuideContent } from "@/features/shared/user-guide";
 
 import { AdminDocumentsPage } from "@/pages/admin/AdminDocumentsPage";
-import { AdminFarmDocumentsPage } from "@/pages/admin/AdminFarmDocumentsPage";
 import { AdminCertAuditsPage } from "@/pages/admin/AdminCertAuditsPage";
 
 type AdminPortalContentProps = {
@@ -69,7 +68,7 @@ export function AdminPortalContent({ currentView }: AdminPortalContentProps) {
     case "documents":
       return <AdminDocumentsPage />;
     case "farm-documents":
-      return <AdminFarmDocumentsPage />;
+      return <AdminCertAuditsPage />;
     case "profile":
       return <AdminProfile />;
     case "settings":

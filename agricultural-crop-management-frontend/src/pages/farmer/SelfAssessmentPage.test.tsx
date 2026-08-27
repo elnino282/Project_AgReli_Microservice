@@ -21,11 +21,14 @@ vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 const details = (secondStatus: string, secondNotes?: string): CertificationDetails => ({
   recordId: 1,
   farmId: 7,
-  standardCode: 'VIETGAP-PLANTING-2024',
+  standardCode: 'VIETGAP-PLANTING-2026',
   standardName: 'VietGAP',
   complianceScore: 50,
   status: 'IN_PROGRESS',
+  scopes: [],
   isEligible: false,
+  missingMandatoryEvidenceCount: 1,
+  missingEvidenceItems: [],
   items: [
     { id: 11, itemCode: 'PA-003', category: 'PRODUCTION_AREA', description: 'Có sơ đồ mặt bằng', isMandatory: true, weightPct: 3, dataSourceType: 'MANUAL', dataSourceQuery: '', status: 'PASS', notes: 'Đã lưu' },
     { id: 12, itemCode: 'HV-002', category: 'HARVEST', description: 'Bảo quản đúng cách', isMandatory: true, weightPct: 2, dataSourceType: 'MANUAL', dataSourceQuery: '', status: secondStatus, notes: secondNotes },

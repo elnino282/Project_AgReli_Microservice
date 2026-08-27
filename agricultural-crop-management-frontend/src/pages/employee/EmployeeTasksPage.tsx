@@ -3,6 +3,7 @@ import {
   useEmployeeReportTaskProgress,
   useEmployeeSeasonPlan,
   useEmployeeTasks,
+  isSupportedEvidenceUrl,
 } from "@/entities/labor";
 import {
   BackButton,
@@ -121,6 +122,10 @@ export function EmployeeTasksPage() {
     }
     if (parsedPercent === 100 && !evidenceUrl.trim()) {
       toast.error("Vui lòng tải lên hình ảnh nghiệm thu khi báo cáo 100%");
+      return;
+    }
+    if (evidenceUrl.trim() && !isSupportedEvidenceUrl(evidenceUrl)) {
+      toast.error(t("employee.tasks.validation.evidenceUrl", "Evidence must be a valid HTTP(S) URL."));
       return;
     }
     reportProgressMutation.mutate({
@@ -309,23 +314,20 @@ export function EmployeeTasksPage() {
                   </div>
                 )}
                 <Input
-                  type="file"
-                  accept="image/*"
+                  type="url"
                   className="min-h-[44px]"
-                  capture="environment"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      // Tạo preview (trong thực tế có thể dùng URL.createObjectURL để view local, 
-                      // nhưng yêu cầu dùng Dummy URL cho payload)
-                      // Gán cứng Dummy URL để test
-                      setEvidenceUrl("https://dummyimage.com/600x400/000/fff&text=Nghiem+Thu");
-                      toast.info("Đã giả lập tải ảnh lên thành công!");
-                    }
-                  }}
+                  value={evidenceUrl}
+                  onChange={(event) => setEvidenceUrl(event.target.value)}
+                  placeholder={t(
+                    "employee.tasks.progressDialog.evidenceUrlPlaceholder",
+                    "https://storage.example/evidence/photo.jpg",
+                  )}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Chụp ảnh thửa ruộng sau khi hoàn thành.
+                  {t(
+                    "employee.tasks.progressDialog.evidenceUrlHelp",
+                    "Paste the persisted HTTP(S) URL of the completion photo.",
+                  )}
                 </p>
               </div>
             </div>

@@ -20,7 +20,8 @@ import { farmerReportsApi } from "@/entities/user/api/api.farmer";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useSeason } from "@/shared/contexts";
 import { taskApi } from "@/entities/task";
-import { fieldLogApi } from "@/entities/field-log";
+import { seasonsApi } from "@/entities/season";
+import { toPesticideReportRecord } from "../lib/pesticideCompliance";
 
 interface UseReportsOptions {
   seasonId?: number;
@@ -159,17 +160,12 @@ export function useReports(options: UseReportsOptions = {}) {
   });
 
   const {
-    data: sprayLogPage,
+    data: pesticideApiRecords,
     isLoading: pesticideLoading,
     error: pesticideError,
   } = useQuery({
-    queryKey: ["farmerReports", "pesticide", "sprayLogs", resolvedSeasonId],
-    queryFn: () =>
-      fieldLogApi.listBySeason(resolvedSeasonId as number, {
-        type: "SPRAY",
-        page: 0,
-        size: 500,
-      }),
+    queryKey: ["farmerReports", "pesticide", "phiRecords", resolvedSeasonId],
+    queryFn: () => seasonsApi.getPesticideRecords(resolvedSeasonId as number),
     enabled: queryEnabled,
     staleTime: 1000 * 60 * 5,
   });
@@ -303,20 +299,10 @@ export function useReports(options: UseReportsOptions = {}) {
   }, [seasonTaskPage?.items]);
 
   const pesticideRecords: PesticideRecord[] = useMemo(() => {
-    const sprayLogs = sprayLogPage?.items ?? [];
-    return sprayLogs.map((log) => ({
-      id: log.id,
-      lotId: `Log #${log.id}`,
-      chemical: null,
-      quantity: null,
-      unit: null,
-      phi: null,
-      daysRemaining: null,
-      status: "review",
-      appliedAt: log.logDate,
-      notes: log.notes ?? null,
-    }));
-  }, [resolvedSeasonId, sprayLogPage?.items]);
+    return [...(pesticideApiRecords ?? [])]
+      .sort((left, right) => right.applicationDate.localeCompare(left.applicationDate))
+      .map((record) => toPesticideReportRecord(record));
+  }, [pesticideApiRecords]);
 
   const isLoading =
     yieldLoading ||

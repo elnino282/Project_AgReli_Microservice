@@ -5,17 +5,22 @@ import org.example.season.dto.request.EmployeeTrainingRecordRequest;
 import org.example.season.dto.request.TrainingProgramRequest;
 import org.example.season.dto.response.EmployeeTrainingRecordDto;
 import org.example.season.dto.response.TrainingProgramDto;
+import org.example.season.dto.response.TrainingComplianceSnapshotDto;
 import org.example.season.entity.EmployeeTrainingRecord;
 import org.example.season.entity.TrainingProgram;
 import org.example.season.entity.WorkTeamMember;
 import org.example.season.repository.EmployeeTrainingRecordRepository;
+import org.example.season.repository.SeasonEmployeeRepository;
 import org.example.season.repository.TrainingProgramRepository;
 import org.example.season.repository.WorkTeamMemberRepository;
 import org.example.season.repository.WorkTeamRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -26,6 +31,7 @@ public class EmployeeTrainingService {
 
     private final TrainingProgramRepository trainingProgramRepository;
     private final EmployeeTrainingRecordRepository employeeTrainingRecordRepository;
+    private final SeasonEmployeeRepository seasonEmployeeRepository;
     private final WorkTeamRepository workTeamRepository;
     private final WorkTeamMemberRepository workTeamMemberRepository;
 
@@ -106,6 +112,75 @@ public class EmployeeTrainingService {
                     .toList());
         }
         return result;
+    }
+
+    /**
+     * Snapshot fail-closed used by VietGAP certification scoring. A member is compliant only
+     * when every mandatory program has a completed, in-date record with evidence.
+     */
+    public TrainingComplianceSnapshotDto getTrainingComplianceForSeason(Integer seasonId) {
+        var memberUserIds = new LinkedHashSet<Long>();
+        seasonEmployeeRepository.findAllBySeasonIdAndActiveTrue(seasonId).stream()
+                .map(seasonEmployee -> seasonEmployee.getEmployeeUserId())
+                .filter(java.util.Objects::nonNull)
+                .forEach(memberUserIds::add);
+
+        var teams = workTeamRepository.findBySeasonId(Long.valueOf(seasonId));
+        List<Long> teamIds = teams.stream().map(team -> team.getId()).toList();
+        if (!teamIds.isEmpty()) {
+            workTeamMemberRepository.findByWorkTeamIdIn(teamIds).stream()
+                    .map(WorkTeamMember::getEmployeeUserId)
+                    .filter(java.util.Objects::nonNull)
+                    .forEach(memberUserIds::add);
+        }
+        List<Long> userIds = List.copyOf(memberUserIds);
+        List<TrainingProgram> requiredPrograms = trainingProgramRepository.findByIsMandatoryTrue();
+        List<EmployeeTrainingRecord> records = userIds.isEmpty()
+                ? List.of()
+                : employeeTrainingRecordRepository.findByUserIdIn(userIds);
+        LocalDate today = LocalDate.now();
+        Map<Long, Boolean> memberCompliance = new LinkedHashMap<>();
+
+        for (Long userId : userIds) {
+            boolean memberIsCompliant = !requiredPrograms.isEmpty()
+                    && requiredPrograms.stream().allMatch(program -> records.stream()
+                            .anyMatch(record -> isValidRecord(record, userId, program.getId(), today)));
+            memberCompliance.put(userId, memberIsCompliant);
+        }
+
+        int compliantMembers = (int) memberCompliance.values().stream().filter(Boolean.TRUE::equals).count();
+        boolean compliant = !memberCompliance.isEmpty()
+                && !requiredPrograms.isEmpty()
+                && compliantMembers == memberCompliance.size();
+
+        return TrainingComplianceSnapshotDto.builder()
+                .seasonId(seasonId)
+                .totalMembers(memberCompliance.size())
+                .compliantMembers(compliantMembers)
+                .requiredProgramIds(requiredPrograms.stream().map(TrainingProgram::getId).toList())
+                .requiredCategories(requiredPrograms.stream()
+                        .map(TrainingProgram::getCategory)
+                        .filter(category -> category != null && !category.isBlank())
+                        .distinct()
+                        .toList())
+                .memberCompliance(memberCompliance)
+                .compliant(compliant)
+                .build();
+    }
+
+    private boolean isValidRecord(EmployeeTrainingRecord record, Long userId, Integer programId, LocalDate today) {
+        if (!userId.equals(record.getUserId())
+                || record.getTrainingProgram() == null
+                || !programId.equals(record.getTrainingProgram().getId())
+                || !"COMPLETED".equalsIgnoreCase(record.getStatus())
+                || record.getTrainedAt() == null
+                || record.getTrainedAt().isAfter(today)
+                || record.getCertifiedUntil() == null
+                || record.getCertifiedUntil().isBefore(today)) {
+            return false;
+        }
+        return record.getEvidenceUrls() != null
+                && record.getEvidenceUrls().stream().anyMatch(url -> url != null && !url.isBlank());
     }
 
     private TrainingProgramDto toDto(TrainingProgram p) {

@@ -6,6 +6,8 @@ describe('soil-test schemas', () => {
     const parsed = CreateSoilTestRequestSchema.parse({
       plotId: 22,
       sampleDate: '2026-03-18',
+      soilPh: 6.2,
+      electricalConductivityDsM: 0.42,
       mineralNKgPerHa: 14.5,
       soilOrganicMatterPct: 2.1,
       sourceType: 'user_entered',
@@ -13,6 +15,19 @@ describe('soil-test schemas', () => {
 
     expect(parsed.plotId).toBe(22);
     expect(parsed.mineralNKgPerHa).toBe(14.5);
+    expect(parsed.soilPh).toBe(6.2);
+  });
+
+  it('rejects pH outside the physical 0-14 scale', () => {
+    const result = CreateSoilTestRequestSchema.safeParse({
+      plotId: 22,
+      sampleDate: '2026-03-18',
+      soilPh: 14.1,
+      mineralNKgPerHa: 14.5,
+      sourceType: 'lab_measured',
+    });
+
+    expect(result.success).toBe(false);
   });
 
   it('fails create request when mineral N is missing', () => {
@@ -31,6 +46,8 @@ describe('soil-test schemas', () => {
       seasonId: 33,
       plotId: 22,
       sampleDate: '2026-03-18',
+      soilPh: '6.20',
+      electricalConductivityDsM: '0.4200',
       soilOrganicMatterPct: 2.1,
       mineralNKgPerHa: 14.5,
       nitrateMgPerKg: null,
@@ -50,5 +67,6 @@ describe('soil-test schemas', () => {
     });
 
     expect(parsed.estimatedNContributionKg).toBeNull();
+    expect(parsed.soilPh).toBe(6.2);
   });
 });

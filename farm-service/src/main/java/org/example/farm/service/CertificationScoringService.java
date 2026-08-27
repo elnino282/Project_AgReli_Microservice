@@ -79,8 +79,19 @@ public class CertificationScoringService {
             }
         }
 
+        autoPopulateFromSeasonIds(seasonIds, pendingStatuses, items);
+    }
+
+    /**
+     * Certification evidence must be evaluated only for seasons explicitly included
+     * in the registered product/plot scope, never for every season of the farm.
+     */
+    public void autoPopulateFromSeasonIds(
+            List<Integer> seasonIds,
+            List<CertificationItemStatus> pendingStatuses,
+            List<CertificationChecklistItem> items) {
         if (seasonIds.isEmpty()) {
-            log.info("No seasons found for farm {}, skipping auto-populate", farmId);
+            log.info("No seasons are registered in the certification scope; skipping auto-populate");
             return;
         }
 
@@ -186,20 +197,40 @@ public class CertificationScoringService {
                     }
                 }
                 case "TRAINING_RECORD" -> {
-                    boolean hasTraining = false;
+                    int totalMembers = 0;
+                    int compliantMembers = 0;
+                    boolean allPopulatedSeasonsCompliant = true;
                     for (Integer seasonId : seasonIds) {
                         try {
-                            var stats = seasonServiceClient.getTrainingStatsInternal(seasonId);
-                            if (stats != null && !stats.isEmpty()) {
-                                hasTraining = true;
-                                break;
+                            var snapshot = seasonServiceClient.getTrainingComplianceInternal(seasonId);
+                            if (snapshot == null
+                                    || snapshot.getTotalMembers() == null
+                                    || snapshot.getCompliantMembers() == null
+                                    || snapshot.getCompliant() == null) {
+                                throw new IllegalStateException("Incomplete training compliance snapshot");
+                            }
+                            if (snapshot.getTotalMembers() > 0) {
+                                totalMembers += snapshot.getTotalMembers();
+                                compliantMembers += snapshot.getCompliantMembers();
+                                allPopulatedSeasonsCompliant &= Boolean.TRUE.equals(snapshot.getCompliant());
                             }
                         } catch (Exception e) {
-                            log.error("Error fetching training stats for season {}", seasonId, e);
+                            log.error("Error verifying training compliance for season {}", seasonId, e);
+                            throw new AppException(ErrorCode.CERTIFICATION_EVIDENCE_UNAVAILABLE);
                         }
                     }
-                    if (hasTraining) {
+
+                    if (totalMembers > 0 && allPopulatedSeasonsCompliant && compliantMembers == totalMembers) {
                         status.setStatus("PASS");
+                        status.setNotes("Đã xác minh 100% nhân sự có hồ sơ đào tạo bắt buộc hợp lệ ("
+                                + compliantMembers + "/" + totalMembers + ")");
+                        status.setCheckedAt(LocalDateTime.now());
+                    } else {
+                        status.setStatus("FAIL");
+                        status.setNotes(totalMembers == 0
+                                ? "Không có nhân sự hoặc hồ sơ đào tạo để xác minh"
+                                : "Chỉ " + compliantMembers + "/" + totalMembers
+                                        + " nhân sự đáp ứng đầy đủ chương trình đào tạo bắt buộc");
                         status.setCheckedAt(LocalDateTime.now());
                     }
                 }

@@ -1,0 +1,30 @@
+.harvest-batch-dialog .harvest-form-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.harvest-batch-dialog .harvest-form-field > label {
+  display: flex;
+  align-items: flex-end;
+  line-height: 1.25rem;
+}
+
+.harvest-batch-dialog .harvest-form-field input,
+.harvest-batch-dialog .harvest-form-field button[role="combobox"],
+.harvest-batch-dialog .harvest-readonly-field {
+  width: 100%;
+  min-height: 2.75rem;
+}
+
+.harvest-batch-dialog .harvest-readonly-field {
+  display: flex;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .harvest-batch-dialog .harvest-form-field > label {
+    min-height: 2.5rem;
+  }
+}

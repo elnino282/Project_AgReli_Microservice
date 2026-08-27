@@ -26,7 +26,7 @@ export function isCertificationVerified(
   certification: MarketplaceTraceability["certification"],
   today = new Date(),
 ): certification is TraceCertification {
-  if (!certification || certification.status !== "PUBLISHED") return false;
+  if (!certification || certification.status !== "PUBLISHED" || certification.scopeMatched !== true) return false;
   if (!certification.expiryDate) return true;
 
   const expiry = new Date(`${certification.expiryDate}T23:59:59.999`);
@@ -81,6 +81,7 @@ export function PublicTracePage() {
 
   const { farm, season, plot, harvest, productLot, timeline, validatedAt, certification, phiSafety, nutritionClaim } = traceability;
   const hasVerifiedCertification = isCertificationVerified(certification);
+  const matchedCertificationScope = certification?.scopes?.find((scope) => scope.seasonId === season?.id);
 
   // Determine global PHI safety status
   const hasVerifiedPHI = phiSafety != null;
@@ -246,6 +247,13 @@ export function PublicTracePage() {
                     </span>
                   </div>
                 </div>
+                {matchedCertificationScope && (
+                  <div className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50/70 p-2 text-[10px] text-emerald-900">
+                    <span className="block font-bold">Phạm vi được chứng nhận</span>
+                    <span>{matchedCertificationScope.cropName}{matchedCertificationScope.varietyName ? ` · ${matchedCertificationScope.varietyName}` : ""}</span>
+                    <span className="block">{matchedCertificationScope.plotName} · {matchedCertificationScope.registeredAreaHa.toLocaleString("vi-VN")} ha</span>
+                  </div>
+                )}
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-50 text-[10px] text-slate-400 flex items-center justify-between relative">

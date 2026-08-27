@@ -77,7 +77,7 @@ Quy ước chi tiết nằm ở `agricultural-crop-management-frontend/AGENTS.md
 
 ## Known issues / Audit findings (ưu tiên xử lý)
 
-Cập nhật trạng thái ngay khi audit thêm hoặc fix xong; không xóa lịch sử xác minh quan trọng nếu việc xóa làm phiên sau hiểu sai kiến trúc. Audit gần nhất: 2026-08-21.
+Cập nhật trạng thái ngay khi audit thêm hoặc fix xong; không xóa lịch sử xác minh quan trọng nếu việc xóa làm phiên sau hiểu sai kiến trúc. Audit gần nhất: 2026-08-27.
 
 1. **[FIXED 2026-08-14, AUD-S0-001] Compose readiness đã được xác minh lặp lại.** MySQL probe đăng nhập bằng application credential và kiểm tra đủ 11 schema; dependency bắt buộc dùng `service_healthy`. Hai cold-start độc lập từ volume `vietfuture_audit_*` mới đều hoàn tất khoảng 194 giây, đủ 22 container, 12 service healthy, gateway HTTP 200/`UP` và không có lỗi DB/dependency startup. Không chạy song song full dev/audit trên Docker Desktop nếu thiếu tài nguyên.
 2. **[FIXED 2026-08-14, AUD-S0-011] Marketplace PHI gate đã fail-closed.** PHI luôn được kiểm tra khi listing có `seasonId`, độc lập claim null/`NONE`; SeasonClient fallback không còn biến outage thành empty. Verified-empty vẫn tạo safe snapshot, còn violation/outage chặn cả `ACTIVE` và `PUBLISHED`. Targeted 17 test và full marketplace 40 test xanh.
@@ -103,8 +103,8 @@ Cập nhật trạng thái ngay khi audit thêm hoặc fix xong; không xóa l�
 22. **[FIXED 2026-08-21, AUD-S2-001] AI harvest dùng dữ liệu season thật.** Growth days lấy từ ngày persisted, recent logs lấy từ backend của đúng season; input thiếu/sai hoặc tải log lỗi không được gọi AI.
 23. **[FIXED 2026-08-21, AUD-S2-004/AUD-S2-007] RAG và provenance đã nối thật.** AI dùng Gemini embedding + Chroma v2, không còn dummy store/vector; controller, OpenAPI/Orval và hai hook giữ metadata nguồn từ document thực tế, fallback không bịa nguồn. AI 14/14 và frontend hook regression xanh.
 24. **[FIXED 2026-08-21, AUD-S2-008] Farmer self-assessment đã persist.** Route chỉ cho sửa checklist `MANUAL`, lưu status/notes qua backend và reload server truth trước khi báo thành công.
-25. **[S2 CLOSED 2026-08-21]** Cả 5 finding S2 đã FIXED; lịch sử/evidence giữ tại `docs/audit/AUDIT_BACKLOG.md`.
-26. **[S3 CLOSED 2026-08-21, AUD-S3-001..008]** Cả 8 finding S3 đã FIXED: dashboard/workspace FDN reachable với seed read-model được backfill qua outbox; duplicate page và legacy root đã dọn; architecture gates/run guide/smoke hoạt động. Full frontend 294 test và backend liên quan 62 test xanh; localhost smoke pass đủ FARMER/EMPLOYEE/BUYER/ADMIN.
+25. **[S2 CLOSED 2026-08-27]** Cả 6 finding S2 đã FIXED. `AUD-S2-009` bổ sung từ acceptance: Employee progress không còn giả upload bằng `dummyimage.com`; UI chỉ gửi URL HTTP(S) persisted hợp lệ theo contract backend hiện hành. Lịch sử/evidence giữ tại `docs/audit/AUDIT_BACKLOG.md`.
+26. **[S3 CLOSED 2026-08-27, AUD-S3-001..010]** Mười finding S3 đã FIXED. Acceptance browser 2026-08-27 bổ sung `AUD-S3-009/010`: Vite dev port đã đồng bộ 3000 và Employee `TaskSchema` giữ plot context backend; Playwright read-only 8/8 pass cho Admin/Buyer/Employee cùng reload/role isolation. Mutation Giai đoạn 5 vẫn phải chạy trên stack audit cô lập.
 
 ## Quy tắc làm việc
 

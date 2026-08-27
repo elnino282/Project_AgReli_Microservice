@@ -12,7 +12,7 @@ import { EmptyState } from "./components/EmptyState";
 import { useDocumentFilters } from "./hooks/useDocumentFilters";
 import { useDocuments } from "./hooks/useDocuments";
 
-export function Documents() {
+export function DocumentLibrary() {
   const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const {
@@ -76,24 +76,14 @@ export function Documents() {
   ]);
 
   return (
-    <PageContainer variant="default">
-      <div>
-        <div className="mb-6">
-          <PageHeader
-            icon={<FileText className="w-8 h-8" />}
-            title={t("documents.title")}
-            subtitle={t("documents.subtitle")}
-          />
-        </div>
-
-        <div className="mb-6">
-          <DocumentFilterBar
-            filters={filters}
-            onFilterChange={setFilter}
-            onClearFilters={clearFilters}
-            hasActiveFilters={hasActiveFilters}
-          />
-        </div>
+    <>
+      <div className="space-y-6">
+        <DocumentFilterBar
+          filters={filters}
+          onFilterChange={setFilter}
+          onClearFilters={clearFilters}
+          hasActiveFilters={hasActiveFilters}
+        />
 
         <Card variant="content" className="rounded-2xl">
           <CardContent className="px-6 py-4">
@@ -164,6 +154,23 @@ export function Documents() {
         getRelatedDocuments={getRelatedDocuments}
         onSelectRelated={setSelectedDoc}
       />
+    </>
+  );
+}
+
+export function Documents() {
+  const { t } = useI18n();
+
+  return (
+    <PageContainer variant="default">
+      <div className="mb-6">
+        <PageHeader
+          icon={<FileText className="h-8 w-8" />}
+          title={t("documents.title")}
+          subtitle={t("documents.subtitle")}
+        />
+      </div>
+      <DocumentLibrary />
     </PageContainer>
   );
 }

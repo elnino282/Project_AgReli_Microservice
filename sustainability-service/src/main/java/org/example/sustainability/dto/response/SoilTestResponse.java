@@ -24,6 +24,8 @@ public class SoilTestResponse {
     String plotName;
 
     LocalDate sampleDate;
+    BigDecimal soilPh;
+    BigDecimal electricalConductivityDsM;
     BigDecimal soilOrganicMatterPct;
     BigDecimal mineralNKgPerHa;
     BigDecimal nitrateMgPerKg;

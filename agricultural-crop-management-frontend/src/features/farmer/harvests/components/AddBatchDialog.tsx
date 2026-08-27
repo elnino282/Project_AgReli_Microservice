@@ -35,6 +35,7 @@ import { useHarvestStockContext } from "@/entities/harvest";
 import { useProductWarehouseLots } from "@/entities/product-warehouse";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
 import { useEffect, useMemo, useRef, useState } from "react";
+import "./AddBatchDialog.css";
 
 interface AddBatchDialogProps {
   open: boolean;
@@ -391,7 +392,10 @@ export function AddBatchDialog({
         onOpenChange(true);
       }}
     >
-      <DialogContent className="sm:max-w-[720px]" closeDisabled={isSubmitting}>
+      <DialogContent
+        className="harvest-batch-dialog sm:max-w-[860px]"
+        closeDisabled={isSubmitting}
+      >
         <DialogHeader>
           <BackButton onClick={closeWithConfirm} className="w-fit" />
           <DialogTitle className="flex items-center gap-2 text-foreground text-xl">
@@ -454,7 +458,7 @@ export function AddBatchDialog({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
+              <div className="harvest-form-field">
                 <Label htmlFor="date" className="text-foreground">
                   {t("harvests.addBatch.fields.harvestDate", "Harvest Date")} <span className="text-destructive">*</span>
                 </Label>
@@ -468,12 +472,12 @@ export function AddBatchDialog({
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="harvest-form-field">
                 <Label htmlFor="season" className="text-foreground">
                   {t("harvests.addBatch.fields.season", "Season")}
                 </Label>
                 {isSeasonLocked || isEditing ? (
-                  <div className="rounded-xl border border-border px-3 py-2 text-sm bg-muted/30">
+                  <div className="harvest-readonly-field rounded-xl border border-border px-3 py-2 text-sm bg-muted/30">
                     {lockedSeasonLabel || selectedSeason?.seasonName || t("harvests.addBatch.currentSeason", "Current season")}
                   </div>
                 ) : (
@@ -498,11 +502,11 @@ export function AddBatchDialog({
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="harvest-form-field">
                 <Label className="text-foreground">
                   {t("harvests.addBatch.fields.harvestFromPlot", "Harvest From Plot")} <span className="text-destructive">*</span>
                 </Label>
-                <div className={`rounded-xl border px-3 py-2 text-sm ${
+                <div className={`harvest-readonly-field rounded-xl border px-3 py-2 text-sm ${
                   hasPlotLink
                     ? "border-border bg-muted/30 text-foreground"
                     : "border-destructive/40 bg-destructive/5 text-destructive"
@@ -530,9 +534,13 @@ export function AddBatchDialog({
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div
+              className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${
+                isEditing ? "" : "xl:grid-cols-3"
+              }`}
+            >
               {!isEditing && (
-              <div className="space-y-2 md:col-span-2 xl:col-span-1">
+              <div className="harvest-form-field">
                 <Label htmlFor="productName" className="text-foreground">
                   {t("harvests.addBatch.fields.cropProduct", "Crop / Product")} <span className="text-destructive">*</span>
                 </Label>
@@ -568,7 +576,7 @@ export function AddBatchDialog({
               </div>
               )}
 
-              <div className="space-y-2">
+              <div className="harvest-form-field">
                 <Label htmlFor="quantity" className="text-foreground">
                   {t("harvests.addBatch.fields.quantityKg", "Quantity (kg)")} <span className="text-destructive">*</span>
                 </Label>
@@ -585,7 +593,31 @@ export function AddBatchDialog({
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="harvest-form-field">
+                <Label htmlFor="grade" className="text-foreground">
+                  {t("harvests.addBatch.fields.grade", "Grade")} <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={formData.grade}
+                  onValueChange={(value: HarvestGrade) =>
+                    onFormChange({ ...formData, grade: value })
+                  }
+                  disabled={isFormDisabled}
+                >
+                  <SelectTrigger id="grade" className="rounded-xl border-border">
+                    <SelectValue placeholder={t("harvests.addBatch.placeholders.selectGrade", "Select grade")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GRADE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {gradeLabels[option.value]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="harvest-form-field">
                 <Label htmlFor="grossWetWeight" className="text-foreground">
                   Khối lượng ướt gặt ngoài đồng (kg)
                 </Label>
@@ -603,7 +635,7 @@ export function AddBatchDialog({
               </div>
 
               {!isEditing && (
-              <div className="space-y-2">
+              <div className="harvest-form-field">
                 <Label htmlFor="warehouse" className="text-foreground">
                   {t("harvests.addBatch.fields.warehouse", "Warehouse")} <span className="text-destructive">*</span>
                 </Label>
@@ -628,7 +660,7 @@ export function AddBatchDialog({
               </div>
               )}
 
-              <div className="space-y-2">
+              <div className="harvest-form-field">
                 <Label htmlFor="qualityGrade" className="text-foreground">
                   {t("harvests.addBatch.fields.qualityGrade", "Quality Grade")} <span className="text-destructive">*</span>
                 </Label>
@@ -694,6 +726,25 @@ export function AddBatchDialog({
               </div>
             )}
 
+            <div className="harvest-form-field">
+              <Label htmlFor="qualityNotes" className="text-foreground">
+                {t("harvests.addBatch.fields.qualityNotes", "Quality notes")}
+              </Label>
+              <Input
+                id="qualityNotes"
+                placeholder={t(
+                  "harvests.addBatch.placeholders.qualityNotes",
+                  "Describe appearance, moisture, defects, or inspection results",
+                )}
+                value={formData.qualityNotes || ""}
+                onChange={(event) =>
+                  onFormChange({ ...formData, qualityNotes: event.target.value })
+                }
+                className="rounded-xl border-border focus:border-primary"
+                disabled={isFormDisabled}
+              />
+            </div>
+
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="notes" className="text-foreground">
@@ -710,20 +761,13 @@ export function AddBatchDialog({
               </div>
             </div>
 
-            {/* Packaging & Processing Section (Conditional on Crop Type) */}
-            {(() => {
-              const cropNameStr = (formData.productName || selectedSeason?.cropName || "").toLowerCase();
-              const isGrain = cropNameStr.includes("lúa") || cropNameStr.includes("grain") || cropNameStr.includes("gạo") || cropNameStr.includes("ngô");
-              const showPackaging = !isGrain; // Rau củ quả hiện form đóng gói
-
-              if (!showPackaging) return null;
-
-              return (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 p-4 border border-primary/20 rounded-xl bg-primary/5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 p-4 border border-primary/20 rounded-xl bg-primary/5">
                   <div className="col-span-1 md:col-span-3">
-                    <h4 className="text-sm font-semibold text-primary">Quy trình đóng gói & sơ chế (Rau/Quả)</h4>
+                    <h4 className="text-sm font-semibold text-primary">
+                      {t("harvests.addBatch.fields.packagingProcessing", "Packaging & processing")}
+                    </h4>
                   </div>
-                  <div className="space-y-2">
+                  <div className="harvest-form-field">
                     <Label htmlFor="packagingType" className="text-foreground">Loại đóng gói</Label>
                     <Select
                       value={formData.packagingType || ""}
@@ -742,7 +786,7 @@ export function AddBatchDialog({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
+                  <div className="harvest-form-field">
                     <Label htmlFor="packagingCount" className="text-foreground">Số lượng kiện</Label>
                     <Input
                       id="packagingCount"
@@ -756,7 +800,7 @@ export function AddBatchDialog({
                       disabled={isFormDisabled || !formData.packagingType || formData.packagingType === "NONE"}
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="harvest-form-field">
                     <Label htmlFor="processingType" className="text-foreground">Quy trình sơ chế</Label>
                     <Select
                       value={formData.processingType || ""}
@@ -775,9 +819,7 @@ export function AddBatchDialog({
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-              );
-            })()}
+            </div>
           </div>
 
           <Accordion
@@ -805,7 +847,7 @@ export function AddBatchDialog({
               <AccordionContent className="space-y-4">
                 {!isEditing && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
+                  <div className="harvest-form-field">
                     <Label htmlFor="batchIdPreview" className="text-foreground">
                       {t("harvests.addBatch.fields.batchIdPreview", "Batch ID Preview")}
                     </Label>
@@ -817,7 +859,7 @@ export function AddBatchDialog({
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="harvest-form-field">
                     <Label htmlFor="lotCode" className="text-foreground">
                       {t("harvests.addBatch.fields.lotNumber", "Lot Number")}
                     </Label>
@@ -843,7 +885,7 @@ export function AddBatchDialog({
                     </p>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="harvest-form-field">
                     <Label htmlFor="productVariant" className="text-foreground">
                       {t("harvests.addBatch.fields.productVariant", "Product Variant")}
                     </Label>
@@ -861,7 +903,7 @@ export function AddBatchDialog({
 
                 {!isEditing && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
+                  <div className="harvest-form-field">
                     <Label htmlFor="location" className="text-foreground">
                       {t("harvests.addBatch.fields.locationOptional", "Location (Optional)")}
                     </Label>
@@ -883,7 +925,7 @@ export function AddBatchDialog({
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="harvest-form-field">
                     <Label htmlFor="inventoryUnit" className="text-foreground">
                       {t("harvests.addBatch.fields.inventoryUnit", "Inventory Unit")}
                     </Label>
@@ -895,7 +937,7 @@ export function AddBatchDialog({
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="harvest-form-field">
                     <Label htmlFor="productId" className="text-foreground">
                       {t("harvests.addBatch.fields.productIdReadonly", "Product ID (Readonly)")}
                     </Label>
@@ -911,7 +953,7 @@ export function AddBatchDialog({
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
+                  <div className="harvest-form-field">
                     <Label htmlFor="moisture" className="text-foreground">
                       {t("harvests.addBatch.fields.moisture", "Moisture %")}
                     </Label>
@@ -929,7 +971,7 @@ export function AddBatchDialog({
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="harvest-form-field">
                     <Label htmlFor="harvestLoss" className="text-foreground">
                       {t("harvests.addBatch.fields.harvestLoss", "Harvest Loss %")}
                     </Label>
@@ -947,7 +989,7 @@ export function AddBatchDialog({
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="harvest-form-field">
                     <Label htmlFor="cropResidueHandling" className="text-foreground">
                       {t("harvests.addBatch.fields.cropResidueHandling", "Crop Residue Handling")}
                     </Label>
@@ -980,7 +1022,7 @@ export function AddBatchDialog({
                     {t("harvests.addBatch.fields.qualityControlMetrics", "Quality Control Metrics (Optional)")}
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
+                    <div className="harvest-form-field">
                       <Label htmlFor="purity" className="text-foreground">
                         {t("harvests.addBatch.fields.purity", "Purity %")}
                       </Label>
@@ -998,7 +1040,7 @@ export function AddBatchDialog({
                       />
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="harvest-form-field">
                       <Label htmlFor="foreignMatter" className="text-foreground">
                         {t("harvests.addBatch.fields.foreignMatter", "Foreign Matter %")}
                       </Label>
@@ -1016,7 +1058,7 @@ export function AddBatchDialog({
                       />
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="harvest-form-field">
                       <Label htmlFor="brokenGrains" className="text-foreground">
                         {t("harvests.addBatch.fields.brokenGrains", "Broken Grains %")}
                       </Label>

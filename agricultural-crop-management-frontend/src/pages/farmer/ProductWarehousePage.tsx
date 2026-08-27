@@ -195,6 +195,13 @@ export function ProductWarehousePage() {
     isError: traceabilityError,
   } = useProductWarehouseTraceability(selectedTraceLotId);
 
+  const selectedTraceLot = useMemo(
+    () =>
+      (lotsData?.items ?? []).find((lot) => lot.id === selectedTraceLotId) ??
+      null,
+    [lotsData?.items, selectedTraceLotId],
+  );
+
   const adjustMutation = useAdjustProductWarehouseLot();
   const stockOutMutation = useStockOutProductWarehouseLot();
   const createWarehouseMutation = useCreateWarehouse();
@@ -845,14 +852,7 @@ export function ProductWarehousePage() {
                       <tr>
                         <th>{t("productWarehouse.table.lotCode")}</th>
                         <th>{t("productWarehouse.table.productName")}</th>
-                        <th>{t("productWarehouse.table.variant")}</th>
-                        <th>Đóng gói</th>
-                        <th>{t("productWarehouse.table.unit")}</th>
-                        <th>{t("productWarehouse.table.harvestedAt")}</th>
                         <th>{t("productWarehouse.table.receivedAt")}</th>
-                        <th>Ngày hết hạn</th>
-                        <th>{t("productWarehouse.table.farmPlot")}</th>
-                        <th>{t("productWarehouse.table.season")}</th>
                         <th>{t("productWarehouse.table.location")}</th>
                         <th>{t("productWarehouse.table.quality")}</th>
                         <th>{t("productWarehouse.table.onHand")}</th>
@@ -861,7 +861,7 @@ export function ProductWarehousePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {(lotsData?.items ?? []).map((lot: any) => {
+                      {(lotsData?.items ?? []).map((lot: ProductWarehouseLot) => {
                         // Logic kiểm tra kho chuyên biệt
                         const isSensitive = lot.cropCategory === "VEGETABLE" || lot.cropCategory === "FRUIT";
                         const hasColdChainAlert = isSensitive && lot.hasTemperatureAlert; // giả lập field có alert
@@ -870,30 +870,24 @@ export function ProductWarehousePage() {
                         <tr key={lot.id} className={hasColdChainAlert ? "bg-red-50" : ""}>
                           <td>{lot.lotCode}</td>
                           <td>
-                            <div className="flex items-center gap-2">
-                              {lot.productName}
+                            <div className="flex min-w-40 flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                <span>{lot.productName}</span>
                               {hasColdChainAlert && (
                                 <span className="inline-flex items-center gap-1 text-xs text-red-600 font-semibold bg-red-100 px-2 py-0.5 rounded-full" title="Tổn thương do lạnh">
                                   <AlertCircle className="w-3 h-3" />
                                   Cảnh báo Lạnh
                                 </span>
                               )}
+                              </div>
+                              {lot.productVariant && (
+                                <span className="text-xs text-muted-foreground">
+                                  {lot.productVariant}
+                                </span>
+                              )}
                             </div>
                           </td>
-                          <td>{lot.productVariant || "-"}</td>
-                          <td>
-                            {lot.packagingType && lot.packagingType !== "NONE" 
-                              ? `${lot.packagingType} (${lot.packagingCount || 0})` 
-                              : "-"}
-                          </td>
-                          <td>{lot.unit || "-"}</td>
-                          <td>{formatDate(lot.harvestedAt)}</td>
                           <td>{formatDateTime(lot.receivedAt)}</td>
-                          <td className={hasColdChainAlert ? "text-red-600 font-medium" : ""}>
-                            {formatDate(lot.expiryDate)}
-                          </td>
-                          <td>{`${lot.farmName || "-"} / ${lot.plotName || "-"}`}</td>
-                          <td>{lot.seasonName || "-"}</td>
                           <td>{lot.locationLabel || "-"}</td>
                           <td>{lot.grade || lot.qualityStatus || "-"}</td>
                           <td>
@@ -1108,6 +1102,34 @@ export function ProductWarehousePage() {
                       {formatDate(traceabilityData.harvestedAt)}
                     </p>
                     <p>
+                      <strong>{t("productWarehouse.traceability.receivedAt")}:</strong>{" "}
+                      {formatDateTime(traceabilityData.receivedAt)}
+                    </p>
+                    <p>
+                      <strong>{t("productWarehouse.traceability.expiryDate")}:</strong>{" "}
+                      {formatDate(selectedTraceLot?.expiryDate)}
+                    </p>
+                    <p>
+                      <strong>{t("productWarehouse.traceability.warehouseLocation")}:</strong>{" "}
+                      {selectedTraceLot
+                        ? `${selectedTraceLot.warehouseName || "-"} / ${selectedTraceLot.locationLabel || "-"}`
+                        : "-"}
+                    </p>
+                    <p>
+                      <strong>{t("productWarehouse.traceability.packaging")}:</strong>{" "}
+                      {selectedTraceLot?.packagingType && selectedTraceLot.packagingType !== "NONE"
+                        ? `${selectedTraceLot.packagingType} (${selectedTraceLot.packagingCount ?? 0})`
+                        : "-"}
+                    </p>
+                    <p>
+                      <strong>{t("productWarehouse.traceability.processing")}:</strong>{" "}
+                      {selectedTraceLot?.processingType || "-"}
+                    </p>
+                    <p>
+                      <strong>{t("productWarehouse.traceability.quality")}:</strong>{" "}
+                      {selectedTraceLot?.grade || selectedTraceLot?.qualityStatus || "-"}
+                    </p>
+                    <p>
                       <strong>{t("productWarehouse.traceability.recordedBy")}:</strong>{" "}
                       {traceabilityData.recordedByName || "-"}
                     </p>
@@ -1128,6 +1150,10 @@ export function ProductWarehousePage() {
                     <p>
                       <strong>{t("productWarehouse.traceability.harvestRef")}:</strong>{" "}
                       {traceabilityData.harvestId || "-"}
+                    </p>
+                    <p>
+                      <strong>{t("productWarehouse.traceability.note")}:</strong>{" "}
+                      {selectedTraceLot?.note || "-"}
                     </p>
                   </div>
 

@@ -6,6 +6,7 @@ import {
     ClipboardCheck,
     Link as LinkIcon,
     FileText,
+    PackageCheck,
 } from "lucide-react";
 import {
     Dialog,
@@ -46,6 +47,15 @@ export function HarvestDetailsDialog({
     if (!batch) return null;
 
     const notAvailable = t("common.notAvailable", "—");
+    const visibleNotes = batch.notes?.split("[harvest-metadata]")[0].trim();
+    const hasAdvancedQuality = Boolean(
+        batch.qualityGrade
+        || batch.qualityNotes
+        || batch.grossWetWeight != null
+        || batch.netDryWeight != null
+        || batch.packagingType
+        || batch.processingType,
+    );
 
     return (
         <Dialog
@@ -155,6 +165,62 @@ export function HarvestDetailsDialog({
                         </Card>
                     )}
 
+                    {hasAdvancedQuality && (
+                        <Card className="border-border rounded-xl">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-sm text-foreground flex items-center gap-2">
+                                    <PackageCheck className="w-4 h-4 text-primary" />
+                                    {t("harvests.details.advancedQuality", "Advanced quality & packaging")}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                <div className="flex items-center justify-between gap-4">
+                                    <span className="text-sm text-muted-foreground">
+                                        {t("harvests.addBatch.fields.qualityGrade", "Quality grade")}
+                                    </span>
+                                    <span className="text-sm text-foreground">{batch.qualityGrade || notAvailable}</span>
+                                </div>
+                                <div className="flex items-center justify-between gap-4">
+                                    <span className="text-sm text-muted-foreground">
+                                        {t("harvests.addBatch.fields.grossWetWeight", "Gross wet weight")}
+                                    </span>
+                                    <span className="numeric text-foreground">
+                                        {batch.grossWetWeight != null ? `${batch.grossWetWeight.toLocaleString(preferences.locale)} kg` : notAvailable}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between gap-4">
+                                    <span className="text-sm text-muted-foreground">
+                                        {t("harvests.details.netDryWeight", "Net dry weight")}
+                                    </span>
+                                    <span className="numeric text-foreground">
+                                        {batch.netDryWeight != null ? `${batch.netDryWeight.toLocaleString(preferences.locale)} kg` : notAvailable}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between gap-4">
+                                    <span className="text-sm text-muted-foreground">
+                                        {t("harvests.addBatch.fields.packagingType", "Packaging")}
+                                    </span>
+                                    <span className="text-sm text-foreground">
+                                        {batch.packagingType
+                                            ? `${batch.packagingType}${batch.packagingCount != null ? ` (${batch.packagingCount})` : ""}`
+                                            : notAvailable}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between gap-4">
+                                    <span className="text-sm text-muted-foreground">
+                                        {t("harvests.addBatch.fields.processingType", "Processing")}
+                                    </span>
+                                    <span className="text-sm text-foreground">{batch.processingType || notAvailable}</span>
+                                </div>
+                                {batch.qualityNotes && (
+                                    <div className="border-t border-border pt-3">
+                                        <p className="text-sm text-muted-foreground">{batch.qualityNotes}</p>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {batch.linkedSale && (
                         <Card className="border-border rounded-xl">
                             <CardHeader className="pb-3">
@@ -174,7 +240,7 @@ export function HarvestDetailsDialog({
                         </Card>
                     )}
 
-                    {batch.notes && (
+                    {visibleNotes && (
                         <Card className="border-border rounded-xl">
                             <CardHeader className="pb-3">
                                 <CardTitle className="text-sm text-foreground flex items-center gap-2">
@@ -183,7 +249,7 @@ export function HarvestDetailsDialog({
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-sm text-muted-foreground">{batch.notes}</p>
+                                <p className="text-sm text-muted-foreground">{visibleNotes}</p>
                             </CardContent>
                         </Card>
                     )}

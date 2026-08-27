@@ -5,6 +5,8 @@ import { AdminCertAuditsPage } from "./AdminCertAuditsPage";
 
 const api = vi.hoisted(() => ({
   getAllAudits: vi.fn(),
+  getCertificationApplications: vi.fn(),
+  scheduleAudit: vi.fn(),
   startAudit: vi.fn(),
   completeAudit: vi.fn(),
   createNonconformity: vi.fn(),
@@ -33,6 +35,8 @@ describe("AdminCertAuditsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     api.getAllAudits.mockResolvedValue([passedAudit]);
+    api.getCertificationApplications.mockResolvedValue([]);
+    api.scheduleAudit.mockResolvedValue({ id: 21 });
     api.issueCertificate.mockResolvedValue("ok");
   });
 
@@ -47,6 +51,27 @@ describe("AdminCertAuditsPage", () => {
 
     await waitFor(() => expect(api.issueCertificate).toHaveBeenCalledWith(3, expect.objectContaining({
       certificateNumber: "CERT-2026-001",
+    })));
+  });
+
+  it("schedules an initial audit from an applied application", async () => {
+    api.getCertificationApplications.mockResolvedValueOnce([{
+      recordId: 8,
+      farmId: 4,
+      farmName: "Farm chờ đánh giá",
+      complianceScore: 88,
+      status: "APPLIED",
+    }]);
+    const user = userEvent.setup();
+    render(<AdminCertAuditsPage />);
+
+    expect(await screen.findByText(/Farm chờ đánh giá/)).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Tổ chức chứng nhận"), "Đơn vị VietGAP A");
+    await user.click(screen.getByRole("button", { name: /Tiếp nhận & lên lịch/i }));
+
+    await waitFor(() => expect(api.scheduleAudit).toHaveBeenCalledWith(4, expect.objectContaining({
+      auditType: "INITIAL",
+      auditorOrgName: "Đơn vị VietGAP A",
     })));
   });
 });

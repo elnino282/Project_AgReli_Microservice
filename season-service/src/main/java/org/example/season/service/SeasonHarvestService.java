@@ -487,6 +487,14 @@ public class SeasonHarvestService {
         harvest.setUnit(request.getUnit());
         harvest.setGrade(request.getGrade());
         harvest.setNote(request.getNote());
+        harvest.setQualityGrade(parseQualityGrade(request.getQualityGrade()));
+        harvest.setQualityNotes(request.getQualityNotes());
+        harvest.setSubStandardQuantity(request.getSubStandardQuantity());
+        harvest.setSubStandardDisposition(parseSubStandardDisposition(request.getSubStandardDisposition()));
+        harvest.setPackagingType(parsePackagingType(request.getPackagingType()));
+        harvest.setPackagingCount(request.getPackagingCount());
+        harvest.setProcessingType(parseProcessingType(request.getProcessingType()));
+        harvest.setGrossWetWeight(request.getGrossWetWeight());
 
         Harvest saved = harvestRepository.save(harvest);
         ProductWarehouseLotDto savedLot = syncLinkedLotFromHarvest(linkedLot, saved);

@@ -183,6 +183,7 @@ class FlywayMigrationTest {
                         "admin_marketplace_order_summary",
                         "admin_marketplace_product_summary",
                         "admin_documents",
+                        "document_user_interactions",
                         "admin_audit_log_entries",
                         "processed_events"
                 };

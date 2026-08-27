@@ -12,6 +12,7 @@ import {
   type PlotRequest,
 } from "@/entities/plot";
 import { farmKeys } from "@/entities/farm";
+import { useLatestSoilTests } from "@/entities/soil-test";
 import { normalizeSoilTypeCode } from "@/features/farmer/shared/plotOptions";
 import type { Plot, PlotStatus, SplitPlotRequest, ViewMode } from "../types";
 import { transformApiToFeature, mapPlotStatusToApiStatus } from "../utils";
@@ -159,6 +160,16 @@ export const usePlotManagement = (): UsePlotManagementReturn => {
     error,
     refetch
   } = usePlots();
+  const plotIds = useMemo(
+    () => (apiPlots ?? []).map((plot) => plot.id).filter((id): id is number => Number.isInteger(id) && id > 0),
+    [apiPlots]
+  );
+  const {
+    data: latestSoilTests,
+    isLoading: isLoadingSoilTests,
+    error: soilTestsError,
+    refetch: refetchSoilTests,
+  } = useLatestSoilTests(plotIds, { enabled: plotIds.length > 0 });
 
   const createMutation = useCreatePlot({
     onSuccess: () => {
@@ -363,10 +374,11 @@ export const usePlotManagement = (): UsePlotManagementReturn => {
 
   const plots = useMemo(() => {
     if (apiPlots && apiPlots.length > 0) {
-      return apiPlots.map(transformApiToFeature);
+      const soilTestByPlot = new Map((latestSoilTests ?? []).map((item) => [item.plotId, item]));
+      return apiPlots.map((plot) => transformApiToFeature(plot, soilTestByPlot.get(plot.id)));
     }
     return [];
-  }, [apiPlots]);
+  }, [apiPlots, latestSoilTests]);
 
   // Apply filters from usePlotFilters hook
   const filteredPlots = useMemo(
@@ -560,9 +572,14 @@ export const usePlotManagement = (): UsePlotManagementReturn => {
     filteredPlots,
 
     // Loading & Error states
-    isLoading,
-    error: error ?? null,
-    refetch,
+    isLoading: isLoading || isLoadingSoilTests,
+    error: error ?? soilTestsError ?? null,
+    refetch: () => {
+      void refetch();
+      if (plotIds.length > 0) {
+        void refetchSoilTests();
+      }
+    },
 
     // UI state
     selectedPlot,

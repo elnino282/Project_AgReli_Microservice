@@ -17,7 +17,8 @@ const navTranslationKeys: Record<string, string> = {
     'labor-management': 'nav.laborManagement',
     'inventory': 'nav.inventory',
     'product-warehouse': 'nav.productWarehouse',
-    'documents': 'nav.documents',
+    'documents': 'nav.systemDocuments',
+    'vietgap-workspace': 'nav.vietGapWorkspace',
     'farm-documents': 'nav.farmDocuments',
 
     'notifications': 'nav.notifications',

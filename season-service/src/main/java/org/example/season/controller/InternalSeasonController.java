@@ -65,6 +65,7 @@ public class InternalSeasonController {
                 .startDate(season.getStartDate())
                 .plannedHarvestDate(season.getPlannedHarvestDate())
                 .endDate(season.getEndDate())
+                .expectedYieldKg(season.getExpectedYieldKg())
                 .build();
 
         return ResponseEntity.ok(dto);
@@ -175,6 +176,12 @@ public class InternalSeasonController {
         return ResponseEntity.ok(employeeTrainingService.getTrainingStatusForSeason(seasonId));
     }
 
+    @GetMapping("/seasons/{seasonId}/training-compliance")
+    public ResponseEntity<org.example.season.dto.response.TrainingComplianceSnapshotDto> getTrainingComplianceInternal(
+            @PathVariable Integer seasonId) {
+        return ResponseEntity.ok(employeeTrainingService.getTrainingComplianceForSeason(seasonId));
+    }
+
     @Data
     @Builder
     @NoArgsConstructor
@@ -201,6 +208,7 @@ public class InternalSeasonController {
         private java.time.LocalDate startDate;
         private java.time.LocalDate plannedHarvestDate;
         private java.time.LocalDate endDate;
+        private java.math.BigDecimal expectedYieldKg;
     }
 
     @Data

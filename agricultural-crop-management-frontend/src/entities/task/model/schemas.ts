@@ -57,8 +57,11 @@ export const TaskSchema = z.object({
     actualEndDate: TaskDateSchema.optional().nullable(),
     notes: z.string().optional().nullable(),
     plotId: z.number().int().positive().optional().nullable(),
+    plotName: z.string().optional().nullable(),
+    plotArea: z.number().nonnegative().optional().nullable(),
     workTeamId: z.number().int().positive().optional().nullable(),
     estimatedDays: z.number().int().positive().optional().nullable(),
+    estimatedCompletionDate: TaskDateSchema.optional().nullable(),
     createdAt: z.string().optional().nullable(),  // Accept any datetime string or null from backend
     baseWage: z.number().optional().nullable(),
 });

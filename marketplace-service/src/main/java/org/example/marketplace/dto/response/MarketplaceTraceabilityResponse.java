@@ -72,12 +72,35 @@ public record MarketplaceTraceabilityResponse(
     }
 
     public record CertificationInfo(
-            String certificationName,   // "VietGAP Trồng trọt 2024"
+            String certificationName,
             String certificationType,   // "VIETGAP_PLANTING"
-            String status,              // "ACTIVE", "PENDING", "EXPIRED"
+            String status,
             LocalDate issuedDate,
             LocalDate expiryDate,
-            BigDecimal complianceScore  // % compliance khi apply
+            BigDecimal complianceScore,
+            String certificateNumber,
+            Boolean scopeMatched,
+            List<CertificationScopeInfo> scopes,
+            Integer missingMandatoryEvidenceCount,
+            List<MissingEvidenceInfo> missingEvidenceItems
+    ) {}
+
+    public record CertificationScopeInfo(
+            Integer seasonId,
+            Integer plotId,
+            String plotName,
+            Integer cropId,
+            String cropName,
+            Integer varietyId,
+            String varietyName,
+            BigDecimal registeredAreaHa,
+            BigDecimal expectedYieldKg
+    ) {}
+
+    public record MissingEvidenceInfo(
+            String itemCode,
+            String category,
+            String description
     ) {}
 
     public record PHISafetyInfo(

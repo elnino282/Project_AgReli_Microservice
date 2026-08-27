@@ -35,7 +35,7 @@ export interface Plot {
   name: string;
   area: number;
   soilType: string;
-  pH: number;
+  pH?: number;
   status: PlotStatus;
   statusCode?: string;
   crop?: string;
@@ -45,6 +45,13 @@ export interface Plot {
   organicMatter?: number;
   electricalConductivity?: number;
   soilTestDate?: string;
+  soilTestSourceType?: string;
+  soilTestSourceDocument?: string;
+  soilTestLabReference?: string;
+  soilTestNote?: string;
+  mineralNKgPerHa?: number;
+  nitrateMgPerKg?: number;
+  ammoniumMgPerKg?: number;
   seasons?: LinkedSeason[];
 }
 

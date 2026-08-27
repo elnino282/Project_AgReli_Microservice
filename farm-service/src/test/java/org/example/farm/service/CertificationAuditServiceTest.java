@@ -19,6 +19,7 @@ import org.example.farm.repository.FarmDocumentRepository;
 import org.example.farm.repository.FarmRepository;
 import org.example.farm.repository.OutboxEventRepository;
 import org.example.farm.repository.CertificationStandardRepository;
+import org.example.farm.repository.CertificationScopeRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -60,6 +61,8 @@ class CertificationAuditServiceTest {
     private FarmRepository farmRepository;
     @Mock
     private CertificationStandardRepository standardRepository;
+    @Mock
+    private CertificationScopeRepository scopeRepository;
 
     @InjectMocks
     private CertificationAuditService service;
@@ -90,6 +93,27 @@ class CertificationAuditServiceTest {
             assertThat(response.getRecordStatus()).isEqualTo("AUDIT_PASSED");
             assertThat(response.getComplianceScore()).isEqualByComparingTo("92.50");
             assertThat(response.getNonconformities()).hasSize(1);
+        });
+    }
+
+    @Test
+    void applicationQueueContainsAppliedFarmContext() {
+        CertificationRecord record = CertificationRecord.builder()
+                .id(8).farmId(4).standardId(5).status("APPLIED")
+                .complianceScore(new java.math.BigDecimal("88.00")).build();
+        when(recordRepository.findAll()).thenReturn(List.of(record));
+        when(farmRepository.findById(4)).thenReturn(Optional.of(Farm.builder().id(4).name("Farm chờ đánh giá").build()));
+        when(standardRepository.findById(5)).thenReturn(Optional.of(
+                CertificationStandard.builder().id(5).code("VIETGAP-PLANTING-2026").name("VietGAP 2026").build()));
+        when(scopeRepository.findByRecordIdOrderById(8)).thenReturn(List.of());
+
+        var result = service.getApplicationsForAdmin();
+
+        assertThat(result).singleElement().satisfies(application -> {
+            assertThat(application.getFarmId()).isEqualTo(4);
+            assertThat(application.getFarmName()).isEqualTo("Farm chờ đánh giá");
+            assertThat(application.getStatus()).isEqualTo("APPLIED");
+            assertThat(application.getComplianceScore()).isEqualByComparingTo("88.00");
         });
     }
 

@@ -100,6 +100,8 @@
     "inventory": "Supply Warehouse",
     "productWarehouse": "Product Warehouse",
     "documents": "Documents",
+    "systemDocuments": "System Documents",
+    "vietGapWorkspace": "VietGAP workspace",
     "farmDocuments": "VietGAP Documents",
     "incidents": "Incidents",
     "notifications": "Notifications",
@@ -248,8 +250,12 @@
         "breadcrumb": "Marketplace Orders"
       },
       "documents": {
-        "title": "Documents",
-        "breadcrumb": "Documents"
+        "title": "System Documents",
+        "breadcrumb": "System Documents"
+      },
+      "vietGapWorkspace": {
+        "title": "VietGAP workspace",
+        "breadcrumb": "VietGAP workspace"
       },
       "farmDocuments": {
         "title": "VietGAP Documents",
@@ -1672,10 +1678,17 @@
       "season": "Season",
       "farmPlot": "Farm / Plot",
       "harvestedAt": "Harvest Date",
+      "receivedAt": "Received Date",
+      "expiryDate": "Expiry Date",
+      "warehouseLocation": "Warehouse / Storage Location",
+      "packaging": "Packaging",
+      "processing": "Processing",
+      "quality": "Quality / Grade",
       "recordedBy": "Recorded By",
       "initialQuantity": "Initial Quantity",
       "onHandQuantity": "Current On-hand",
       "harvestRef": "Harvest Reference",
+      "note": "Note",
       "transactions": "Stock Movement Timeline"
     },
     "dialog": {
@@ -2448,6 +2461,18 @@
       "someFarmsFailedUpdate": "Some farms could not be updated"
     }
   },
+  "vietGapWorkspace": {
+    "title": "VietGAP workspace",
+    "subtitle": "Track readiness, dossiers, audits, and certification for each farm",
+    "loadError": "Unable to load farms.",
+    "emptyTitle": "No farm is available for certification",
+    "emptyDescription": "Create a farm and production area before preparing a VietGAP dossier.",
+    "manageFarms": "Go to Farms & Plots",
+    "selectFarmTitle": "Select a farm dossier",
+    "selectFarmDescription": "Each workspace only shows certification for products and production areas within the selected farm.",
+    "locationUnknown": "Location not updated",
+    "area": "Area: {{area}} ha"
+  },
   "suppliers": {
     "title": "Suppliers & Supplies",
     "subtitle": "Manage suppliers, items, and inventory lots",
@@ -3022,6 +3047,15 @@
     }
   },
   "documents": {
+    "system": {
+      "title": "System Documents",
+      "subtitle": "Browse agricultural resources and platform guidance in one place",
+      "tabs": {
+        "ariaLabel": "System document sections",
+        "library": "Document library",
+        "guide": "User guide"
+      }
+    },
     "title": "Documents",
     "subtitle": "Access farming guides, tutorials, and resources",
     "uploadButton": "Upload Document",

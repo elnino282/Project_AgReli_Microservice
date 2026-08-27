@@ -16,6 +16,11 @@ export interface PesticideRecord {
     daysRemaining: number | null;
     status: PesticideStatus;
     appliedAt?: string | null;
+    harvestAllowedDate?: string | null;
+    activeIngredient?: string | null;
+    dosage?: string | null;
+    applicationMethod?: string | null;
+    targetPest?: string | null;
     notes?: string | null;
 }
 

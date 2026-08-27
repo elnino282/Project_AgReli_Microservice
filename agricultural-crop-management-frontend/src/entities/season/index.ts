@@ -32,6 +32,10 @@ export {
 // Keys
 export { seasonKeys } from './model/keys';
 
+// API client for feature-level queries not yet exposed as dedicated hooks
+export { seasonsApi } from './api/seasonsApi';
+export type { PesticideRecordResponse } from './api/seasonsApi';
+
 // Hooks
 export {
     useSeasons,

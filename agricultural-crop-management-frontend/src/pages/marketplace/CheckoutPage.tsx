@@ -141,8 +141,6 @@ export function CheckoutPage() {
   const [phone, setPhone] = useState("");
   const [addressLine, setAddressLine] = useState("");
   const [note, setNote] = useState("");
-  const [deliverySchedule, setDeliverySchedule] = useState<"one-time" | "weekly" | "monthly">("one-time");
-  const [deliveryDay, setDeliveryDay] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<MarketplacePaymentMethod>("COD");
   const [checkoutIdempotencyKey, setCheckoutIdempotencyKey] = useState<string>(
     () => createCheckoutIdempotencyKey(),
@@ -768,77 +766,6 @@ export function CheckoutPage() {
                   })}
                 </div>
               )}
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-foreground">Loại đơn hàng</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                  <label
-                    className={cn(
-                      "flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-colors",
-                      deliverySchedule === "one-time"
-                        ? "border-emerald-600 bg-emerald-50 text-emerald-800"
-                        : "border-border bg-card hover:bg-muted"
-                    )}
-                  >
-                    <input
-                      type="radio"
-                      className="hidden"
-                      checked={deliverySchedule === "one-time"}
-                      onChange={() => setDeliverySchedule("one-time")}
-                    />
-                    <span className="font-medium text-sm">Giao 1 lần</span>
-                  </label>
-                  <label
-                    className={cn(
-                      "flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-colors",
-                      deliverySchedule === "weekly"
-                        ? "border-emerald-600 bg-emerald-50 text-emerald-800"
-                        : "border-border bg-card hover:bg-muted"
-                    )}
-                  >
-                    <input
-                      type="radio"
-                      className="hidden"
-                      checked={deliverySchedule === "weekly"}
-                      onChange={() => setDeliverySchedule("weekly")}
-                    />
-                    <span className="font-medium text-sm">Giao hàng tuần</span>
-                  </label>
-                  <label
-                    className={cn(
-                      "flex cursor-pointer items-center justify-center rounded-lg border-2 p-3 transition-colors",
-                      deliverySchedule === "monthly"
-                        ? "border-emerald-600 bg-emerald-50 text-emerald-800"
-                        : "border-border bg-card hover:bg-muted"
-                    )}
-                  >
-                    <input
-                      type="radio"
-                      className="hidden"
-                      checked={deliverySchedule === "monthly"}
-                      onChange={() => setDeliverySchedule("monthly")}
-                    />
-                    <span className="font-medium text-sm">Giao hàng tháng</span>
-                  </label>
-                </div>
-
-                {deliverySchedule !== "one-time" && (
-                  <div className="mb-4 p-4 bg-emerald-50 border border-emerald-100 rounded-lg">
-                    <label className="mb-2 block text-sm font-medium text-emerald-800">
-                      {deliverySchedule === "weekly" ? "Chọn thứ giao hàng" : "Chọn ngày giao hàng trong tháng"}
-                    </label>
-                    <Input
-                      className="border-emerald-200 bg-white placeholder:text-emerald-300"
-                      placeholder={deliverySchedule === "weekly" ? "VD: Thứ 2 và Thứ 5" : "VD: Ngày 15 và 30"}
-                      value={deliveryDay}
-                      onChange={(event) => setDeliveryDay(event.target.value)}
-                    />
-                    <p className="text-xs text-emerald-600 mt-2">
-                      Đơn hàng sẽ được tự động tạo và gửi đến Nông trại vào trước ngày giao hàng.
-                    </p>
-                  </div>
-                )}
-              </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-foreground">Ghi chú</label>

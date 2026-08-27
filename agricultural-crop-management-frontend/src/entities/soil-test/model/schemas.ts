@@ -45,6 +45,8 @@ export const SoilTestSourceTypeSchema = z.enum([
 export const CreateSoilTestRequestSchema = z.object({
   plotId: z.number().int().positive(),
   sampleDate: DateSchema,
+  soilPh: NumericSchema.pipe(z.number().min(0).max(14)).optional(),
+  electricalConductivityDsM: NonNegativeNumericSchema.optional(),
   soilOrganicMatterPct: PercentSchema.optional(),
   mineralNKgPerHa: NonNegativeNumericSchema,
   nitrateMgPerKg: NonNegativeNumericSchema.optional(),
@@ -61,6 +63,8 @@ export const SoilTestResponseSchema = z.object({
   plotId: z.number().int().positive(),
   plotName: z.string().nullable().optional(),
   sampleDate: DateSchema,
+  soilPh: NumericSchema.nullable().optional(),
+  electricalConductivityDsM: NumericSchema.nullable().optional(),
   soilOrganicMatterPct: NumericSchema.nullable().optional(),
   mineralNKgPerHa: NumericSchema,
   nitrateMgPerKg: NumericSchema.nullable().optional(),
@@ -85,7 +89,12 @@ export const SoilTestListQuerySchema = z.object({
   plotId: z.number().int().positive().optional(),
 });
 
+export const LatestSoilTestsQuerySchema = z.object({
+  plotIds: z.array(z.number().int().positive()).min(1).max(200),
+});
+
 export type SoilTestSourceType = z.infer<typeof SoilTestSourceTypeSchema>;
 export type CreateSoilTestRequest = z.infer<typeof CreateSoilTestRequestSchema>;
 export type SoilTestResponse = z.infer<typeof SoilTestResponseSchema>;
 export type SoilTestListQuery = z.infer<typeof SoilTestListQuerySchema>;
+export type LatestSoilTestsQuery = z.infer<typeof LatestSoilTestsQuerySchema>;

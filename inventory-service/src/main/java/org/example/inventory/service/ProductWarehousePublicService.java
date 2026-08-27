@@ -480,6 +480,9 @@ public class ProductWarehousePublicService {
                 .cropCategory(lot.getCropCategory())
                 .hasTemperatureAlert(hasTemperatureAlert)
                 .expiryDate(lot.getExpiryDate())
+                .packagingType(lot.getPackagingType())
+                .packagingCount(lot.getPackagingCount())
+                .processingType(lot.getProcessingType())
                 .build();
     }
 

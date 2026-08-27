@@ -1,4 +1,5 @@
 import type { Plot as ApiPlot, PlotRequest } from "@/entities/plot";
+import type { SoilTestResponse } from "@/entities/soil-test";
 import type { Plot, PlotStatus } from "./types";
 
 /**
@@ -47,16 +48,26 @@ export const mapPlotStatusToApiStatus = (status: PlotStatus): PlotRequest["statu
 /**
  * Transform API plot response to feature-local Plot type.
  */
-export const transformApiToFeature = (apiPlot: ApiPlot): Plot => ({
+export const transformApiToFeature = (apiPlot: ApiPlot, soilTest?: SoilTestResponse): Plot => ({
   id: String(apiPlot.id),
   farmId: apiPlot.farmId ?? undefined,
   name: apiPlot.plotName,
   area: apiPlot.area ?? 0,
   soilType: apiPlot.soilType ?? "Unknown",
-  pH: 7.0,
+  pH: soilTest?.soilPh ?? undefined,
   status: mapStatusToPlotStatus(apiPlot.status),
   statusCode: apiPlot.status ?? undefined,
   createdDate: apiPlot.createdAt?.split("T")[0] ?? new Date().toISOString().split("T")[0],
+  organicMatter: soilTest?.soilOrganicMatterPct ?? undefined,
+  electricalConductivity: soilTest?.electricalConductivityDsM ?? undefined,
+  soilTestDate: soilTest?.sampleDate,
+  soilTestSourceType: soilTest?.sourceType ?? undefined,
+  soilTestSourceDocument: soilTest?.sourceDocument ?? undefined,
+  soilTestLabReference: soilTest?.labReference ?? undefined,
+  soilTestNote: soilTest?.note ?? undefined,
+  mineralNKgPerHa: soilTest?.mineralNKgPerHa,
+  nitrateMgPerKg: soilTest?.nitrateMgPerKg ?? undefined,
+  ammoniumMgPerKg: soilTest?.ammoniumMgPerKg ?? undefined,
   seasons: [],
 });
 

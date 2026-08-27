@@ -29,8 +29,20 @@ export const HarvestSchema = z.object({
     grade: z.string().nullable().optional(),
     revenue: z.number().nullable().optional(),
     note: z.string().nullable().optional(),
-    status: z.enum(['stored', 'sold', 'processing']).nullable().optional(),
+    status: z.enum(['stored', 'sold', 'processing', 'PENDING_RECEIPT', 'RECEIVED']).nullable().optional(),
     createdAt: z.string().nullable().optional(),
+    qualityGrade: z.enum(['PASSED', 'SUBSTANDARD', 'REJECTED']).nullable().optional(),
+    qualityNotes: z.string().nullable().optional(),
+    subStandardQuantity: z.number().nonnegative().nullable().optional(),
+    subStandardDisposition: z.enum(['SELL_LIVESTOCK_FEED', 'COMPOSTING', 'PROCESSING', 'DISCARDED', 'SELL_DISCOUNT']).nullable().optional(),
+    packagingType: z.enum(['NONE', 'BULK_BAG', 'CRATE', 'CARTON_BOX', 'VACUUM_SEALED', 'NET_BAG']).nullable().optional(),
+    packagingCount: z.number().int().nonnegative().nullable().optional(),
+    processingType: z.enum(['NONE', 'WASHED', 'TRIMMED', 'GRADED_AND_SORTED', 'DRIED', 'COOLED']).nullable().optional(),
+    cropCategory: z.string().nullable().optional(),
+    grossWetWeight: z.number().nonnegative().nullable().optional(),
+    netDryWeight: z.number().nonnegative().nullable().optional(),
+    warehouseReceiptStatus: z.string().nullable().optional(),
+    postHarvestDelayDays: z.number().int().nonnegative().nullable().optional(),
 });
 
 export type Harvest = z.infer<typeof HarvestSchema>;
@@ -71,6 +83,14 @@ export const HarvestCreateRequestSchema = z.object({
     inventoryUnit: z.string().trim().min(1).optional(),
     grade: z.string().optional(),
     note: z.string().optional(),
+    qualityGrade: z.enum(['PASSED', 'SUBSTANDARD', 'REJECTED']).optional(),
+    qualityNotes: z.string().optional(),
+    subStandardQuantity: z.number().nonnegative().optional(),
+    subStandardDisposition: z.enum(['SELL_LIVESTOCK_FEED', 'COMPOSTING', 'PROCESSING', 'DISCARDED', 'SELL_DISCOUNT']).optional(),
+    packagingType: z.enum(['NONE', 'BULK_BAG', 'CRATE', 'CARTON_BOX', 'VACUUM_SEALED', 'NET_BAG']).optional(),
+    packagingCount: z.number().int().nonnegative().optional(),
+    processingType: z.enum(['NONE', 'WASHED', 'TRIMMED', 'GRADED_AND_SORTED', 'DRIED', 'COOLED']).optional(),
+    grossWetWeight: z.number().positive().optional(),
 });
 
 export type HarvestCreateRequest = z.infer<typeof HarvestCreateRequestSchema>;
@@ -85,6 +105,14 @@ export const HarvestUpdateRequestSchema = z.object({
     unit: z.number().positive('Unit/price must be positive'),
     grade: z.string().optional(),
     note: z.string().optional(),
+    qualityGrade: z.enum(['PASSED', 'SUBSTANDARD', 'REJECTED']).optional(),
+    qualityNotes: z.string().optional(),
+    subStandardQuantity: z.number().nonnegative().optional(),
+    subStandardDisposition: z.enum(['SELL_LIVESTOCK_FEED', 'COMPOSTING', 'PROCESSING', 'DISCARDED', 'SELL_DISCOUNT']).optional(),
+    packagingType: z.enum(['NONE', 'BULK_BAG', 'CRATE', 'CARTON_BOX', 'VACUUM_SEALED', 'NET_BAG']).optional(),
+    packagingCount: z.number().int().nonnegative().optional(),
+    processingType: z.enum(['NONE', 'WASHED', 'TRIMMED', 'GRADED_AND_SORTED', 'DRIED', 'COOLED']).optional(),
+    grossWetWeight: z.number().positive().optional(),
 });
 
 export type HarvestUpdateRequest = z.infer<typeof HarvestUpdateRequestSchema>;

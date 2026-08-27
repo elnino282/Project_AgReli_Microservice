@@ -22,6 +22,8 @@ public class CertificationInfoDto {
     LocalDate expiryDate;
     BigDecimal complianceScore;
     String certificateNumber;
+    Boolean scopeMatched;
+    java.util.List<CertificationScopeResponse> scopes;
     Integer missingMandatoryEvidenceCount;
     java.util.List<org.example.farm.dto.response.CertificationDetailsResponse.MissingEvidenceItem> missingEvidenceItems;
 }

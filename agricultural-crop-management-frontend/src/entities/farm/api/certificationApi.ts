@@ -15,20 +15,59 @@ export interface CertificationItemDetail {
   checkedAt?: string;
 }
 
+export interface CertificationScope {
+  id: number;
+  seasonId: number;
+  plotId: number;
+  plotName: string;
+  cropId: number;
+  cropName: string;
+  varietyId?: number;
+  varietyName?: string;
+  registeredAreaHa: number;
+  expectedYieldKg?: number;
+}
+
 export interface CertificationDetails {
   recordId: number;
   farmId: number;
   standardCode: string;
   standardName: string;
   complianceScore: number;
-  status: string; // IN_PROGRESS, READY_TO_APPLY, APPLIED, CERTIFIED, REJECTED, EXPIRED
+  status: CertificationRecordStatus;
   appliedAt?: string;
   certifiedAt?: string;
   expiryDate?: string;
   auditorNotes?: string;
+  scopes: CertificationScope[];
   items: CertificationItemDetail[];
   isEligible: boolean;
+  certificateNumber?: string;
+  nextPeriodicReviewDate?: string;
+  publishedAt?: string;
+  missingMandatoryEvidenceCount: number;
+  missingEvidenceItems: Array<{
+    itemCode: string;
+    category: string;
+    description: string;
+  }>;
 }
+
+export type CertificationRecordStatus =
+  | 'IN_PROGRESS'
+  | 'READY_TO_APPLY'
+  | 'APPLIED'
+  | 'AUDIT_SCHEDULED'
+  | 'AUDIT_IN_PROGRESS'
+  | 'NONCONFORMITY_FOUND'
+  | 'CORRECTIVE_ACTION_SUBMITTED'
+  | 'AUDIT_PASSED'
+  | 'CERTIFIED'
+  | 'PUBLISHED'
+  | 'PERIODIC_REVIEW_DUE'
+  | 'EXPIRED'
+  | 'REVOKED'
+  | 'REJECTED';
 
 export interface ApiResponse<T> {
   code: string;
@@ -66,6 +105,20 @@ export interface CertificationAudit {
   nonconformities: CertificationNonconformity[];
 }
 
+export interface CertificationApplication {
+  recordId: number;
+  farmId: number;
+  farmName?: string;
+  standardCode?: string;
+  standardName?: string;
+  scopes: CertificationScope[];
+  complianceScore?: number;
+  status: CertificationRecordStatus;
+  appliedAt?: string;
+  nextPeriodicReviewDate?: string;
+  expiryDate?: string;
+}
+
 export interface FarmDocumentResponse {
   id: number;
   farmId: number;
@@ -99,6 +152,17 @@ export const certificationApi = {
     return response.data.result;
   },
 
+  async updateScopes(
+    farmId: number,
+    scopes: Array<{ seasonId: number; registeredAreaHa: number }>,
+  ): Promise<CertificationScope[]> {
+    const response = await httpClient.put<ApiResponse<CertificationScope[]>>(
+      `/api/v1/farms/${farmId}/certification/scope`,
+      { scopes },
+    );
+    return response.data.result;
+  },
+
   async applyCertification(farmId: number): Promise<string> {
     const response = await httpClient.post<ApiResponse<string>>(`/api/v1/farms/${farmId}/certification/apply`);
     return response.data.result;
@@ -113,6 +177,40 @@ export const certificationApi = {
 
   async getAllAudits(): Promise<CertificationAudit[]> {
     const response = await httpClient.get<ApiResponse<CertificationAudit[]>>(`/api/v1/admin/certification-audits`);
+    return response.data.result || [];
+  },
+
+  async getCertificationApplications(): Promise<CertificationApplication[]> {
+    const response = await httpClient.get<ApiResponse<CertificationApplication[]>>(
+      `/api/v1/admin/certification-applications`,
+    );
+    return response.data.result || [];
+  },
+
+  async scheduleAudit(farmId: number, data: {
+    auditType: 'INITIAL' | 'PERIODIC';
+    scheduledDate: string;
+    auditorUserId?: number;
+    auditorOrgName?: string;
+  }): Promise<CertificationAudit> {
+    const response = await httpClient.post<ApiResponse<CertificationAudit>>(
+      `/api/v1/farms/${farmId}/certification/audits`,
+      data,
+    );
+    return response.data.result;
+  },
+
+  async getFarmAudits(farmId: number): Promise<CertificationAudit[]> {
+    const response = await httpClient.get<ApiResponse<CertificationAudit[]>>(
+      `/api/v1/farms/${farmId}/certification/audits`,
+    );
+    return response.data.result || [];
+  },
+
+  async getFarmDocuments(farmId: number): Promise<FarmDocumentResponse[]> {
+    const response = await httpClient.get<ApiResponse<FarmDocumentResponse[]>>(
+      `/api/v1/farms/${farmId}/documents`,
+    );
     return response.data.result || [];
   },
 

@@ -23,11 +23,11 @@ describe('Farmer Portal Navigation Configuration', () => {
             'product-warehouse',
             'marketplace-workspace',
             'documents',
+            'vietgap-workspace',
             'farm-documents',
             'ai-assistant',
             'chat',
             'notifications',
-            'user-guide',
         ];
 
         const actualOrder = farmerNav.map((item) => item.id);
@@ -58,12 +58,12 @@ describe('Farmer Portal Navigation Configuration', () => {
         expect(itemLabels['seasons']).toBe('Seasons');
         expect(itemLabels['suppliers-supplies']).toBe('Suppliers & Supplies');
         expect(itemLabels['product-warehouse']).toBe('Product Warehouse');
-        expect(itemLabels['documents']).toBe('Documents');
+        expect(itemLabels['documents']).toBe('System Documents');
+        expect(itemLabels['vietgap-workspace']).toBe('VietGAP Workspace');
         expect(itemLabels['farm-documents']).toBe('VietGAP Documents');
         expect(itemLabels['chat']).toBe('Chat');
         expect(itemLabels['notifications']).toBe('Notifications');
         expect(itemLabels['ai-assistant']).toBe('AI Assistant');
-        expect(itemLabels['user-guide']).toBe('User Guide');
     });
 
     it('should not contain removed items (workspace modules and legacy routes)', () => {
@@ -75,6 +75,7 @@ describe('Farmer Portal Navigation Configuration', () => {
         expect(ids).not.toContain('crops');
         expect(ids).not.toContain('plots'); // plots is now part of 'farms'
         expect(ids).not.toContain('labor-management'); // labor management moved into season workspace
+        expect(ids).not.toContain('user-guide'); // merged into system documents
     });
 
     it('should have unique IDs for all items', () => {
@@ -93,5 +94,6 @@ describe('Admin Portal Navigation Configuration', () => {
         expect(ids).toContain('users-roles');
         expect(ids).not.toContain('buyers');
         expect(ids).not.toContain('farmers');
+        expect(ids).not.toContain('farm-documents');
     });
 });

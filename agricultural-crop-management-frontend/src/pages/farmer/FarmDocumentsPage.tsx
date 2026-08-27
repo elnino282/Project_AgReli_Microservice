@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -85,6 +86,7 @@ const DOCUMENT_TYPES = [
   { value: "FERTILIZER_RECORD", label: "Hồ sơ phân bón / Fertilizer Record" },
   { value: "HARVEST_LOG", label: "Hồ sơ thu hoạch / Harvest Log" },
   { value: "INTERNAL_AUDIT", label: "Biên bản kiểm tra nội bộ / Internal Audit" },
+  { value: "PERIODIC_INSPECTION", label: "Biên bản kiểm tra định kỳ / Periodic Inspection" },
   { value: "CERTIFICATE", label: "Giấy chứng nhận (VietGAP,...) / Certificate" },
   { value: "OTHER", label: "Khác / Other" }
 ];
@@ -92,6 +94,8 @@ const DOCUMENT_TYPES = [
 export default function FarmDocumentsPage() {
   const { t, locale } = useI18n();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const handledUploadDeepLink = useRef(false);
 
   // State management
   const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
@@ -127,9 +131,25 @@ export default function FarmDocumentsPage() {
   // Auto-select first farm when farms list loads
   useEffect(() => {
     if (farms.length > 0 && selectedFarmId === null) {
-      setSelectedFarmId(farms[0].id);
+      const requestedFarmId = Number(searchParams.get("farmId"));
+      const requestedFarm = farms.find((farm: { id: number }) => farm.id === requestedFarmId);
+      setSelectedFarmId(requestedFarm?.id ?? farms[0].id);
     }
-  }, [farms, selectedFarmId]);
+  }, [farms, searchParams, selectedFarmId]);
+
+  useEffect(() => {
+    if (!selectedFarmId || handledUploadDeepLink.current || searchParams.get("openUpload") !== "1") return;
+
+    const requestedType = searchParams.get("type");
+    const supportedType = DOCUMENT_TYPES.some((type) => type.value === requestedType);
+    if (requestedType && supportedType) {
+      setDocumentType(requestedType);
+      const selectedLabel = DOCUMENT_TYPES.find((type) => type.value === requestedType)?.label.split(" /")[0];
+      setTitle(selectedLabel ? `${selectedLabel} - ${new Date().getFullYear()}` : "");
+    }
+    handledUploadDeepLink.current = true;
+    setIsUploadModalOpen(true);
+  }, [searchParams, selectedFarmId]);
 
   // Fetch documents for selected farm
   const { data: documents = [], isLoading: isLoadingDocs, refetch: refetchDocs } = useQuery({

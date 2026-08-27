@@ -24,6 +24,7 @@ public class CertificationDetailsResponse {
     private LocalDateTime certifiedAt;
     private LocalDate expiryDate;
     private String auditorNotes;
+    private List<CertificationScopeResponse> scopes;
     private List<CertificationItemDetail> items;
     private Boolean isEligible;
 

@@ -66,6 +66,7 @@ Không chuyển sang S1 khi còn S0 ở trạng thái khác `FIXED`/`NOT_REPRODU
 | AUD-S2-006 | FIXED | Observability/Tempo | Compose dùng Tempo 2.7.2 single-binary thật, OTLP 4317/4318, readiness/query 3200, storage volume riêng và Grafana datasource provisioned. Readiness 200 + synthetic OTLP trace query 200 ngày 2026-08-21 |
 | AUD-S2-007 | FIXED | AI chat adapter/provenance | Backend trả metadata từ đúng document RAG đã dùng; OpenAPI/Orval và farmer/buyer hook giữ `sources`, fallback không bịa nguồn. Backend regression nằm trong AI 14/14; hook 3/3 xanh ngày 2026-08-21 |
 | AUD-S2-008 | FIXED | Farmer self-assessment | Route tải checklist persisted, chỉ cho sửa item `MANUAL`, lưu status/notes và fetch lại server truth trước khi báo thành công; reload hydrate dữ liệu thật. Component regression 1/1 xanh ngày 2026-08-21 |
+| AUD-S2-009 | FIXED | Employee progress evidence | Route sống không còn biến file local thành URL `dummyimage.com` rồi toast upload thành công giả. Do backend hiện chỉ nhận `evidenceUrl`, UI yêu cầu URL HTTP(S) persisted thật và validate trước mutation; helper regression 2/2 xanh ngày 2026-08-27 |
 
 ## S3 — UX / dead code
 
@@ -79,12 +80,14 @@ Không chuyển sang S1 khi còn S0 ở trạng thái khác `FIXED`/`NOT_REPRODU
 | AUD-S3-006 | FIXED | FSD legacy boundary | 76 import chuyển sang shared canonical; 56 file legacy root xóa, `src/components|hooks|services` và legacy import đều bằng 0 |
 | AUD-S3-007 | FIXED | Run documentation | Guide/Vite thống nhất 3000/8080, đủ 12 service/readiness và có `npm run demo:smoke` qua Vite proxy |
 | AUD-S3-008 | FIXED | CI runtime coverage | admin-reporting và delivery đã được thêm vào database microservice matrix |
+| AUD-S3-009 | FIXED | Frontend local port drift | Runtime Playwright tái hiện `.env.development` mở Vite ở 5173 trong khi guide/smoke dùng 3000; đã đồng bộ `PORT=3000` và khóa web server acceptance tại localhost:3000 |
+| AUD-S3-010 | FIXED | Employee task mất context lô | API trả `plotName/plotArea/estimatedCompletionDate` nhưng `TaskSchema` strip field; entity contract đã giữ đủ field, unit 1/1 và browser task→reload xanh |
 
 ## Thứ tự xử lý đã chốt
 
 1. **S0 đã đóng (17/17 FIXED).** `AUD-S0-013` đóng ngày 2026-08-20 sau khi xác minh quote system server-authoritative + regression delivery 17/17 và marketplace 48/48 xanh. `AUD-S0-001` đã qua hai cold-start sạch; `AUD-S0-002` đã đóng trong phạm vi Compose, không áp dụng kết luận đó cho multi-host.
 2. **S1 đã đóng.** `AUD-S1-001/002/003/005/006` FIXED; `AUD-S1-004` NOT_REPRODUCIBLE bằng regression actual dates. Gate S2 được mở ngày 2026-08-21.
-3. **S2 đã đóng (5/5 FIXED).** Dữ liệu dự đoán thu hoạch, RAG/provenance, self-assessment và tracing đều đã dùng nguồn thật hoặc fail rõ; gate S3 mở ngày 2026-08-21.
+3. **S2 đã đóng (6/6 FIXED).** Dữ liệu dự đoán thu hoạch, RAG/provenance, self-assessment, tracing và Employee evidence đều dùng nguồn thật hoặc fail rõ; finding runtime bổ sung `AUD-S2-009` đóng ngày 2026-08-27.
 4. **S3 đã đóng (8/8 FIXED).** Route chết đã được xóa/wire có kiểm chứng; tooling, legacy boundary và run guide đã có gate. Runtime demo smoke qua Vite proxy pass đủ bốn persona và các route chính, không kéo feature mới từ tài liệu ý tưởng vào.
 
 ## Lịch sử reclassify/merge
@@ -138,3 +141,5 @@ Hồ sơ contract trước fix nằm ở `docs/audit/patches/AUD-S0-010.md` đ�
 | 2026-08-21 | Giai đoạn 4 — `AUD-S1-005` + S1 gate | Test đỏ chứng minh route export bỏ qua persisted document và tạo ZIP giả từ object JSON. FE dùng typed response + `fileUrl`, tên `.txt` đúng MIME hiện hành và fail rõ khi URL thiếu. API contract 1, UI 2, targeted S1 FE 8, farm 27, season 21, delivery 21, marketplace 49 test cùng typecheck/lint/build xanh. S1 closed; S2 gate mở. |
 | 2026-08-21 | Giai đoạn 4 — S2 gate | Đóng `AUD-S2-001/004/006/007/008`: dashboard AI dùng season/log thật; RAG dùng Gemini embedding + Chroma v2 và trả provenance; self-assessment persist/reload server truth; Tempo 2.7.2 nhận và query synthetic OTLP trace. AI 14/14, frontend S2 5/5, full frontend regression, typecheck/lint/build, Compose config, 22 container running, gateway `UP` và Tempo readiness 200 đều xanh. S2 closed; S3 gate mở. |
 | 2026-08-21 | Giai đoạn 4 — S3 gate | Đóng `AUD-S3-001/002/003/004/006/007`: dashboard FDN và ba workspace route đã reachable; outbox backfill sửa read-model seed; duplicate page và 56 legacy file được xóa; FSD/legacy gates và run guide/smoke được khôi phục. Farm 27, season 21, sustainability 14, FDN 38, full frontend 294 test; typecheck/lint/build xanh. `LOCAL_DEMO_SMOKE=PASS`, 22 container running, gateway `UP`; S3 closed 8/8. |
+| 2026-08-27 | Giai đoạn 5 — portal read-only acceptance | Chromium thật qua localhost:3000, không mock network: Employee task/progress/payroll, Admin dashboard/certification/marketplace, Buyer order/detail, reload và role isolation đều xanh 8/8. Runtime phát hiện và đóng `AUD-S3-009/010`; mutation acceptance vẫn mở và chỉ chạy trên stack audit cô lập. |
+| 2026-08-27 | Giai đoạn 5 — Employee evidence | Static/runtime-route trace phát hiện file input gán cứng `dummyimage.com` và toast giả. Backend chỉ có `evidenceUrl`, chưa có upload contract; UI đổi sang URL HTTP(S) persisted, validate/fail rõ và helper regression 2/2 xanh. Đóng `AUD-S2-009`; upload trực tiếp cần patch contract riêng. |

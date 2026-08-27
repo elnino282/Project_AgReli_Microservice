@@ -141,14 +141,8 @@ export function useDocuments(params?: UseDocumentsParams) {
 
   const handleOpenDocument = useCallback(
     (doc: Document) => {
-      recordOpenMutation.mutate(doc.documentId, {
-        onSuccess: () => {
-          window.open(doc.url, "_blank", "noopener,noreferrer");
-        },
-        onError: () => {
-          window.open(doc.url, "_blank", "noopener,noreferrer");
-        },
-      });
+      window.open(doc.url, "_blank", "noopener,noreferrer");
+      recordOpenMutation.mutate(doc.documentId);
     },
     [recordOpenMutation],
   );
@@ -160,10 +154,14 @@ export function useDocuments(params?: UseDocumentsParams) {
     [handleOpenDocument],
   );
 
-  const handlePreview = useCallback((doc: Document) => {
-    setSelectedDoc(doc);
-    setIsPreviewOpen(true);
-  }, []);
+  const handlePreview = useCallback(
+    (doc: Document) => {
+      setSelectedDoc(doc);
+      setIsPreviewOpen(true);
+      recordOpenMutation.mutate(doc.documentId);
+    },
+    [recordOpenMutation],
+  );
 
   const getDocumentIcon = useCallback((type: DocumentType) => {
     switch (type) {

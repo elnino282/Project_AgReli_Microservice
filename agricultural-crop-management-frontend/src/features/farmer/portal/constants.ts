@@ -120,10 +120,16 @@ export const FARMER_VIEW_CONFIG: Record<FarmerView, FarmerViewTextConfig> = {
     breadcrumbKey: "farmerPortal.views.marketplaceOrders.breadcrumb",
   },
   documents: {
-    title: "Documents",
-    breadcrumbLabel: "Documents",
+    title: "System Documents",
+    breadcrumbLabel: "System Documents",
     titleKey: "farmerPortal.views.documents.title",
     breadcrumbKey: "farmerPortal.views.documents.breadcrumb",
+  },
+  "vietgap-workspace": {
+    title: "VietGAP Workspace",
+    breadcrumbLabel: "VietGAP Workspace",
+    titleKey: "farmerPortal.views.vietGapWorkspace.title",
+    breadcrumbKey: "farmerPortal.views.vietGapWorkspace.breadcrumb",
   },
   "farm-documents": {
     title: "VietGAP Documents",

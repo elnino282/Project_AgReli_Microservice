@@ -145,6 +145,47 @@ describe("useHarvestManagement", () => {
     expect(result.current.batches[0].crop).toBeUndefined();
   });
 
+  it("keeps advanced quality, packaging, and metadata fields from backend", () => {
+    mocks.useAllFarmerHarvests.mockReturnValue({
+      data: {
+        items: [{
+          ...apiHarvestRows[0],
+          grade: "GRADE_A",
+          note: "verified\n\n[harvest-metadata]\nmoisturePercent=14\npurityPercent=98.5\nforeignMatterPercent=0.8\nbrokenGrainsPercent=2",
+          qualityGrade: "PASSED",
+          qualityNotes: "Golden grains",
+          packagingType: "BULK_BAG",
+          packagingCount: 690,
+          processingType: "DRIED",
+          grossWetWeight: 40000,
+          netDryWeight: 34500,
+        }],
+        page: 0,
+        size: 100,
+        totalElements: 1,
+        totalPages: 1,
+      },
+      isLoading: false,
+      error: null,
+      refetch: mocks.refetch,
+    });
+
+    const { result } = renderHook(() => useHarvestManagement(), { wrapper });
+
+    expect(result.current.batches[0]).toMatchObject({
+      grade: "A",
+      moisture: 14,
+      qcMetrics: { purity: 98.5, foreignMatter: 0.8, brokenGrains: 2 },
+      qualityGrade: "PASSED",
+      qualityNotes: "Golden grains",
+      packagingType: "BULK_BAG",
+      packagingCount: 690,
+      processingType: "DRIED",
+      grossWetWeight: 40000,
+      netDryWeight: 34500,
+    });
+  });
+
   it("builds status badge from backend harvest status", () => {
     const { result } = renderHook(() => useHarvestManagement(), { wrapper });
 
@@ -328,6 +369,7 @@ describe("useHarvestManagement", () => {
           lotCode: "LOT-100",
           inventoryUnit: "kg",
           note: expect.stringContaining("note"),
+          qualityGrade: "PASSED",
         }),
       })
     );

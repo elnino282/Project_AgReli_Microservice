@@ -3,7 +3,9 @@ package org.example.sustainability.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +53,8 @@ public class SoilTestService {
                         .seasonId(season.id())
                         .plotId(plot.id())
                         .sampleDate(request.getSampleDate())
+                        .soilPh(scale2(request.getSoilPh()))
+                        .electricalConductivityDsM(scale4(request.getElectricalConductivityDsM()))
                         .soilOrganicMatterPct(scale4(request.getSoilOrganicMatterPct()))
                         .mineralNKgPerHa(scale4(request.getMineralNKgPerHa()))
                         .nitrateMgPerKg(scale4(request.getNitrateMgPerKg()))
@@ -99,6 +103,46 @@ public class SoilTestService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<SoilTestResponse> latestByPlots(List<Integer> plotIds) {
+        if (plotIds == null || plotIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<Integer> distinctPlotIds = plotIds.stream()
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        if (distinctPlotIds.isEmpty() || distinctPlotIds.size() > 200) {
+            throw new AppException(ErrorCode.BAD_REQUEST);
+        }
+
+        Long currentUserId = currentUserService.getCurrentUserId();
+        Map<Integer, PlotContext> ownedPlots = new LinkedHashMap<>();
+        ownershipService.findPlotsByOwnerId(currentUserId).stream()
+                .filter(plot -> distinctPlotIds.contains(plot.id()))
+                .forEach(plot -> ownedPlots.put(plot.id(), plot));
+
+        if (ownedPlots.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Integer, SoilTest> latestByPlot = new LinkedHashMap<>();
+        soilTestRepository
+                .findAllByPlotIdInOrderByPlotIdAscSampleDateDescCreatedAtDescIdDesc(
+                        List.copyOf(ownedPlots.keySet())
+                )
+                .forEach(item -> latestByPlot.putIfAbsent(item.getPlotId(), item));
+
+        return ownedPlots.keySet().stream()
+                .map(plotId -> {
+                    SoilTest item = latestByPlot.get(plotId);
+                    return item == null ? null : toResponse(item, ownedPlots.get(plotId));
+                })
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
     private void validatePlotBelongsToSeason(SeasonContext season, PlotContext plot) {
         if (season == null || plot == null || !Objects.equals(season.plotId(), plot.id())) {
             throw new AppException(ErrorCode.BAD_REQUEST);
@@ -126,6 +170,8 @@ public class SoilTestService {
                 .plotId(item.getPlotId())
                 .plotName(plot != null ? plot.plotName() : null)
                 .sampleDate(item.getSampleDate())
+                .soilPh(scale2(item.getSoilPh()))
+                .electricalConductivityDsM(scale4(item.getElectricalConductivityDsM()))
                 .soilOrganicMatterPct(scale4(item.getSoilOrganicMatterPct()))
                 .mineralNKgPerHa(scale4(item.getMineralNKgPerHa()))
                 .nitrateMgPerKg(scale4(item.getNitrateMgPerKg()))
@@ -158,6 +204,10 @@ public class SoilTestService {
 
     private BigDecimal scale4(BigDecimal value) {
         return value == null ? null : value.setScale(4, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal scale2(BigDecimal value) {
+        return value == null ? null : value.setScale(2, RoundingMode.HALF_UP);
     }
 
     private String trimToNull(String value) {

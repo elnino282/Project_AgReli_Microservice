@@ -1,7 +1,7 @@
 import {
     Home, MapPin, Calendar, Package,
     ShoppingCart, BarChart3, Settings, Sprout, FileText,
-    Shield, Warehouse, Users, AlertTriangle, Bell, ClipboardList, Clock3, Wallet2, MessageSquare, BookOpen
+    Shield, Warehouse, Users, AlertTriangle, Bell, ClipboardList, Clock3, Wallet2, MessageSquare, BookOpen, Award
 } from 'lucide-react';
 import type { PortalType, PortalConfig } from '../model/types';
 
@@ -30,7 +30,6 @@ export const portalConfig: Record<PortalType, PortalConfig> = {
             { id: 'crops-varieties', label: 'Crops & Varieties', icon: Sprout },
             { id: 'reports', label: 'Reports', icon: BarChart3 },
             { id: 'documents', label: 'System Docs', icon: FileText },
-            { id: 'farm-documents', label: 'Farm Dossiers', icon: FileText },
             { id: 'user-guide', label: 'User Guide', icon: BookOpen },
         ],
     },
@@ -46,12 +45,12 @@ export const portalConfig: Record<PortalType, PortalConfig> = {
             { id: 'suppliers-supplies', label: 'Suppliers & Supplies', icon: Package, group: 'Kho & Thị trường' },
             { id: 'product-warehouse', label: 'Product Warehouse', icon: Package, group: 'Kho & Thị trường' },
             { id: 'marketplace-workspace', label: 'Marketplace Workspace', icon: ShoppingCart, group: 'Kho & Thị trường' },
-            { id: 'documents', label: 'Documents', icon: FileText, group: 'Tiện ích & Hỗ trợ' },
+            { id: 'documents', label: 'System Documents', icon: FileText, group: 'Tiện ích & Hỗ trợ' },
+            { id: 'vietgap-workspace', label: 'VietGAP Workspace', icon: Award, group: 'Tiện ích & Hỗ trợ' },
             { id: 'farm-documents', label: 'VietGAP Documents', icon: FileText, group: 'Tiện ích & Hỗ trợ' },
             { id: 'ai-assistant', label: 'AI Assistant', icon: Sprout, group: 'Tiện ích & Hỗ trợ' },
             { id: 'chat', label: 'Chat', icon: MessageSquare, group: 'Tiện ích & Hỗ trợ' },
             { id: 'notifications', label: 'Notifications', icon: Bell, group: 'Tiện ích & Hỗ trợ' },
-            { id: 'user-guide', label: 'User Guide', icon: BookOpen, group: 'Tiện ích & Hỗ trợ' },
         ],
     },
     BUYER: {

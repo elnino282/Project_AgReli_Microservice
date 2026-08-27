@@ -27,6 +27,7 @@ export {
 } from "./model/schemas";
 
 export { laborKeys } from "./model/keys";
+export { isSupportedEvidenceUrl } from "./model/evidence";
 export { laborApi } from "./api/client";
 
 export {

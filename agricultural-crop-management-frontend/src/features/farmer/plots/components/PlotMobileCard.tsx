@@ -55,7 +55,7 @@ export function PlotMobileCard({
                 <span>•</span>
                 <span>{getSoilTypeLabel(plot.soilType, t)}</span>
                 <span>•</span>
-                <span>pH {plot.pH.toFixed(1)}</span>
+                <span>pH {plot.pH?.toFixed(1) ?? t("plots.detail.noData")}</span>
             </div>
 
             {/* Crop Information */}

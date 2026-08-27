@@ -137,6 +137,31 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseString"
+  /api/v1/farms/{farmId}/certification/scope:
+    put:
+      tags:
+      - certification-controller
+      operationId: updateScope
+      parameters:
+      - name: farmId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCertificationScopesRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListCertificationScopeResponse"
   /api/v1/farms/{farmId}/certification/items/{itemId}:
     put:
       tags:
@@ -885,7 +910,13 @@ paths:
         required: false
         schema:
           type: string
-          default: VIETGAP-PLANTING-2024
+          default: VIETGAP-PLANTING-2026
+      - name: seasonId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
       responses:
         "200":
           description: OK
@@ -962,6 +993,18 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseListCertificationAuditResponse"
+  /api/v1/admin/certification-applications:
+    get:
+      tags:
+      - certification-audit-controller
+      operationId: getApplications
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListCertificationApplicationResponse"
   /api/v1/addresses/wards/{id}:
     get:
       tags:
@@ -1131,11 +1174,11 @@ components:
           format: double
         valid:
           type: boolean
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
         m:
           type: number
           format: double
-        coordinate:
-          $ref: "#/components/schemas/Coordinate"
     CoordinateSequence:
       type: object
       properties:
@@ -1152,13 +1195,16 @@ components:
       properties:
         "null":
           type: boolean
+        diameter:
+          type: number
+          format: double
+        width:
+          type: number
+          format: double
+        area:
+          type: number
+          format: double
         height:
-          type: number
-          format: double
-        minY:
-          type: number
-          format: double
-        maxY:
           type: number
           format: double
         maxX:
@@ -1167,13 +1213,10 @@ components:
         minX:
           type: number
           format: double
-        width:
+        minY:
           type: number
           format: double
-        diameter:
-          type: number
-          format: double
-        area:
+        maxY:
           type: number
           format: double
     Geometry:
@@ -1192,46 +1235,46 @@ components:
           type: boolean
         valid:
           type: boolean
+        simple:
+          type: boolean
+        precisionModel:
+          $ref: "#/components/schemas/PrecisionModel"
+        interiorPoint:
+          $ref: "#/components/schemas/Point"
+        numPoints:
+          type: integer
+          format: int32
+        boundary:
+          $ref: "#/components/schemas/Geometry"
+        coordinates:
+          type: array
+          items:
+            $ref: "#/components/schemas/Coordinate"
+        centroid:
+          $ref: "#/components/schemas/Point"
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
+        rectangle:
+          type: boolean
+        numGeometries:
+          type: integer
+          format: int32
+        dimension:
+          type: integer
+          format: int32
+        geometryType:
+          type: string
         srid:
           type: integer
           format: int32
-        simple:
-          type: boolean
+        area:
+          type: number
+          format: double
         boundaryDimension:
           type: integer
           format: int32
         envelopeInternal:
           $ref: "#/components/schemas/Envelope"
-        area:
-          type: number
-          format: double
-        geometryType:
-          type: string
-        dimension:
-          type: integer
-          format: int32
-        numGeometries:
-          type: integer
-          format: int32
-        coordinate:
-          $ref: "#/components/schemas/Coordinate"
-        coordinates:
-          type: array
-          items:
-            $ref: "#/components/schemas/Coordinate"
-        rectangle:
-          type: boolean
-        centroid:
-          $ref: "#/components/schemas/Point"
-        boundary:
-          $ref: "#/components/schemas/Geometry"
-        precisionModel:
-          $ref: "#/components/schemas/PrecisionModel"
-        numPoints:
-          type: integer
-          format: int32
-        interiorPoint:
-          $ref: "#/components/schemas/Point"
     GeometryFactory:
       type: object
       properties:
@@ -1291,55 +1334,55 @@ components:
             $ref: "#/components/schemas/Coordinate"
         empty:
           type: boolean
-        simple:
-          type: boolean
-        boundaryDimension:
-          type: integer
-          format: int32
-        coordinateSequence:
-          $ref: "#/components/schemas/CoordinateSequence"
         "y":
           type: number
           format: double
         x:
           type: number
           format: double
-        geometryType:
-          type: string
-        dimension:
-          type: integer
-          format: int32
-        coordinate:
-          $ref: "#/components/schemas/Coordinate"
-        boundary:
-          $ref: "#/components/schemas/Geometry"
+        simple:
+          type: boolean
         numPoints:
           type: integer
           format: int32
+        boundary:
+          $ref: "#/components/schemas/Geometry"
+        coordinate:
+          $ref: "#/components/schemas/Coordinate"
+        dimension:
+          type: integer
+          format: int32
+        geometryType:
+          type: string
+        boundaryDimension:
+          type: integer
+          format: int32
+        coordinateSequence:
+          $ref: "#/components/schemas/CoordinateSequence"
         length:
           type: number
           format: double
         valid:
           type: boolean
-        srid:
-          type: integer
-          format: int32
-        envelopeInternal:
-          $ref: "#/components/schemas/Envelope"
-        area:
-          type: number
-          format: double
-        numGeometries:
-          type: integer
-          format: int32
-        rectangle:
-          type: boolean
-        centroid:
-          $ref: "#/components/schemas/Point"
         precisionModel:
           $ref: "#/components/schemas/PrecisionModel"
         interiorPoint:
           $ref: "#/components/schemas/Point"
+        centroid:
+          $ref: "#/components/schemas/Point"
+        rectangle:
+          type: boolean
+        numGeometries:
+          type: integer
+          format: int32
+        srid:
+          type: integer
+          format: int32
+        area:
+          type: number
+          format: double
+        envelopeInternal:
+          $ref: "#/components/schemas/Envelope"
     PrecisionModel:
       type: object
       properties:
@@ -1353,10 +1396,10 @@ components:
         maximumSignificantDigits:
           type: integer
           format: int32
-        offsetX:
+        offsetY:
           type: number
           format: double
-        offsetY:
+        offsetX:
           type: number
           format: double
     Type:
@@ -1481,6 +1524,77 @@ components:
           type: number
         active:
           type: boolean
+    ScopeItem:
+      type: object
+      properties:
+        seasonId:
+          type: integer
+          format: int32
+        registeredAreaHa:
+          type: number
+          minimum: 0.0001
+      required:
+      - registeredAreaHa
+      - seasonId
+    UpdateCertificationScopesRequest:
+      type: object
+      properties:
+        scopes:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScopeItem"
+          maxItems: 50
+          minItems: 0
+      required:
+      - scopes
+    ApiResponseListCertificationScopeResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/CertificationScopeResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CertificationScopeResponse"
+        generatedAt:
+          type: string
+    CertificationScopeResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        seasonId:
+          type: integer
+          format: int32
+        plotId:
+          type: integer
+          format: int32
+        plotName:
+          type: string
+        cropId:
+          type: integer
+          format: int32
+        cropName:
+          type: string
+        varietyId:
+          type: integer
+          format: int32
+        varietyName:
+          type: string
+        registeredAreaHa:
+          type: number
+        expectedYieldKg:
+          type: number
     UpdateCertificationItemRequest:
       type: object
       properties:
@@ -2043,6 +2157,12 @@ components:
           type: number
         certificateNumber:
           type: string
+        scopeMatched:
+          type: boolean
+        scopes:
+          type: array
+          items:
+            $ref: "#/components/schemas/CertificationScopeResponse"
         missingMandatoryEvidenceCount:
           type: integer
           format: int32
@@ -2139,6 +2259,10 @@ components:
           format: date
         auditorNotes:
           type: string
+        scopes:
+          type: array
+          items:
+            $ref: "#/components/schemas/CertificationScopeResponse"
         items:
           type: array
           items:
@@ -2229,6 +2353,58 @@ components:
             $ref: "#/components/schemas/CertificationAuditResponse"
         generatedAt:
           type: string
+    ApiResponseListCertificationApplicationResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: "#/components/schemas/CertificationApplicationResponse"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/CertificationApplicationResponse"
+        generatedAt:
+          type: string
+    CertificationApplicationResponse:
+      type: object
+      properties:
+        recordId:
+          type: integer
+          format: int32
+        farmId:
+          type: integer
+          format: int32
+        farmName:
+          type: string
+        standardCode:
+          type: string
+        standardName:
+          type: string
+        scopes:
+          type: array
+          items:
+            $ref: "#/components/schemas/CertificationScopeResponse"
+        complianceScore:
+          type: number
+        status:
+          type: string
+        appliedAt:
+          type: string
+          format: date-time
+        nextPeriodicReviewDate:
+          type: string
+          format: date
+        expiryDate:
+          type: string
+          format: date
     ApiResponseWardResponse:
       type: object
       properties:

@@ -27,6 +27,13 @@ public class CreateSoilTestRequest {
     LocalDate sampleDate;
 
     @DecimalMin(value = "0.0", inclusive = true, message = "KEY_INVALID")
+    @DecimalMax(value = "14.0", inclusive = true, message = "KEY_INVALID")
+    BigDecimal soilPh;
+
+    @DecimalMin(value = "0.0", inclusive = true, message = "KEY_INVALID")
+    BigDecimal electricalConductivityDsM;
+
+    @DecimalMin(value = "0.0", inclusive = true, message = "KEY_INVALID")
     @DecimalMax(value = "100.0", inclusive = true, message = "KEY_INVALID")
     BigDecimal soilOrganicMatterPct;
 

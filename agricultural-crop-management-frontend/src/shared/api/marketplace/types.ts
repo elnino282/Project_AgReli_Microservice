@@ -163,6 +163,19 @@ export type MarketplaceTraceability = {
     issuedDate: string | null;
     expiryDate: string | null;
     complianceScore: number;
+    certificateNumber?: string | null;
+    scopeMatched: boolean;
+    scopes: Array<{
+      seasonId: number;
+      plotId: number;
+      plotName: string;
+      cropId: number;
+      cropName: string;
+      varietyId?: number | null;
+      varietyName?: string | null;
+      registeredAreaHa: number;
+      expectedYieldKg?: number | null;
+    }>;
   } | null;
   phiSafety?: {
     safe: boolean;

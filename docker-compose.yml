@@ -249,6 +249,8 @@ services:
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS:-rabbitpass}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      APP_SEASON_SERVICE_URL: http://season-service:8085
+      APP_CROP_CATALOG_SERVICE_URL: http://crop-catalog-service:8082
       MANAGEMENT_OTLP_TRACING_EXPORT_ENABLED: "false"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8084/actuator/health"]

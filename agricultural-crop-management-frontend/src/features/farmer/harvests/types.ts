@@ -14,9 +14,9 @@ export interface QCMetrics {
 }
 
 export type QualityGrade = "PASSED" | "SUBSTANDARD" | "REJECTED";
-export type SubStandardDisposition = "SELL_LIVESTOCK_FEED" | "COMPOSTING" | "DISCARDED" | "SELL_DISCOUNT";
-export type PackagingType = "NONE" | "BULK_BAG" | "CRATE" | "PALLET_BOX" | "BASKET" | "CARTON" | "NET_BAG" | "VACUUM_BAG" | "PUNNET" | "DRUM";
-export type ProcessingType = "NONE" | "WASHED" | "TRIMMED" | "SORTED" | "CURED" | "FUMIGATED";
+export type SubStandardDisposition = "SELL_LIVESTOCK_FEED" | "COMPOSTING" | "PROCESSING" | "DISCARDED" | "SELL_DISCOUNT";
+export type PackagingType = "NONE" | "BULK_BAG" | "CRATE" | "CARTON_BOX" | "VACUUM_SEALED" | "NET_BAG";
+export type ProcessingType = "NONE" | "WASHED" | "TRIMMED" | "GRADED_AND_SORTED" | "DRIED" | "COOLED";
 
 export interface HarvestBatch {
     id: string;

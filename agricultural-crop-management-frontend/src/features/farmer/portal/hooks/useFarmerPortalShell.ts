@@ -58,6 +58,10 @@ const resolveViewFromPath = (pathname: string): FarmerView => {
     return 'marketplace-workspace';
   }
 
+  if (pathParts[1] === 'farms' && pathParts[3] === 'certification') {
+    return 'vietgap-workspace';
+  }
+
   return (pathParts[1] as FarmerView) ?? 'dashboard';
 };
 

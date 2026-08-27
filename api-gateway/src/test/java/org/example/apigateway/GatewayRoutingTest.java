@@ -47,5 +47,13 @@ class GatewayRoutingTest {
                 .orElse(null);
         assertThat(adminReportingReadsRoute).isNotNull();
         assertThat(adminReportingReadsRoute.getUri().toString()).contains("8091");
+
+        // 4. Certification workflow commands and admin queue belong to farm-service.
+        Route farmCertificationRoute = routes.stream()
+                .filter(r -> "farm-certification-route".equals(r.getId()))
+                .findFirst()
+                .orElse(null);
+        assertThat(farmCertificationRoute).isNotNull();
+        assertThat(farmCertificationRoute.getUri().toString()).contains("8084");
     }
 }

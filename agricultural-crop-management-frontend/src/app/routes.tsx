@@ -122,11 +122,14 @@ const PlotManagement = lazy(() =>
 const SeasonManagement = lazy(() =>
   import('@/features/farmer/seasons').then((m) => ({ default: m.SeasonManagement }))
 );
-const Documents = lazy(() =>
-  import('@/features/farmer/documents').then((m) => ({ default: m.Documents }))
+const SystemDocumentsPage = lazy(() =>
+  import('@/pages/farmer/SystemDocumentsPage').then((m) => ({ default: m.default }))
 );
 const FarmDocumentsPage = lazy(() =>
   import('@/pages/farmer/FarmDocumentsPage').then((m) => ({ default: m.default }))
+);
+const VietGapWorkspaceEntryPage = lazy(() =>
+  import('@/pages/farmer/VietGapWorkspaceEntryPage').then((m) => ({ default: m.default }))
 );
 const ExpenseManagement = lazy(() =>
   import('@/features/farmer/expense-management').then((m) => ({
@@ -555,7 +558,8 @@ export function AppRoutes() {
           <Route path="suppliers-supplies" element={<SupplyManagementPage />} />
           <Route path="labor-management" element={<LegacySeasonModuleRedirect modulePath="labor-management" />} />
           <Route path="reports" element={<LegacySeasonModuleRedirect modulePath="reports" />} />
-          <Route path="documents" element={<Documents />} />
+          <Route path="documents" element={<SystemDocumentsPage />} />
+          <Route path="vietgap-workspace" element={<VietGapWorkspaceEntryPage />} />
           <Route path="farm-documents" element={<FarmDocumentsPage />} />
           <Route path="field-logs" element={<LegacySeasonModuleRedirect modulePath="field-logs" />} />
           <Route path="inventory" element={<Navigate to="/farmer/suppliers-supplies" replace />} />
@@ -566,7 +570,7 @@ export function AppRoutes() {
           <Route path="ai-assistant" element={<AiAssistantPage />} />
           <Route path="profile" element={<FarmerProfile />} />
           <Route path="settings" element={<FarmerPreferences />} />
-          <Route path="user-guide" element={<UserGuidePage />} />
+          <Route path="user-guide" element={<Navigate to="/farmer/documents?section=guide" replace />} />
         </Route>
 
         {/* ━━━ Dashboard Layout Branch: Admin ━━━ */}

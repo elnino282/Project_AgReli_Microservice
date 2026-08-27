@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.example.marketplace.client.FarmClient;
 import org.example.marketplace.client.SeasonClient;
+import org.example.marketplace.dto.client.FarmCertificationDto;
 import org.example.marketplace.dto.client.PesticideRecordDto;
 import org.example.marketplace.dto.response.ComplianceCheckResponse;
 import org.example.marketplace.dto.response.MarketplaceTraceabilityResponse.PHISafetyInfo;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -109,6 +111,48 @@ class MarketplaceComplianceGateServiceTest {
         assertThat(snapshot.isSafe()).isTrue();
         assertThat(snapshot.totalPesticidesUsed()).isZero();
         verifyNoInteractions(farmClient);
+    }
+
+    @Test
+    void vietGapClaim_isAcceptedOnlyWhenTheProductSeasonMatchesCertifiedScope() throws Exception {
+        MarketplaceProduct product = MarketplaceProduct.builder()
+                .farmId(1).seasonId(20).complianceClaim("VIETGAP").build();
+        FarmCertificationDto.ScopeDto scope = new FarmCertificationDto.ScopeDto(
+                20, 3, "Lo A1", 4, "Lua", 5, "Dai Thom 8",
+                BigDecimal.valueOf(5), BigDecimal.valueOf(34500));
+        when(farmClient.getFarmCertification(1, "VIETGAP-PLANTING-2026", 20))
+                .thenReturn(new FarmCertificationDto(
+                        "TCVN 11892-1:2026", "VIETGAP_PLANTING", "PUBLISHED",
+                        LocalDate.of(2026, 8, 20), LocalDate.of(2027, 8, 20),
+                        BigDecimal.valueOf(100), "VG-001", true, List.of(scope), 0, List.of()));
+        when(seasonClient.getSeasonPesticideRecords(20)).thenReturn(List.of());
+
+        ComplianceCheckResponse result = service.checkCompliance(product);
+
+        assertThat(result.isEligible()).isTrue();
+        FarmCertificationDto snapshot = objectMapper.readValue(
+                result.certificationSnapshotJson(), FarmCertificationDto.class);
+        assertThat(snapshot.scopeMatched()).isTrue();
+        assertThat(snapshot.scopes()).singleElement().extracting(FarmCertificationDto.ScopeDto::seasonId)
+                .isEqualTo(20);
+    }
+
+    @Test
+    void vietGapClaim_isRejectedWhenFarmCertificateDoesNotCoverProductSeason() {
+        MarketplaceProduct product = MarketplaceProduct.builder()
+                .farmId(1).seasonId(21).complianceClaim("VIETGAP").build();
+        when(farmClient.getFarmCertification(1, "VIETGAP-PLANTING-2026", 21))
+                .thenReturn(new FarmCertificationDto(
+                        "TCVN 11892-1:2026", "VIETGAP_PLANTING", "OUT_OF_SCOPE",
+                        LocalDate.of(2026, 8, 20), LocalDate.of(2027, 8, 20),
+                        BigDecimal.valueOf(100), "VG-001", false, List.of(), 0, List.of()));
+        when(seasonClient.getSeasonPesticideRecords(21)).thenReturn(List.of());
+
+        ComplianceCheckResponse result = service.checkCompliance(product);
+
+        assertThat(result.isEligible()).isFalse();
+        assertThat(result.certificationSnapshotJson()).isNull();
+        assertThat(result.reasons()).hasSize(1);
     }
 
     @Test

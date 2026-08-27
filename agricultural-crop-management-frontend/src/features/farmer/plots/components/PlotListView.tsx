@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
-import { ArrowUpDown, ArrowUp, ArrowDown, Sprout } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Checkbox } from "@/shared/ui/checkbox";
-import { Button } from "@/shared/ui/button";
 import { useTranslation } from "react-i18next";
 import { PlotStatusChip } from "./PlotStatusChip";
 import { PlotActionsMenu } from "./PlotActionsMenu";
@@ -45,7 +44,7 @@ export function PlotListView({
     onBulkDelete,
     onBulkStatusChange,
     onClearSelection,
-    onClearFilters,
+    onClearFilters: _onClearFilters,
 }: PlotListViewProps) {
     const { t } = useTranslation();
     const [sortColumn, setSortColumn] = useState<SortColumn>(null);
@@ -73,6 +72,9 @@ export function PlotListView({
                     bValue = b.area;
                     break;
                 case "pH":
+                    if (a.pH === undefined && b.pH === undefined) return 0;
+                    if (a.pH === undefined) return 1;
+                    if (b.pH === undefined) return -1;
                     aValue = a.pH;
                     bValue = b.pH;
                     break;
@@ -204,7 +206,7 @@ export function PlotListView({
 
                         {/* Table Body */}
                         <tbody className="divide-y divide-border">
-                            {sortedPlots.map((plot, index) => {
+                            {sortedPlots.map((plot) => {
                                 const isSelected = selectedPlots.includes(plot.id);
 
                                 return (
@@ -257,11 +259,12 @@ export function PlotListView({
                                             <div className="flex justify-center">
                                                 <span className={`
                                                     inline-flex items-center justify-center px-2.5 py-1 rounded-md font-mono tabular-nums text-xs font-semibold w-14
-                                                    ${plot.pH < 6.0 ? "bg-orange-50 text-orange-700 border border-orange-200" :
+                                                    ${plot.pH === undefined ? "bg-muted text-muted-foreground border border-border" :
+                                                        plot.pH < 6.0 ? "bg-orange-50 text-orange-700 border border-orange-200" :
                                                         plot.pH > 7.5 ? "bg-sky-50 text-sky-700 border border-sky-200" :
                                                             "bg-green-50 text-green-700 border border-green-200"}
                                                 `}>
-                                                    {plot.pH.toFixed(1)}
+                                                    {plot.pH?.toFixed(1) ?? "—"}
                                                 </span>
                                             </div>
                                         </td>

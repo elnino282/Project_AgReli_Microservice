@@ -1,4 +1,4 @@
-import { MoreVertical, Eye, Edit, Trash2, Award } from "lucide-react";
+import { MoreVertical, Eye, Edit, Trash2 } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -48,18 +48,6 @@ export function FarmActionsMenu({
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[200px]">
-                <DropdownMenuItem
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        window.location.href = `/farmer/farms/${farm.id}/certification`;
-                    }}
-                >
-                    <Award className="mr-2 h-4 w-4 text-emerald-600" />
-                    <span className="text-emerald-700 font-medium">Chứng nhận VietGAP</span>
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator />
-
                 <DropdownMenuItem
                     onClick={(e) => {
                         e.stopPropagation();

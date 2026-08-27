@@ -327,6 +327,9 @@ export const useApproveTask = (
     onSuccess: (data, variables, onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.listWorkspace(), exact: false });
       queryClient.invalidateQueries({ queryKey: laborKeys.seasonProgressBase(data.seasonId ?? 0), exact: false });
+      queryClient.invalidateQueries({ queryKey: laborKeys.seasonPayrollBase(data.seasonId ?? 0), exact: false });
+      queryClient.invalidateQueries({ queryKey: laborKeys.employeeTasksBase(), exact: false });
+      queryClient.invalidateQueries({ queryKey: laborKeys.employeePayrollBase(), exact: false });
       onSuccess?.(data, variables, onMutateResult, context);
     },
   });
@@ -343,6 +346,9 @@ export const useRejectTask = (
     onSuccess: (data, variables, onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.listWorkspace(), exact: false });
       queryClient.invalidateQueries({ queryKey: laborKeys.seasonProgressBase(data.seasonId ?? 0), exact: false });
+      queryClient.invalidateQueries({ queryKey: laborKeys.seasonPayrollBase(data.seasonId ?? 0), exact: false });
+      queryClient.invalidateQueries({ queryKey: laborKeys.employeeTasksBase(), exact: false });
+      queryClient.invalidateQueries({ queryKey: laborKeys.employeePayrollBase(), exact: false });
       onSuccess?.(data, variables, onMutateResult, context);
     },
   });

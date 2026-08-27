@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.adminreporting.dto.ApiResponse;
 import org.example.adminreporting.dto.PageResponse;
 import org.example.adminreporting.dto.response.AdminDocumentResponse;
+import org.example.adminreporting.config.CurrentUserService;
 import org.example.adminreporting.service.AdminDocumentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminDocumentController {
 
     private final AdminDocumentService adminDocumentService;
+    private final CurrentUserService currentUserService;
 
     // ═══════════════════════════════════════════════════════════════
     // PUBLIC ENDPOINTS (Farmer/Buyer Access)
@@ -30,9 +32,13 @@ public class AdminDocumentController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String type,
-            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "all") String tab,
+            @RequestParam(required = false) String crop,
+            @RequestParam(required = false) String stage,
+            @RequestParam(required = false) String topic,
             @RequestParam(defaultValue = "createdAt,desc") String sort) {
-        PageResponse<AdminDocumentResponse> response = adminDocumentService.listDocuments(page, size, q, type, status, sort);
+        PageResponse<AdminDocumentResponse> response = adminDocumentService.listPublicDocuments(
+                currentUserService.getCurrentUserId(), page, size, tab, q, type, crop, stage, topic, sort);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -53,7 +59,8 @@ public class AdminDocumentController {
     @GetMapping("/api/v1/documents/{id}")
     @PreAuthorize("hasAnyRole('FARMER', 'BUYER', 'ADMIN')")
     public ResponseEntity<ApiResponse<AdminDocumentResponse>> getPublicDocument(@PathVariable Integer id) {
-        return ResponseEntity.ok(ApiResponse.success(adminDocumentService.getDocumentById(id)));
+        return ResponseEntity.ok(ApiResponse.success(
+                adminDocumentService.getPublicDocumentById(id, currentUserService.getCurrentUserId())));
     }
 
     /**
@@ -63,7 +70,7 @@ public class AdminDocumentController {
     @PostMapping("/api/v1/documents/{id}/open")
     @PreAuthorize("hasAnyRole('FARMER', 'BUYER', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> recordDocumentOpen(@PathVariable Integer id) {
-        // TODO: Implement tracking for Recent tab
+        adminDocumentService.recordDocumentOpen(id, currentUserService.getCurrentUserId());
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
@@ -74,7 +81,7 @@ public class AdminDocumentController {
     @PostMapping("/api/v1/documents/{id}/favorite")
     @PreAuthorize("hasAnyRole('FARMER', 'BUYER', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> addToFavorite(@PathVariable Integer id) {
-        // TODO: Implement favorite tracking per user
+        adminDocumentService.addFavorite(id, currentUserService.getCurrentUserId());
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
@@ -85,7 +92,7 @@ public class AdminDocumentController {
     @DeleteMapping("/api/v1/documents/{id}/favorite")
     @PreAuthorize("hasAnyRole('FARMER', 'BUYER', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> removeFromFavorite(@PathVariable Integer id) {
-        // TODO: Implement favorite tracking per user
+        adminDocumentService.removeFavorite(id, currentUserService.getCurrentUserId());
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 

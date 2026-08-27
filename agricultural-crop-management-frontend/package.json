@@ -93,6 +93,8 @@
   "scripts": {
     "dev": "vite",
     "demo:smoke": "node scripts/local-demo-smoke.js",
+    "test:e2e": "playwright test",
+    "test:e2e:portals": "playwright test tests/e2e/portal-readiness.spec.ts",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",

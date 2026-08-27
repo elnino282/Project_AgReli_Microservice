@@ -9,5 +9,7 @@ import java.util.List;
 @Repository
 public interface TrainingProgramRepository extends JpaRepository<TrainingProgram, Integer> {
     List<TrainingProgram> findByCategory(String category);
+
+    List<TrainingProgram> findByIsMandatoryTrue();
 }
 

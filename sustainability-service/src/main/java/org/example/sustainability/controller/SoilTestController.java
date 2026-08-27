@@ -42,4 +42,11 @@ public class SoilTestController {
     ) {
         return ApiResponse.success(soilTestService.list(seasonId, plotId));
     }
+
+    @GetMapping("/soil-tests/latest")
+    public ApiResponse<List<SoilTestResponse>> latestByPlots(
+            @RequestParam List<Integer> plotIds
+    ) {
+        return ApiResponse.success(soilTestService.latestByPlots(plotIds));
+    }
 }

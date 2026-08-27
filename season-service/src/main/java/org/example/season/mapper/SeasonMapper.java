@@ -17,12 +17,28 @@ public class SeasonMapper {
         if (season == null) {
             return null;
         }
+
+        ExternalServiceClient.PlotInternalDto plot = season.getPlotId() != null
+                ? externalServiceClient.getPlot(season.getPlotId())
+                : null;
+        ExternalServiceClient.CropInternalDto crop = season.getCropId() != null
+                ? externalServiceClient.getCrop(season.getCropId())
+                : null;
+        ExternalServiceClient.VarietyInternalDto variety = season.getVarietyId() != null
+                ? externalServiceClient.getVariety(season.getVarietyId())
+                : null;
+
         return SeasonResponse.builder()
                 .id(season.getId())
                 .seasonName(season.getSeasonName())
+                .farmId(plot != null ? plot.getFarmId() : null)
+                .farmName(plot != null ? plot.getFarmName() : null)
                 .plotId(season.getPlotId())
+                .plotName(plot != null ? plot.getPlotName() : null)
                 .cropId(season.getCropId())
+                .cropName(crop != null ? crop.getCropName() : null)
                 .varietyId(season.getVarietyId())
+                .varietyName(variety != null ? variety.getName() : null)
                 .startDate(season.getStartDate())
                 .plannedHarvestDate(season.getPlannedHarvestDate())
                 .endDate(season.getEndDate())

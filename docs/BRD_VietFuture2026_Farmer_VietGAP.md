@@ -114,7 +114,7 @@ Codebase hiện tại **trưởng thành hơn nhiều** so với những gì m�
 | 25 | Kịch bản 4 — Same-day priority list "Đơn cần chuẩn bị hôm nay" | ✅ ĐÃ CÓ (rate/logic) / 🔧 cần verify FE farmer fulfillment queue | `ShippingFeeCalculator` đã hỗ trợ `same_day`; `DeliveryOrder`/`DeliveryStatus` đã có | Verify FE Farmer Portal có tab lọc đơn same-day chưa — xem Luồng I §10.5 |
 | 26 | Kịch bản 4 — trạng thái đơn hàng PACKING→READY_FOR_PICKUP→PICKED_UP→IN_TRANSIT→DELIVERED | ✅ ĐÃ CÓ | `DeliveryStatus` enum | Không cần code mới |
 | 27 | Note rời — Đặt trước (pre-order) hẹn ngày ship, gom đơn theo khu vực để giảm phí | 🆕 MỚI | `grep preOrder/scheduledDelivery` → không có kết quả | Xây mới — xem Luồng I §10.6–10.7 `[AUTO ≥70%]` cho pre-order, `[CẦN XÁC NHẬN]` cho thuật toán gom đơn |
-| 28 | Note rời — Chứng nhận Hữu cơ (Organic) | 🔧 MỞ RỘNG | `CertificationStandard.type` hỗ trợ đa loại nhưng `getOrCreateRecord()` hard-code `"VIETGAP-PLANTING-2024"` | Cần tham số hoá theo `standardCode` thay vì hard-code — xem Luồng D §5.9 |
+| 28 | Note rời — Chứng nhận Hữu cơ (Organic) | 🔧 MỞ RỘNG | `CertificationStandard.type` và overload `getOrCreateRecord(farmId, standardCode)` đã hỗ trợ đa loại; UI đăng ký đa chuẩn chưa hoàn thiện | Bổ sung luồng chọn chuẩn và bộ checklist được thẩm định — xem Luồng D §5.9 |
 
 ### 1.3 🐞 Lỗi hiện tại cần fix TRƯỚC (blocking)
 
@@ -305,7 +305,7 @@ Ghi chú demo: *"tùy loại cây trồng có kho thu hoạch khác"*, *"Rau c�
 **Trạng thái tổng thể: 🔧 Nền tảng đã có (checklist, auto-score, apply). 🆕 Phần audit ngoài, khắc phục không phù hợp, cấp giấy, tái kiểm định kỳ, admin duyệt public là VIỆC MỚI TRỌNG TÂM của toàn bộ tài liệu này.**
 
 ### 5.1 Mục tiêu nghiệp vụ
-Số hoá toàn bộ hành trình một nông trại đạt chứng nhận VietGAP: từ thiết lập hồ sơ, tự đánh giá nội bộ, đăng ký, audit bởi tổ chức chứng nhận (certification body), xử lý điểm không phù hợp (nonconformity), đến khi được cấp giấy và duy trì hiệu lực qua các đợt tái kiểm tra định kỳ — đúng theo tinh thần **TCVN 11892-1:2017** mà `plan3&4.md` đã tham chiếu.
+Số hoá toàn bộ hành trình một nông trại đạt chứng nhận VietGAP: từ thiết lập hồ sơ, tự đánh giá nội bộ, đăng ký, audit bởi tổ chức chứng nhận (certification body), xử lý điểm không phù hợp (nonconformity), đến khi được cấp giấy và duy trì hiệu lực qua các đợt tái kiểm tra định kỳ. Metadata mặc định hiện bám **TCVN 11892-1:2026**; checklist chi tiết phải tiếp tục được đối chiếu với bản tiêu chuẩn có bản quyền và tổ chức chứng nhận.
 
 ### 5.2 Actor
 - **Farmer**: chủ hồ sơ, thực hiện tự đánh giá, nộp hồ sơ, khắc phục lỗi.
@@ -322,7 +322,7 @@ IN_PROGRESS ──(score ≥ 80%)──► READY_TO_APPLY ──(apply())──�
                                                           (DỪNG Ở ĐÂY — chưa có state tiếp theo)
 ```
 - `CertificationScoringService.autoPopulateFromFieldLogs()`: tự động map Field Log / Soil Test / Water Test / PHI record sang từng `CertificationChecklistItem` (PASS/FAIL/PENDING). **✅ Giữ nguyên, tái sử dụng.**
-- `getOrCreateRecord()` hiện **hard-code** `standardCode = "VIETGAP-PLANTING-2024"`. Cần tham số hoá để hỗ trợ đa chuẩn (Organic, GlobalGAP...) — xem §5.9.
+- `getOrCreateRecord()` mặc định `VIETGAP-PLANTING-2026`, nhận `standardCode` cho luồng đa chuẩn và ánh xạ mã 2024 cũ để tương thích dữ liệu — xem §5.9.
 
 ### 5.4 🆕 Mở rộng State Machine — vòng đời đầy đủ `[AUTO ≥70%]`
 
@@ -459,7 +459,7 @@ AUDIT_SCHEDULED ──────────────► AUDIT_IN_PROGRESS
 `FarmDocumentController` đã có `GET /api/v1/farms/{farmId}/documents/expiring` — mở rộng logic tương tự cho `CertificationRecord.expiryDate` để cảnh báo trước 30/15/7 ngày trên Dashboard Farmer, đúng như note *"Trước ngày đó có cảnh báo để kiểm tra"* (liên kết trực tiếp Luồng G — chặn Marketplace).
 
 ### 5.7 🔧 Hỗ trợ đa chuẩn chứng nhận (VietGAP + Hữu cơ + GlobalGAP)
-Ghi chú demo có nhắc "giấy chứng nhận hữu cơ". `CertificationStandard.type` đã hỗ trợ đa giá trị nhưng `CertificationService.getOrCreateRecord(farmId)` đang hard-code `"VIETGAP-PLANTING-2024"`.
+Ghi chú demo có nhắc "giấy chứng nhận hữu cơ". `CertificationStandard.type` và API backend đã hỗ trợ nhận `standardCode`; mặc định hiện là `VIETGAP-PLANTING-2026` và giữ alias mã cũ.
 
 - 🔧 Đổi chữ ký hàm thành `getOrCreateRecord(Integer farmId, String standardCode)` (overload giữ bản cũ gọi mặc định VietGAP để **không phá code đang gọi hàm này**), cho phép Farmer chọn đăng ký thêm chuẩn Hữu cơ song song. `[AUTO ≥70%]` — additive, rủi ro thấp, giá trị nghiệp vụ rõ ràng (đã có sẵn trong plan gốc của dự án).
 - Cần seed thêm `CertificationStandard` cho `ORGANIC` + checklist tương ứng (dữ liệu, không phải code logic).

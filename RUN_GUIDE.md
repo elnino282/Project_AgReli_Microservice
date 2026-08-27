@@ -133,6 +133,16 @@ npm run demo:smoke
 
 Kết quả cuối phải là `LOCAL_DEMO_SMOKE=PASS`. Script không in access token; có thể override tài khoản bằng các biến `DEMO_*_EMAIL`/`DEMO_*_PASSWORD` nếu không dùng seed mặc định.
 
+Để chạy acceptance browser thật cho Admin, Buyer và Employee (không mock network, read-only trên volume dev):
+
+```bash
+cd agricultural-crop-management-frontend
+npx playwright install chromium
+npm run test:e2e
+```
+
+Suite tự khởi động Vite tại `http://localhost:3000`, kiểm tra reload và role isolation. Các journey có mutation chỉ chạy trên stack audit cô lập; xem `docs/audit/PHASE5_ACCEPTANCE.md`.
+
 ---
 
 ## 7. Giải thích cơ chế Import dữ liệu (Flyway)

@@ -52,6 +52,13 @@ public class CertificationAuditController {
         return ResponseEntity.ok(ApiResponse.success(auditService.getAllAuditsForAdmin()));
     }
 
+    /** Admin/Auditor: hàng đợi hồ sơ để tiếp nhận và lên lịch đánh giá. */
+    @GetMapping("/api/v1/admin/certification-applications")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AUDITOR')")
+    public ResponseEntity<ApiResponse<List<CertificationApplicationResponse>>> getApplications() {
+        return ResponseEntity.ok(ApiResponse.success(auditService.getApplicationsForAdmin()));
+    }
+
     /** Bắt đầu audit */
     @PutMapping("/api/v1/certification-audits/{auditId}/start")
     @PreAuthorize("hasAnyRole('ADMIN', 'AUDITOR')")

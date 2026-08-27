@@ -11,7 +11,6 @@ import {
   TestTube,
   Activity,
   Download,
-  Upload,
   FileText,
   Info,
   Sprout,
@@ -96,6 +95,17 @@ export function PlotDetailDialog({
     if (normalized === "ARCHIVED") return t("farmDetail.seasons.statusLabels.ARCHIVED");
     return status;
   };
+  const formatSoilTestSource = (source?: string) => {
+    if (!source) return t("plots.detail.notAvailable");
+    const labels: Record<string, string> = {
+      lab_measured: "Kết quả phòng thử nghiệm",
+      user_entered: "Người dùng nhập",
+      external_reference: "Nguồn tham chiếu bên ngoài",
+      system_estimated: "Hệ thống ước tính",
+      default_reference: "Giá trị tham chiếu",
+    };
+    return labels[source] ?? source;
+  };
 
   if (!plot) return null;
   const soilTypeLabel = getSoilTypeLabel(plot.soilType, t);
@@ -176,7 +186,9 @@ export function PlotDetailDialog({
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">{t("plots.detail.phLevel")}</p>
-                      <p className="text-lg text-foreground">{plot.pH.toFixed(1)}</p>
+                      <p className="text-lg text-foreground">
+                        {plot.pH?.toFixed(1) ?? t("plots.detail.noData")}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -246,7 +258,9 @@ export function PlotDetailDialog({
               <CardHeader>
                 <CardTitle className="text-base">{t("plots.detail.soilTestResults")}</CardTitle>
                 <CardDescription>
-                  {t("plots.detail.lastUpdated", { date: formatDate(plot.soilTestDate) })}
+                  {plot.soilTestDate
+                    ? t("plots.detail.lastUpdated", { date: formatDate(plot.soilTestDate) })
+                    : t("plots.detail.noData")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -254,25 +268,26 @@ export function PlotDetailDialog({
                   <div>
                     <Label className="text-xs text-muted-foreground">{t("plots.detail.phLevel")}</Label>
                     <p className="text-2xl text-foreground mt-1">
-                      {plot.pH.toFixed(1)}
+                      {plot.pH?.toFixed(2) ?? t("plots.detail.notAvailable")}
                     </p>
-                    <p className="text-xs text-primary mt-1">{t("plots.detail.soilRating.optimal")}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Thang đo 0–14</p>
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">
                       {t("plots.detail.organicMatter")}
                     </Label>
                     <p className="text-2xl text-foreground mt-1">
-                      {plot.organicMatter?.toFixed(1) || t("plots.detail.notAvailable")}
+                      {plot.organicMatter !== undefined
+                        ? `${plot.organicMatter.toFixed(2)}%`
+                        : t("plots.detail.notAvailable")}
                     </p>
-                    <p className="text-xs text-primary mt-1">{t("plots.detail.soilRating.good")}</p>
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">
                       {t("plots.detail.electricalConductivity")}
                     </Label>
                     <p className="text-2xl text-foreground mt-1">
-                      {plot.electricalConductivity?.toFixed(1) || t("plots.detail.notAvailable")}
+                      {plot.electricalConductivity?.toFixed(4) ?? t("plots.detail.notAvailable")}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">dS/m</p>
                   </div>
@@ -284,22 +299,54 @@ export function PlotDetailDialog({
 
                 <Separator className="bg-border" />
 
+                <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground">Nitơ khoáng</span>
+                    <span>{plot.mineralNKgPerHa !== undefined ? `${plot.mineralNKgPerHa.toFixed(4)} kg/ha` : t("plots.detail.notAvailable")}</span>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground">Nitrat</span>
+                    <span>{plot.nitrateMgPerKg !== undefined ? `${plot.nitrateMgPerKg.toFixed(4)} mg/kg` : t("plots.detail.notAvailable")}</span>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground">Amoni</span>
+                    <span>{plot.ammoniumMgPerKg !== undefined ? `${plot.ammoniumMgPerKg.toFixed(4)} mg/kg` : t("plots.detail.notAvailable")}</span>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground">Mã phòng thử nghiệm</span>
+                    <span>{plot.soilTestLabReference ?? t("plots.detail.notAvailable")}</span>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground">Nguồn kết quả</span>
+                    <span>{formatSoilTestSource(plot.soilTestSourceType)}</span>
+                  </div>
+                </div>
+
+                {plot.soilTestNote && (
+                  <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                    <p className="mb-1 text-xs text-muted-foreground">Ghi chú kết quả</p>
+                    <p>{plot.soilTestNote}</p>
+                  </div>
+                )}
+
+                <Separator className="bg-border" />
+
                 <div className="space-y-2">
                   <Label className="text-sm text-foreground">
                     {t("plots.detail.uploadSoilTestReport")}
                   </Label>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      {t("plots.detail.uploadPdfCsv")}
+                  {plot.soilTestSourceDocument ? (
+                    <Button variant="outline" className="w-full" asChild>
+                      <a href={plot.soilTestSourceDocument} target="_blank" rel="noreferrer">
+                        <FileText className="w-4 h-4 mr-2" />
+                        Mở báo cáo đã lưu
+                      </a>
                     </Button>
-                    <Button variant="outline">
-                      <FileText className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  ) : (
+                    <div className="rounded-lg border border-dashed border-border p-3 text-sm text-muted-foreground">
+                      Chưa có tệp báo cáo được lưu cho lần kiểm tra này.
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -313,7 +360,9 @@ export function PlotDetailDialog({
                       {t("plots.detail.soilRecommendationTitle")}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {t("plots.detail.soilRecommendationDesc")}
+                      {plot.soilTestDate
+                        ? "Theo dõi xu hướng qua các lần xét nghiệm và sử dụng kết quả phòng thử nghiệm khi lập kế hoạch cải tạo đất."
+                        : "Chưa có kết quả xét nghiệm. Hãy ghi nhận kết quả tại workspace kiểm tra đất của mùa vụ liên kết."}
                     </p>
                   </div>
                 </div>

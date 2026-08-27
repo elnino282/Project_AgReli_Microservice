@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { documentKeys } from "../model/keys";
-import type { DocumentListParams } from "../model/types";
+import type {
+  DocumentListParams,
+  DocumentPageResponse,
+} from "../model/types";
 import { documentApi } from "./client";
 
 /**
@@ -44,10 +47,7 @@ export function useRecordDocumentOpen() {
   return useMutation({
     mutationFn: (id: number) => documentApi.recordOpen(id),
     onSuccess: () => {
-      // Invalidate recent tab queries
-      queryClient.invalidateQueries({
-        queryKey: documentKeys.list({ tab: "recent" }),
-      });
+      queryClient.invalidateQueries({ queryKey: documentKeys.lists() });
     },
   });
 }
@@ -59,8 +59,32 @@ export function useAddFavorite() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => documentApi.addFavorite(id),
-    onSuccess: () => {
-      // Invalidate all document lists to refresh isFavorited status
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: documentKeys.lists() });
+      const previous = queryClient.getQueriesData<DocumentPageResponse>({
+        queryKey: documentKeys.lists(),
+      });
+
+      previous.forEach(([queryKey, data]) => {
+        if (!data) return;
+        queryClient.setQueryData<DocumentPageResponse>(queryKey, {
+          ...data,
+          items: data.items.map((document) =>
+            document.documentId === id
+              ? { ...document, isFavorited: true }
+              : document,
+          ),
+        });
+      });
+
+      return { previous };
+    },
+    onError: (_error, _id, context) => {
+      context?.previous.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: documentKeys.lists() });
     },
   });
@@ -73,8 +97,42 @@ export function useRemoveFavorite() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => documentApi.removeFavorite(id),
-    onSuccess: () => {
-      // Invalidate all document lists to refresh isFavorited status
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: documentKeys.lists() });
+      const previous = queryClient.getQueriesData<DocumentPageResponse>({
+        queryKey: documentKeys.lists(),
+      });
+
+      previous.forEach(([queryKey, data]) => {
+        if (!data) return;
+        const params = queryKey[2] as DocumentListParams | undefined;
+        const isFavoritesTab = params?.tab === "favorites";
+        const items = isFavoritesTab
+          ? data.items.filter((document) => document.documentId !== id)
+          : data.items.map((document) =>
+              document.documentId === id
+                ? { ...document, isFavorited: false }
+                : document,
+            );
+        const removedCount = data.items.length - items.length;
+        const totalElements = Math.max(0, data.totalElements - removedCount);
+
+        queryClient.setQueryData<DocumentPageResponse>(queryKey, {
+          ...data,
+          items,
+          totalElements,
+          totalPages: Math.ceil(totalElements / Math.max(data.size, 1)),
+        });
+      });
+
+      return { previous };
+    },
+    onError: (_error, _id, context) => {
+      context?.previous.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: documentKeys.lists() });
     },
   });

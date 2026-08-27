@@ -7,7 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
 import { Badge } from "@/shared/ui/badge";
 import { BackButton } from "@/shared/ui/back-button";
 import { Button } from "@/shared/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Card, CardContent } from "@/shared/ui/card";
 import {
   Form,
   FormControl,
@@ -41,6 +41,8 @@ type Translator = (key: string, optionsOrDefault?: Record<string, unknown> | str
 const createSoilTestFormSchema = (t: Translator) =>
   z.object({
     sampleDate: z.string().min(1, t("seasonSoilWorkspace.validation.sampleDateRequired")),
+    soilPh: z.number().min(0).max(14).optional(),
+    electricalConductivityDsM: z.number().min(0).optional(),
     soilOrganicMatterPct: z.number().min(0).max(100).optional(),
     mineralNKgPerHa: z
       .number({ required_error: t("seasonSoilWorkspace.validation.mineralNRequired") })
@@ -85,6 +87,8 @@ const FORM_TEXTAREA_CLASS_NAME =
 
 const defaultValues = (): SoilTestFormValues => ({
   sampleDate: new Date().toISOString().split("T")[0],
+  soilPh: undefined,
+  electricalConductivityDsM: undefined,
   soilOrganicMatterPct: undefined,
   mineralNKgPerHa: 0,
   nitrateMgPerKg: undefined,
@@ -185,6 +189,8 @@ export function SeasonSoilTestsWorkspace() {
     createMutation.mutate({
       plotId,
       sampleDate: values.sampleDate,
+      soilPh: values.soilPh,
+      electricalConductivityDsM: values.electricalConductivityDsM,
       soilOrganicMatterPct: values.soilOrganicMatterPct,
       mineralNKgPerHa: values.mineralNKgPerHa,
       nitrateMgPerKg: values.nitrateMgPerKg,
@@ -281,6 +287,53 @@ export function SeasonSoilTestsWorkspace() {
                     {t("seasonSoilWorkspace.sections.sampleInfo", "Thông tin lấy mẫu")}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="soilPh"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Độ pH (0–14)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              max="14"
+                              data-testid="soil-ph-input"
+                              value={field.value ?? ""}
+                              onChange={(event) => field.onChange(toNumberOrUndefined(event.target.value))}
+                              placeholder="Ví dụ: 6.20"
+                              className={FORM_INPUT_CLASS_NAME}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="electricalConductivityDsM"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Độ dẫn điện EC (dS/m)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.0001"
+                              min="0"
+                              data-testid="soil-ec-input"
+                              value={field.value ?? ""}
+                              onChange={(event) => field.onChange(toNumberOrUndefined(event.target.value))}
+                              placeholder="Ví dụ: 0.4200"
+                              className={FORM_INPUT_CLASS_NAME}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <FormField
                       control={form.control}
                       name="sampleDate"
@@ -557,6 +610,8 @@ export function SeasonSoilTestsWorkspace() {
                 <thead className="bg-muted/30">
                   <tr className="border-b border-border/50 text-muted-foreground">
                     <th className="text-left font-medium py-3 px-4">{t("seasonSoilWorkspace.list.headers.date")}</th>
+                    <th className="text-left font-medium py-3 px-4">pH</th>
+                    <th className="text-left font-medium py-3 px-4">EC <span className="text-xs font-normal text-muted-foreground">(dS/m)</span></th>
                     <th className="text-left font-medium py-3 px-4">{t("seasonSoilWorkspace.list.headers.mineralN")} <span className="text-xs font-normal text-muted-foreground">(kg/ha)</span></th>
                     <th className="text-left font-medium py-3 px-4">{t("seasonSoilWorkspace.list.headers.soilOrganicMatter")} <span className="text-xs font-normal text-muted-foreground">(%)</span></th>
                     <th className="text-left font-medium py-3 px-4">{t("seasonSoilWorkspace.list.headers.nContribution")} <span className="text-xs font-normal text-muted-foreground">(kg)</span></th>
@@ -568,6 +623,8 @@ export function SeasonSoilTestsWorkspace() {
                   {records.map((item) => (
                     <tr key={item.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
                       <td className="py-3 px-4 text-muted-foreground">{formatDate(item.sampleDate, locale)}</td>
+                      <td className="py-3 px-4 font-medium text-foreground">{item.soilPh?.toFixed(2) ?? "-"}</td>
+                      <td className="py-3 px-4 font-medium text-foreground">{formatNumber(item.electricalConductivityDsM)}</td>
                       <td className="py-3 px-4 font-medium text-foreground">{formatNumber(item.mineralNKgPerHa)}</td>
                       <td className="py-3 px-4 font-medium text-foreground">{formatNumber(item.soilOrganicMatterPct)}</td>
                       <td className="py-3 px-4 font-semibold text-primary">{formatNumber(item.estimatedNContributionKg)}</td>

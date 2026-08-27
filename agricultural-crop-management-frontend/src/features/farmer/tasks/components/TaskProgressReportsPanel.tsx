@@ -1,7 +1,12 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Activity, Clock, ExternalLink, RefreshCw, UserRound, CheckCircle } from "lucide-react";
-import { useSeasonProgressLogs } from "@/entities/labor";
+import {
+  type TaskProgressLog,
+  useApproveTask,
+  useRejectTask,
+  useSeasonProgressLogs,
+} from "@/entities/labor";
 import {
   Badge,
   Button,
@@ -21,9 +26,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  Textarea,
 } from "@/shared/ui";
 import { useI18n } from "@/shared/lib/hooks/useI18n";
-import { useState } from "react";
 import { toast } from "sonner";
 
 interface TaskProgressReportsPanelProps {
@@ -60,12 +65,50 @@ export function TaskProgressReportsPanel({ seasonId }: TaskProgressReportsPanelP
     { enabled: seasonId > 0 }
   );
 
-  const [verifyLog, setVerifyLog] = useState<any>(null);
+  const [verifyLog, setVerifyLog] = useState<TaskProgressLog | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const approveTask = useApproveTask();
+  const rejectTask = useRejectTask();
+  const isSubmitting = approveTask.isPending || rejectTask.isPending;
 
   const handleVerify = (status: "APPROVED" | "REJECTED") => {
-    if (!verifyLog) return;
-    toast.success(status === "APPROVED" ? `Đã duyệt công việc ${verifyLog.taskTitle} và cộng tiền vào bảng lương!` : `Đã từ chối công việc ${verifyLog.taskTitle}`);
-    setVerifyLog(null);
+    if (!verifyLog?.taskId) {
+      toast.error("Không xác định được công việc cần duyệt.");
+      return;
+    }
+
+    const closeDialog = async () => {
+      setVerifyLog(null);
+      setRejectReason("");
+      await refetch();
+    };
+
+    if (status === "APPROVED") {
+      approveTask.mutate(verifyLog.taskId, {
+        onSuccess: () => {
+          toast.success(`Đã duyệt công việc ${verifyLog.taskTitle ?? verifyLog.taskId} và cập nhật bảng lương.`);
+          void closeDialog();
+        },
+        onError: (error) => toast.error(error.message || "Không thể duyệt công việc."),
+      });
+      return;
+    }
+
+    const reason = rejectReason.trim();
+    if (!reason) {
+      toast.error("Vui lòng nhập lý do từ chối.");
+      return;
+    }
+    rejectTask.mutate(
+      { taskId: verifyLog.taskId, rejectReason: reason },
+      {
+        onSuccess: () => {
+          toast.success(`Đã từ chối công việc ${verifyLog.taskTitle ?? verifyLog.taskId}.`);
+          void closeDialog();
+        },
+        onError: (error) => toast.error(error.message || "Không thể từ chối công việc."),
+      }
+    );
   };
 
   const progressLogs = useMemo(() => sortNewestFirst(data?.items ?? []), [data?.items]);
@@ -235,7 +278,7 @@ export function TaskProgressReportsPanel({ seasonId }: TaskProgressReportsPanelP
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
-                      {log.progressPercent === 100 && (
+                      {log.progressPercent === 100 && log.taskId && (
                         <Button size="sm" variant="outline" className="h-8" onClick={() => setVerifyLog(log)}>
                           <CheckCircle className="w-4 h-4 mr-1 text-emerald-500" />
                           Duyệt
@@ -250,7 +293,15 @@ export function TaskProgressReportsPanel({ seasonId }: TaskProgressReportsPanelP
         )}
       </CardContent>
 
-      <Dialog open={!!verifyLog} onOpenChange={(open) => !open && setVerifyLog(null)}>
+      <Dialog
+        open={!!verifyLog}
+        onOpenChange={(open) => {
+          if (!open && !isSubmitting) {
+            setVerifyLog(null);
+            setRejectReason("");
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Duyệt công việc: {verifyLog?.taskTitle}</DialogTitle>
@@ -267,10 +318,34 @@ export function TaskProgressReportsPanel({ seasonId }: TaskProgressReportsPanelP
             ) : (
               <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">Không có hình ảnh báo cáo.</p>
             )}
+            <div className="space-y-2">
+              <label htmlFor="task-reject-reason" className="text-sm font-medium text-foreground">
+                Lý do từ chối
+              </label>
+              <Textarea
+                id="task-reject-reason"
+                value={rejectReason}
+                onChange={(event) => setRejectReason(event.target.value)}
+                placeholder="Bắt buộc khi từ chối báo cáo tiến độ"
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => handleVerify("REJECTED")}>Từ chối</Button>
-            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => handleVerify("APPROVED")}>Duyệt & Tính lương</Button>
+            <Button
+              variant="outline"
+              onClick={() => handleVerify("REJECTED")}
+              disabled={isSubmitting || !rejectReason.trim()}
+            >
+              Từ chối
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700"
+              onClick={() => handleVerify("APPROVED")}
+              disabled={isSubmitting}
+            >
+              {approveTask.isPending ? "Đang duyệt..." : "Duyệt & Tính lương"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

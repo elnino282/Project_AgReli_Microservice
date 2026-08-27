@@ -9,6 +9,15 @@ const publishedCertificate = {
   issuedDate: "2026-01-01",
   expiryDate: "2026-12-31",
   complianceScore: 0,
+  scopeMatched: true,
+  scopes: [{
+    seasonId: 1,
+    plotId: 1,
+    plotName: "Lo A1",
+    cropId: 1,
+    cropName: "Lua",
+    registeredAreaHa: 5,
+  }],
 };
 
 describe("public trace certification verification", () => {
@@ -23,5 +32,12 @@ describe("public trace certification verification", () => {
 
   it("verifies a published certification that has not expired", () => {
     expect(isCertificationVerified(publishedCertificate, new Date("2026-08-14T00:00:00Z"))).toBe(true);
+  });
+
+  it("does not verify a farm certificate when the product season is outside its scope", () => {
+    expect(isCertificationVerified(
+      { ...publishedCertificate, scopeMatched: false },
+      new Date("2026-08-14T00:00:00Z"),
+    )).toBe(false);
   });
 });

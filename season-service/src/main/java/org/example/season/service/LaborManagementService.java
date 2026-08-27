@@ -545,6 +545,7 @@ public class LaborManagementService {
         task.setActualEndDate(LocalDate.now());
         Task saved = taskRepository.save(task);
 
+        recalculatePayrollForTask(saved);
         domainEventPublisher.publish(new TaskCompletedEvent(task, previousStatus));
         return toTaskResponse(saved);
     }

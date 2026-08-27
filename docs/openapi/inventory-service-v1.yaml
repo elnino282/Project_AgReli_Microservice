@@ -414,6 +414,31 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseProductWarehouseLotResponse"
+  /api/v1/product-warehouses/lots/{id}/dispose-substandard:
+    post:
+      tags:
+      - product-warehouse-controller
+      operationId: disposeSubStandardLot
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubStandardDispositionRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseProductWarehouseLotResponse"
   /api/v1/product-warehouses/lots/{id}/adjust:
     post:
       tags:
@@ -431,6 +456,31 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/AdjustProductWarehouseLotRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseProductWarehouseLotResponse"
+  /api/v1/product-warehouse-lots/{id}/receive-to-warehouse:
+    post:
+      tags:
+      - product-warehouse-lot-controller
+      operationId: receiveToWarehouse
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReceiveToWarehouseRequest"
         required: true
       responses:
         "200":
@@ -853,6 +903,52 @@ paths:
             '*/*':
               schema:
                 type: string
+  /api/v1/public/lookup/supplies/available-names:
+    get:
+      tags:
+      - public-internal-lookup-controller
+      operationId: getAvailableSupplyNames
+      parameters:
+      - name: farmIds
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: string
+  /api/v1/public/lookup/supplies/available-details:
+    get:
+      tags:
+      - public-internal-lookup-controller
+      operationId: getAvailableSupplyDetails
+      parameters:
+      - name: farmIds
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupplyItemLookupDto"
   /api/v1/public/lookup/inventory/stock-context:
     get:
       tags:
@@ -1537,6 +1633,20 @@ components:
           type: string
         note:
           type: string
+        cropCategory:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        qualityGrade:
+          type: string
+        packagingType:
+          type: string
+        packagingCount:
+          type: integer
+          format: int32
+        processingType:
+          type: string
     ProductWarehouseLotDto:
       type: object
       properties:
@@ -1584,6 +1694,18 @@ components:
           - DEPLETED
           - ARCHIVED
           - AVAILABLE
+        cropCategory:
+          type: string
+        expiryDate:
+          type: string
+          format: date
+        packagingType:
+          type: string
+        packagingCount:
+          type: integer
+          format: int32
+        processingType:
+          type: string
     SyncLotRequest:
       type: object
       properties:
@@ -1753,6 +1875,20 @@ components:
         updatedAt:
           type: string
           format: date-time
+        cropCategory:
+          type: string
+        hasTemperatureAlert:
+          type: boolean
+        expiryDate:
+          type: string
+          format: date
+        packagingType:
+          type: string
+        packagingCount:
+          type: integer
+          format: int32
+        processingType:
+          type: string
     StockOutProductWarehouseLotRequest:
       type: object
       properties:
@@ -1763,6 +1899,25 @@ components:
           type: string
       required:
       - quantity
+    SubStandardDispositionRequest:
+      type: object
+      properties:
+        quantity:
+          type: number
+          minimum: 0.0
+        disposition:
+          type: string
+        buyerName:
+          type: string
+        buyerContact:
+          type: string
+        pricePerUnit:
+          type: number
+        note:
+          type: string
+      required:
+      - disposition
+      - quantity
     AdjustProductWarehouseLotRequest:
       type: object
       properties:
@@ -1772,6 +1927,15 @@ components:
           type: string
       required:
       - quantityDelta
+    ReceiveToWarehouseRequest:
+      type: object
+      properties:
+        currentMoisture:
+          type: number
+        targetMoisture:
+          type: number
+        mechanicalLoss:
+          type: number
     CreateWarehouseRequest:
       type: object
       properties:
@@ -2134,6 +2298,18 @@ components:
         resolvedItemId:
           type: integer
           format: int32
+    SupplyItemLookupDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        activeIngredient:
+          type: string
+        restrictedFlag:
+          type: boolean
     HarvestStockContextDto:
       type: object
       properties:
@@ -2576,6 +2752,5 @@ components:
   securitySchemes:
     bearerAuth:
       type: http
-      name: bearerAuth
       scheme: bearer
       bearerFormat: JWT

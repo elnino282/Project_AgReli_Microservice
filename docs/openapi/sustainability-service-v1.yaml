@@ -173,6 +173,27 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ApiResponseIrrigationWaterAnalysisResponse"
+  /api/v1/soil-tests/latest:
+    get:
+      tags:
+      - soil-test-controller
+      operationId: latestByPlots
+      parameters:
+      - name: plotIds
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ApiResponseListSoilTestResponse"
   /api/v1/internal/seasons/{seasonId}/soil-tests:
     get:
       tags:
@@ -708,6 +729,13 @@ components:
         sampleDate:
           type: string
           format: date
+        soilPh:
+          type: number
+          maximum: 14.0
+          minimum: 0.0
+        electricalConductivityDsM:
+          type: number
+          minimum: 0.0
         soilOrganicMatterPct:
           type: number
           maximum: 100.0
@@ -773,6 +801,10 @@ components:
         sampleDate:
           type: string
           format: date
+        soilPh:
+          type: number
+        electricalConductivityDsM:
+          type: number
         soilOrganicMatterPct:
           type: number
         mineralNKgPerHa:
@@ -1264,8 +1296,6 @@ components:
           type: number
         yield:
           type: number
-        noutput:
-          type: number
         nOutput:
           type: number
     InputsBreakdown:
@@ -1375,14 +1405,6 @@ components:
         nueMetric:
           $ref: "#/components/schemas/MetricValue"
         estimatedYieldMetric:
-          $ref: "#/components/schemas/MetricValue"
-        nsurplus:
-          type: number
-        noutput:
-          type: number
-        noutputMetric:
-          $ref: "#/components/schemas/MetricValue"
-        nsurplusMetric:
           $ref: "#/components/schemas/MetricValue"
         nOutput:
           type: number

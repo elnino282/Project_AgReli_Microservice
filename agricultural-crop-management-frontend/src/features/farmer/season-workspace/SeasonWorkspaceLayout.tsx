@@ -125,7 +125,7 @@ const WORKSPACE_MODULE_TABS = [
   { key: "irrigation-water-analyses", path: "irrigation-water-analyses", labelKey: "nav.irrigationWaterAnalysis", fallbackLabel: "Phân tích nước", icon: Droplets },
   { key: "soil-tests", path: "soil-tests", labelKey: "nav.soilTests", fallbackLabel: "Kiểm tra đất", icon: TestTubeDiagonal },
   { key: "reports", path: "reports", labelKey: "nav.reports", fallbackLabel: "Bao cao", icon: BarChart3 },
-  { key: "production-diary", path: "production-diary", labelKey: "nav.productionDiary", fallbackLabel: "Nhat ky SX", icon: FileText },
+  { key: "production-diary", path: "production-diary", labelKey: "nav.productionDiary", fallbackLabel: "Nhật ký sản xuất", icon: FileText },
 ] as const;
 
 const getTodayDate = () => new Date().toISOString().split("T")[0];

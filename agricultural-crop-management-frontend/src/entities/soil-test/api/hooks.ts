@@ -27,6 +27,18 @@ export const useSeasonSoilTests = (
     ...options,
   });
 
+export const useLatestSoilTests = (
+  plotIds: number[],
+  options?: Omit<UseQueryOptions<SoilTestResponse[], Error>, 'queryKey' | 'queryFn'>
+) =>
+  useQuery({
+    queryKey: soilTestKeys.latestByPlots(plotIds),
+    queryFn: () => soilTestApi.latestByPlots(plotIds),
+    enabled: plotIds.length > 0,
+    staleTime: 60 * 1000,
+    ...options,
+  });
+
 export const useCreateSoilTest = (
   seasonId: number,
   options?: UseMutationOptions<SoilTestResponse, Error, CreateSoilTestRequest>
@@ -40,6 +52,10 @@ export const useCreateSoilTest = (
     onSuccess: (data, variables, onMutateResult, context) => {
       queryClient.invalidateQueries({
         queryKey: soilTestKeys.listBySeasonBase(seasonId),
+        exact: false,
+      });
+      queryClient.invalidateQueries({
+        queryKey: soilTestKeys.latestByPlotsBase(),
         exact: false,
       });
 

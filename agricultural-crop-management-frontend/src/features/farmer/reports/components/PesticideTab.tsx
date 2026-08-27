@@ -18,7 +18,7 @@ const formatNullableNumber = (value: number | null, digits = 1) =>
     value === null ? "N/A" : value.toFixed(digits);
 
 export function PesticideTab({ records, getPesticideStatusBadge }: PesticideTabProps) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const recordsNeedingReview = records.filter((r) => r.status !== "safe").length;
 
     return (
@@ -58,16 +58,45 @@ export function PesticideTab({ records, getPesticideStatusBadge }: PesticideTabP
                             const statusBadge = getPesticideStatusBadge(record.status);
                             return (
                                 <TableRow key={record.id} className="hover:bg-muted/50">
-                                    <TableCell className="numeric text-foreground">{record.lotId}</TableCell>
                                     <TableCell className="text-foreground">
-                                        {record.chemical ?? record.notes ?? "N/A"}
+                                        <div className="numeric font-medium">{record.lotId}</div>
+                                        {record.appliedAt && (
+                                            <div className="mt-1 text-xs text-muted-foreground">
+                                                {new Date(`${record.appliedAt}T00:00:00`).toLocaleDateString(locale)}
+                                            </div>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="text-foreground">
+                                        <div className="font-medium">{record.chemical ?? "N/A"}</div>
+                                        {record.activeIngredient && (
+                                            <div className="mt-1 text-xs text-muted-foreground">
+                                                {record.activeIngredient}
+                                            </div>
+                                        )}
+                                        {(record.targetPest || record.applicationMethod) && (
+                                            <div className="mt-1 text-xs text-muted-foreground">
+                                                {[record.targetPest, record.applicationMethod].filter(Boolean).join(" • ")}
+                                            </div>
+                                        )}
+                                        {record.notes && (
+                                            <div className="mt-1 text-xs text-muted-foreground">{record.notes}</div>
+                                        )}
                                     </TableCell>
                                     <TableCell className="text-right numeric text-foreground">
-                                        {formatNullableNumber(record.quantity)}
-                                        {record.unit ? ` ${record.unit}` : ""}
+                                        {record.dosage ?? (
+                                            <>
+                                                {formatNullableNumber(record.quantity)}
+                                                {record.unit ? ` ${record.unit}` : ""}
+                                            </>
+                                        )}
                                     </TableCell>
                                     <TableCell className="text-right numeric text-foreground">
-                                        {record.phi ?? "N/A"}
+                                        <div>{record.phi ?? "N/A"}</div>
+                                        {record.harvestAllowedDate && (
+                                            <div className="mt-1 text-xs font-normal text-muted-foreground">
+                                                {new Date(`${record.harvestAllowedDate}T00:00:00`).toLocaleDateString(locale)}
+                                            </div>
+                                        )}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <span

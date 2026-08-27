@@ -1,32 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   Calendar,
-  CheckCircle2,
-  Clock,
-  XCircle,
-  AlertCircle,
-  TrendingUp,
-  DollarSign,
-  Package,
   Sprout,
   Tractor,
   ThermometerSun,
   ClipboardList,
 } from 'lucide-react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
 
 import { PageContainer } from '@/shared/ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/ui/card';
@@ -38,21 +17,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/select';
-import { Badge } from '@/shared/ui/badge';
-import { formatMoney } from '@/shared/lib';
 import { DataErrorBoundary } from '@/shared/ui/error-boundary/DataErrorBoundary';
 
-// Import Types & Hook
-import { FarmingLog, ReportData } from '@/features/farmer/dashboard/types/dashboard-types';
 import { FarmingLogsWidget } from '@/features/farmer/dashboard/components/FarmingLogsWidget';
 import { SeasonAnalyticsWidget } from '@/features/farmer/dashboard/components/SeasonAnalyticsWidget';
 import { SustainabilityOverviewWidget } from '@/features/farmer/dashboard/components/SustainabilityOverviewWidget';
+import {
+  formatSeasonOptionLabel,
+  getSeasonFarmName,
+} from '@/features/farmer/dashboard/lib/seasonDisplay';
+import type { Season } from '@/entities/season';
 import { useSeason } from '@/shared/contexts';
 import { SelectGroup, SelectLabel } from '@/shared/ui/select';
 
 export function FarmerDashboardPage() {
-  const { t } = useTranslation();
-  const { seasons, activeSeasons, isLoading, error } = useSeason();
+  const { seasons, activeSeasons } = useSeason();
 
   // 1. HEADER / TOP (Active Seasons)
   const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null);
@@ -73,39 +52,14 @@ export function FarmerDashboardPage() {
   }, [seasons, activeSeasons, selectedSeasonId]);
 
   const activeSeason = useMemo(() => {
-    return seasons?.find((s: any) => s.id === selectedSeasonId);
+    return seasons?.find((season) => season.id === selectedSeasonId);
   }, [seasons, selectedSeasonId]);
 
   const completedSeasons = useMemo(() => {
-    return seasons?.filter((s: any) => s.status === 'COMPLETED') || [];
+    return seasons?.filter((season) => season.status === 'COMPLETED') || [];
   }, [seasons]);
 
-  // Utility for status icon & color
-  const getStatusConfig = (status: FarmingLog['status']) => {
-    switch (status) {
-      case 'COMPLETED':
-        return { icon: <CheckCircle2 className="w-4 h-4 mr-1" />, color: 'bg-green-100 text-green-800 border-green-200' };
-      case 'PENDING':
-        return { icon: <Clock className="w-4 h-4 mr-1" />, color: 'bg-yellow-100 text-yellow-800 border-yellow-200' };
-      case 'CANCELLED':
-        return { icon: <XCircle className="w-4 h-4 mr-1" />, color: 'bg-red-100 text-red-800 border-red-200' };
-      default:
-        return { icon: <AlertCircle className="w-4 h-4 mr-1" />, color: 'bg-gray-100 text-gray-800 border-gray-200' };
-    }
-  };
-
-  const getActivityLabel = (type: FarmingLog['activityType']) => {
-    switch (type) {
-      case 'FERTILIZER': return 'Bón phân';
-      case 'PESTICIDE': return 'Xịt thuốc';
-      case 'WATERING': return 'Tưới nước';
-      case 'HARVEST': return 'Thu hoạch';
-      case 'OTHER': return 'Khác';
-      default: return 'Khác';
-    }
-  };
-
-  const COLORS = ['#10b981', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899'];
+  const renderSeasonOption = (season: Season) => formatSeasonOptionLabel(season);
 
   return (
     <PageContainer>
@@ -135,9 +89,9 @@ export function FarmerDashboardPage() {
                 {activeSeasons && activeSeasons.length > 0 && (
                   <SelectGroup>
                     <SelectLabel>Đang sản xuất</SelectLabel>
-                    {activeSeasons.map((season: any) => (
+                    {activeSeasons.map((season) => (
                       <SelectItem key={season.id} value={String(season.id)}>
-                        {season.seasonName} ({season.cropName})
+                        {renderSeasonOption(season)}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -145,9 +99,9 @@ export function FarmerDashboardPage() {
                 {completedSeasons && completedSeasons.length > 0 && (
                   <SelectGroup>
                     <SelectLabel>Đã thu hoạch</SelectLabel>
-                    {completedSeasons.map((season: any) => (
+                    {completedSeasons.map((season) => (
                       <SelectItem key={season.id} value={String(season.id)}>
-                        {season.seasonName} ({season.cropName})
+                        {renderSeasonOption(season)}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -175,7 +129,14 @@ export function FarmerDashboardPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Nông trại</p>
-                  <p className="font-semibold text-foreground line-clamp-1">{activeSeason.farmName}</p>
+                  <p className="font-semibold text-foreground line-clamp-1">
+                    {getSeasonFarmName(activeSeason)}
+                  </p>
+                  {activeSeason.plotName?.trim() && (
+                    <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
+                      Thửa đất: {activeSeason.plotName}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>

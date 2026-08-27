@@ -13,6 +13,7 @@ import type { AdminView } from '../types';
 const LEGACY_ADMIN_VIEW_REDIRECTS: Record<string, string> = {
   buyers: '/admin/users-roles?tab=users&role=BUYER',
   farmers: '/admin/users-roles?tab=users&role=FARMER',
+  'farm-documents': '/admin/cert-audits',
 };
 
 export function useAdminPortalShell(initialView: AdminView = 'dashboard') {

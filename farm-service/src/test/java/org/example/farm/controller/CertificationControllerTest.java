@@ -2,6 +2,7 @@ package org.example.farm.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.farm.config.TestSecurityConfig;
+import org.example.farm.config.CurrentUserService;
 import org.example.farm.dto.request.UpdateCertificationItemRequest;
 import org.example.farm.entity.*;
 import org.example.farm.repository.*;
@@ -66,6 +67,12 @@ public class CertificationControllerTest {
     @Autowired
     private CertificationItemStatusRepository itemStatusRepository;
 
+    @Autowired
+    private CertificationScopeRepository scopeRepository;
+
+    @MockBean
+    private CurrentUserService currentUserService;
+
     @MockBean
     private SeasonServiceClient seasonServiceClient;
 
@@ -80,6 +87,7 @@ public class CertificationControllerTest {
 
     @BeforeEach
     public void setUp() {
+        scopeRepository.deleteAll();
         itemStatusRepository.deleteAll();
         recordRepository.deleteAll();
         checklistItemRepository.deleteAll();
@@ -121,6 +129,7 @@ public class CertificationControllerTest {
                 .active(true)
                 .build();
         farm = farmRepository.save(farm);
+        when(currentUserService.getCurrentUserId()).thenReturn(1L);
 
         // 2. Tạo Plot
         plot = Plot.builder()
@@ -134,7 +143,7 @@ public class CertificationControllerTest {
 
         // 3. Tạo Standard
         standard = CertificationStandard.builder()
-                .code("VIETGAP-PLANTING-2024")
+                .code("VIETGAP-PLANTING-2026")
                 .name("VietGAP Trồng trọt 2024")
                 .type("VIETGAP_PLANTING")
                 .version("1.0")
@@ -168,6 +177,14 @@ public class CertificationControllerTest {
     }
 
     @Test
+    public void farmerCannotReadAnotherFarmCertificationDossier() throws Exception {
+        when(currentUserService.getCurrentUserId()).thenReturn(999L);
+
+        mockMvc.perform(get("/api/v1/farms/" + farm.getId() + "/certification"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     public void testCertificationWorkflow() throws Exception {
         // Mock Feign calls
         // Mock seasons list for plot
@@ -190,23 +207,39 @@ public class CertificationControllerTest {
         // Mock field logs count (SEEDING) -> return 0 (PENDING)
         when(seasonServiceClient.countFieldLogsByTypeInternal(eq(100), eq("SEEDING"))).thenReturn(0L);
 
-        // 1. GET Certification Details (Soil test PASS, Seeding PENDING -> score 50%)
+        // 1. Create the dossier. Without a product/plot scope it must remain ineligible.
         mockMvc.perform(get("/api/v1/farms/" + farm.getId() + "/certification")
                         .header("X-User-Id", 1L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.result.complianceScore").value(0.0))
+                .andExpect(jsonPath("$.result.isEligible").value(false));
+
+        CertificationRecord record = recordRepository
+                .findByFarmIdAndStandardId(farm.getId(), standard.getId()).orElseThrow();
+        scopeRepository.save(CertificationScope.builder()
+                .recordId(record.getId()).seasonId(100)
+                .plotId(plot.getId()).plotName(plot.getPlotName())
+                .cropId(1).cropName("Lua")
+                .registeredAreaHa(BigDecimal.ONE)
+                .expectedYieldKg(BigDecimal.valueOf(1000)).build());
+
+        // 2. Only evidence from the scoped season is scored.
+        mockMvc.perform(get("/api/v1/farms/" + farm.getId() + "/certification")
+                        .header("X-User-Id", 1L))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.complianceScore").value(50.0))
                 .andExpect(jsonPath("$.result.status").value("IN_PROGRESS"))
                 .andExpect(jsonPath("$.result.isEligible").value(false));
 
-        // 2. Try to Apply -> should return HTTP 400 because score is 50% (< 80%)
+        // 3. Try to Apply -> should return HTTP 400 because score is 50% (< 80%)
         mockMvc.perform(post("/api/v1/farms/" + farm.getId() + "/certification/apply")
                         .header("X-User-Id", 1L))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("ERR_BAD_REQUEST"));
 
-        // 3. Update Item 2 (SEEDING) to PASS manually
+        // 4. Update Item 2 (SEEDING) to PASS manually
         UpdateCertificationItemRequest updateReq = UpdateCertificationItemRequest.builder()
                 .status("PASS")
                 .notes("Đã cập nhật thủ công")
@@ -218,7 +251,7 @@ public class CertificationControllerTest {
                         .header("X-User-Id", 1L))
                 .andExpect(status().isOk());
 
-        // 4. GET Certification Details again -> score should now be 100%
+        // 5. GET Certification Details again -> score should now be 100%
         mockMvc.perform(get("/api/v1/farms/" + farm.getId() + "/certification")
                         .header("X-User-Id", 1L))
                 .andExpect(status().isOk())
@@ -226,7 +259,7 @@ public class CertificationControllerTest {
                 .andExpect(jsonPath("$.result.status").value("READY_TO_APPLY"))
                 .andExpect(jsonPath("$.result.isEligible").value(true));
 
-        // 5. Apply now -> should succeed
+        // 6. Apply now -> should succeed
         mockMvc.perform(post("/api/v1/farms/" + farm.getId() + "/certification/apply")
                         .header("X-User-Id", 1L))
                 .andExpect(status().isOk())

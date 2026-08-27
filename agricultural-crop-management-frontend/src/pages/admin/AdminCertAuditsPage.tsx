@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { certificationApi, type CertificationAudit } from "@/entities/farm/api/certificationApi";
+import {
+  certificationApi,
+  type CertificationApplication,
+  type CertificationAudit,
+} from "@/entities/farm/api/certificationApi";
 import { PageContainer } from "@/shared/ui";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -7,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { Textarea } from "@/shared/ui/textarea";
-import { AlertCircle, ArrowLeft, CheckCircle2, ClipboardCheck, Play, RefreshCw, XCircle } from "lucide-react";
+import { AlertCircle, ArrowLeft, CalendarPlus, CheckCircle2, ClipboardCheck, Play, RefreshCw, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -31,6 +35,7 @@ const statusClass = (status: string) => {
 
 export function AdminCertAuditsPage() {
   const [audits, setAudits] = useState<CertificationAudit[]>([]);
+  const [applications, setApplications] = useState<CertificationApplication[]>([]);
   const [selectedAudit, setSelectedAudit] = useState<CertificationAudit | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -39,6 +44,9 @@ export function AdminCertAuditsPage() {
   const [certificateNumber, setCertificateNumber] = useState("");
   const [issuedDate, setIssuedDate] = useState(today);
   const [expiryDate, setExpiryDate] = useState(nextYear);
+  const [scheduleFarmId, setScheduleFarmId] = useState("");
+  const [scheduleDate, setScheduleDate] = useState(today);
+  const [auditorOrgName, setAuditorOrgName] = useState("");
 
   const fetchAudits = async (selectedId?: number) => {
     try {
@@ -55,7 +63,22 @@ export function AdminCertAuditsPage() {
     }
   };
 
-  useEffect(() => { void fetchAudits(); }, []);
+  const fetchApplications = async () => {
+    try {
+      const data = await certificationApi.getCertificationApplications();
+      setApplications(data);
+      const actionable = data.filter((application) => ["APPLIED", "PERIODIC_REVIEW_DUE"].includes(application.status));
+      setScheduleFarmId((current) => current || actionable[0]?.farmId.toString() || "");
+    } catch (error) {
+      toast.error(errorMessage(error, "Không thể tải hàng đợi hồ sơ chứng nhận"));
+      setApplications([]);
+    }
+  };
+
+  useEffect(() => {
+    void fetchAudits();
+    void fetchApplications();
+  }, []);
 
   const runAuditAction = async (action: () => Promise<unknown>, success: string) => {
     if (!selectedAudit) return;
@@ -95,6 +118,30 @@ export function AdminCertAuditsPage() {
       }),
       "Cấp chứng nhận thành công",
     );
+  };
+
+  const handleScheduleAudit = async () => {
+    const farmId = Number(scheduleFarmId);
+    const application = applications.find((item) => item.farmId === farmId);
+    if (!application || !scheduleDate || !auditorOrgName.trim()) {
+      toast.error("Vui lòng chọn hồ sơ, ngày đánh giá và tổ chức chứng nhận");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      await certificationApi.scheduleAudit(farmId, {
+        auditType: application.status === "PERIODIC_REVIEW_DUE" ? "PERIODIC" : "INITIAL",
+        scheduledDate: scheduleDate,
+        auditorOrgName: auditorOrgName.trim(),
+      });
+      toast.success("Đã tiếp nhận và lên lịch đánh giá");
+      await Promise.all([fetchAudits(), fetchApplications()]);
+      setAuditorOrgName("");
+    } catch (error) {
+      toast.error(errorMessage(error, "Không thể lên lịch đánh giá"));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (selectedAudit) {
@@ -187,8 +234,38 @@ export function AdminCertAuditsPage() {
   return <PageContainer>
     <div className="mb-6 flex items-center justify-between">
       <div><h1 className="text-2xl font-bold text-slate-800">Quản lý Audit</h1><p className="text-sm text-slate-500">Theo dõi vòng đời đánh giá và cấp chứng nhận VietGAP.</p></div>
-      <Button onClick={() => void fetchAudits()} variant="outline" className="gap-2"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Làm mới</Button>
+      <Button onClick={() => void Promise.all([fetchAudits(), fetchApplications()])} variant="outline" className="gap-2"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Làm mới</Button>
     </div>
+    {applications.some((application) => ["APPLIED", "PERIODIC_REVIEW_DUE"].includes(application.status)) && (
+      <Card className="mb-6 border border-blue-200 bg-blue-50/40">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg"><CalendarPlus className="h-5 w-5 text-blue-700" /> Hồ sơ chờ tiếp nhận và lên lịch</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-4">
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-sm font-medium text-slate-700" htmlFor="schedule-application">Hồ sơ sản phẩm / vùng sản xuất</label>
+            <select id="schedule-application" className="h-10 w-full rounded-md border border-input bg-white px-3 text-sm" value={scheduleFarmId} onChange={(event) => setScheduleFarmId(event.target.value)}>
+              {applications.filter((application) => ["APPLIED", "PERIODIC_REVIEW_DUE"].includes(application.status)).map((application) => (
+                <option key={application.recordId} value={application.farmId}>
+                  {application.farmName || `Farm #${application.farmId}`} – {(application.scopes ?? []).map((scope) => `${scope.cropName}/${scope.plotName}`).join(", ") || "Chưa có phạm vi"} – {application.status} – {application.complianceScore ?? 0}%
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-700" htmlFor="schedule-date">Ngày đánh giá</label>
+            <Input id="schedule-date" type="date" min={today()} value={scheduleDate} onChange={(event) => setScheduleDate(event.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-700" htmlFor="auditor-org">Tổ chức chứng nhận</label>
+            <Input id="auditor-org" placeholder="Tên tổ chức đánh giá" value={auditorOrgName} onChange={(event) => setAuditorOrgName(event.target.value)} />
+          </div>
+          <div className="md:col-span-4 flex justify-end">
+            <Button disabled={submitting} onClick={handleScheduleAudit} className="gap-2 bg-blue-700 hover:bg-blue-800"><CalendarPlus className="h-4 w-4" /> Tiếp nhận & lên lịch</Button>
+          </div>
+        </CardContent>
+      </Card>
+    )}
     <Card className="overflow-hidden rounded-xl border border-slate-200 shadow-sm"><Table>
       <TableHeader className="bg-slate-50"><TableRow>
         <TableHead>Mã Audit</TableHead><TableHead>Nông trại</TableHead><TableHead>Tiêu chuẩn</TableHead><TableHead>Ngày Audit</TableHead><TableHead>Điểm số</TableHead><TableHead>Trạng thái</TableHead><TableHead className="text-right">Hành động</TableHead>

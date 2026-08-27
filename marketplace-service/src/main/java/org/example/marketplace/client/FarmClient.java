@@ -23,6 +23,7 @@ public interface FarmClient {
     @GetMapping("/api/v1/internal/farms/{farmId}/certification")
     org.example.marketplace.dto.client.FarmCertificationDto getFarmCertification(
         @PathVariable("farmId") Integer farmId,
-        @org.springframework.web.bind.annotation.RequestParam(value = "standardCode", defaultValue = "VIETGAP-PLANTING-2024") String standardCode
+        @org.springframework.web.bind.annotation.RequestParam(value = "standardCode", defaultValue = "VIETGAP-PLANTING-2026") String standardCode,
+        @org.springframework.web.bind.annotation.RequestParam(value = "seasonId", required = false) Integer seasonId
     );
 }

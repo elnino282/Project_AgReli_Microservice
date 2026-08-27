@@ -64,17 +64,39 @@ const getSafeNumber = (value: number | null | undefined, fallback = 0): number =
   typeof value === "number" && Number.isFinite(value) ? value : fallback;
 
 const parseHarvestGrade = (value?: string | null): HarvestGrade | undefined => {
-  if (value === "Premium" || value === "A" || value === "B" || value === "C") {
-    return value;
+  const normalized = value?.trim().toUpperCase();
+  if (normalized === "PREMIUM" || normalized === "GRADE_PREMIUM") {
+    return "Premium";
+  }
+  if (normalized === "A" || normalized === "GRADE_A") {
+    return "A";
+  }
+  if (normalized === "B" || normalized === "GRADE_B") {
+    return "B";
+  }
+  if (normalized === "C" || normalized === "GRADE_C") {
+    return "C";
   }
   return undefined;
 };
 
 const parseHarvestStatus = (value?: string | null): HarvestStatus | undefined => {
-  if (value === "stored" || value === "sold" || value === "processing") {
+  if (
+    value === "stored" ||
+    value === "sold" ||
+    value === "processing" ||
+    value === "PENDING_RECEIPT" ||
+    value === "RECEIVED"
+  ) {
     return value;
   }
   return undefined;
+};
+
+const parseMetadataNumber = (value?: string): number | undefined => {
+  if (value === undefined || value.trim() === "") return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
 };
 
 const getSeasonStatusLabel = (status: string | null | undefined, t: Translate): string => {
@@ -203,23 +225,48 @@ const escapeHtml = (value: unknown): string => {
     .replace(/'/g, "&#39;");
 };
 
-const transformApiToFeature = (h: ApiHarvest): HarvestBatch => ({
-  id: String(h.id),
-  batchId: String(h.id),
-  seasonId: h.seasonId ?? undefined,
-  seasonName: h.seasonName ?? undefined,
-  date: h.harvestDate,
-  createdAt: h.createdAt ?? undefined,
-  quantity: h.quantity,
-  unitPrice: h.unit ?? undefined,
-  revenue: h.revenue ?? undefined,
-  grade: parseHarvestGrade(h.grade),
-  status: parseHarvestStatus(h.status),
-  notes: h.note ?? undefined,
-  season:
-    h.seasonName ??
-    (h.seasonId && Number.isFinite(h.seasonId) ? `#${h.seasonId}` : undefined),
-});
+const transformApiToFeature = (h: ApiHarvest): HarvestBatch => {
+  const { metadata } = splitNoteMetadata(h.note);
+  const purity = parseMetadataNumber(metadata.purityPercent);
+  const foreignMatter = parseMetadataNumber(metadata.foreignMatterPercent);
+  const brokenGrains = parseMetadataNumber(metadata.brokenGrainsPercent);
+  const hasQcMetrics =
+    purity !== undefined && foreignMatter !== undefined && brokenGrains !== undefined;
+
+  return {
+    id: String(h.id),
+    batchId: String(h.id),
+    seasonId: h.seasonId ?? undefined,
+    seasonName: h.seasonName ?? undefined,
+    date: h.harvestDate,
+    createdAt: h.createdAt ?? undefined,
+    quantity: h.quantity,
+    unitPrice: h.unit ?? undefined,
+    revenue: h.revenue ?? undefined,
+    grade: parseHarvestGrade(h.grade),
+    moisture: parseMetadataNumber(metadata.moisturePercent),
+    status: parseHarvestStatus(h.status),
+    notes: h.note ?? undefined,
+    season:
+      h.seasonName ??
+      (h.seasonId && Number.isFinite(h.seasonId) ? `#${h.seasonId}` : undefined),
+    qcMetrics: hasQcMetrics
+      ? { purity, foreignMatter, brokenGrains }
+      : undefined,
+    qualityGrade: h.qualityGrade ?? undefined,
+    qualityNotes: h.qualityNotes ?? undefined,
+    subStandardQuantity: h.subStandardQuantity ?? undefined,
+    subStandardDisposition: h.subStandardDisposition ?? undefined,
+    packagingType: h.packagingType ?? undefined,
+    packagingCount: h.packagingCount ?? undefined,
+    processingType: h.processingType ?? undefined,
+    cropCategory: h.cropCategory ?? undefined,
+    grossWetWeight: h.grossWetWeight ?? undefined,
+    netDryWeight: h.netDryWeight ?? undefined,
+    warehouseReceiptStatus: h.warehouseReceiptStatus ?? undefined,
+    postHarvestDelayDays: h.postHarvestDelayDays ?? undefined,
+  };
+};
 
 export function useHarvestManagement() {
   const { t, locale } = useI18n();
@@ -640,6 +687,33 @@ export function useHarvestManagement() {
     }
 
     const residueHandling = formData.cropResidueHandling.trim() as CropResidueHandling | "";
+    const grossWetWeight = formData.grossWetWeight?.trim()
+      ? Number(formData.grossWetWeight)
+      : undefined;
+    const packagingCount = formData.packagingCount?.trim()
+      ? Number(formData.packagingCount)
+      : undefined;
+    const subStandardQuantity = formData.subStandardQuantity?.trim()
+      ? Number(formData.subStandardQuantity)
+      : undefined;
+    if (grossWetWeight !== undefined && (!Number.isFinite(grossWetWeight) || grossWetWeight <= 0)) {
+      toast.error(t("harvests.validation.grossWetWeightPositive", "Gross wet weight must be greater than 0"));
+      return;
+    }
+    if (packagingCount !== undefined && (!Number.isInteger(packagingCount) || packagingCount < 0)) {
+      toast.error(t("harvests.validation.packagingCountInvalid", "Packaging count must be a non-negative integer"));
+      return;
+    }
+    if (formData.qualityGrade === "SUBSTANDARD") {
+      if (subStandardQuantity === undefined || !Number.isFinite(subStandardQuantity) || subStandardQuantity <= 0) {
+        toast.error(t("harvests.validation.subStandardQuantityRequired", "Substandard quantity must be greater than 0"));
+        return;
+      }
+      if (!formData.subStandardDisposition) {
+        toast.error(t("harvests.validation.subStandardDispositionRequired", "Select a disposition for substandard produce"));
+        return;
+      }
+    }
     const lotCode = formData.lotCode.trim() || generateAutoLotCode(
       seasonId,
       formData.productName,
@@ -674,6 +748,18 @@ export function useHarvestManagement() {
               : 1,
           grade: formData.grade,
           note: noteWithMetadata,
+          qualityGrade: formData.qualityGrade,
+          qualityNotes: formData.qualityNotes?.trim() || undefined,
+          subStandardQuantity:
+            formData.qualityGrade === "SUBSTANDARD" ? subStandardQuantity : undefined,
+          subStandardDisposition:
+            formData.qualityGrade === "SUBSTANDARD"
+              ? formData.subStandardDisposition || undefined
+              : undefined,
+          packagingType: formData.packagingType || undefined,
+          packagingCount,
+          processingType: formData.processingType || undefined,
+          grossWetWeight,
         },
       });
       return;
@@ -700,6 +786,18 @@ export function useHarvestManagement() {
         inventoryUnit: formData.inventoryUnit.trim() || "kg",
         grade: formData.grade,
         note: noteWithMetadata,
+        qualityGrade: formData.qualityGrade,
+        qualityNotes: formData.qualityNotes?.trim() || undefined,
+        subStandardQuantity:
+          formData.qualityGrade === "SUBSTANDARD" ? subStandardQuantity : undefined,
+        subStandardDisposition:
+          formData.qualityGrade === "SUBSTANDARD"
+            ? formData.subStandardDisposition || undefined
+            : undefined,
+        packagingType: formData.packagingType || undefined,
+        packagingCount,
+        processingType: formData.processingType || undefined,
+        grossWetWeight,
       },
     });
   }, [
@@ -860,6 +958,15 @@ export function useHarvestManagement() {
       brokenGrains: metadata.brokenGrainsPercent ?? "",
       harvestLoss: metadata.harvestLossPercent ?? "",
       cropResidueHandling: (metadata.cropResidueHandling as CropResidueHandling | undefined) ?? "",
+      grossWetWeight: batch.grossWetWeight != null ? String(batch.grossWetWeight) : "",
+      qualityGrade: batch.qualityGrade ?? "PASSED",
+      qualityNotes: batch.qualityNotes ?? "",
+      subStandardQuantity:
+        batch.subStandardQuantity != null ? String(batch.subStandardQuantity) : "",
+      subStandardDisposition: batch.subStandardDisposition ?? "",
+      packagingType: batch.packagingType ?? "",
+      packagingCount: batch.packagingCount != null ? String(batch.packagingCount) : "",
+      processingType: batch.processingType ?? "",
     });
     setIsDetailsDrawerOpen(false);
     setIsAddBatchOpen(true);

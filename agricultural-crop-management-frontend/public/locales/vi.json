@@ -100,6 +100,8 @@
     "inventory": "Kho vật tư",
     "productWarehouse": "Kho sản phẩm",
     "documents": "Tài liệu",
+    "systemDocuments": "Tài liệu hệ thống",
+    "vietGapWorkspace": "VietGAP workspace",
     "farmDocuments": "Tài liệu VietGAP",
     "incidents": "Sự cố",
     "notifications": "Thông báo",
@@ -247,8 +249,12 @@
         "breadcrumb": "Đơn hàng sàn thương mại"
       },
       "documents": {
-        "title": "Tài liệu",
-        "breadcrumb": "Tài liệu"
+        "title": "Tài liệu hệ thống",
+        "breadcrumb": "Tài liệu hệ thống"
+      },
+      "vietGapWorkspace": {
+        "title": "VietGAP workspace",
+        "breadcrumb": "VietGAP workspace"
       },
       "farmDocuments": {
         "title": "Tài liệu VietGAP",
@@ -1636,10 +1642,17 @@
       "season": "Mùa vụ",
       "farmPlot": "Nông trại / Thửa đất",
       "harvestedAt": "Ngày thu hoạch",
+      "receivedAt": "Ngày nhập kho",
+      "expiryDate": "Ngày hết hạn",
+      "warehouseLocation": "Kho / Vị trí lưu kho",
+      "packaging": "Đóng gói",
+      "processing": "Sơ chế",
+      "quality": "Chất lượng / Phân hạng",
       "recordedBy": "Người ghi nhận",
       "initialQuantity": "Số lượng ban đầu",
       "onHandQuantity": "Số lượng tồn hiện tại",
       "harvestRef": "Tham chiếu thu hoạch",
+      "note": "Ghi chú",
       "transactions": "Lịch sử biến động kho"
     },
     "dialog": {
@@ -2412,6 +2425,18 @@
       "someFarmsFailedUpdate": "Một số nông trại không thể cập nhật"
     }
   },
+  "vietGapWorkspace": {
+    "title": "VietGAP workspace",
+    "subtitle": "Theo dõi mức độ sẵn sàng, hồ sơ, đánh giá và chứng nhận theo từng nông trại",
+    "loadError": "Không thể tải danh sách nông trại.",
+    "emptyTitle": "Chưa có nông trại để quản lý chứng nhận",
+    "emptyDescription": "Hãy tạo nông trại và vùng sản xuất trước khi chuẩn bị hồ sơ VietGAP.",
+    "manageFarms": "Đi đến Nông trại & Thửa đất",
+    "selectFarmTitle": "Chọn hồ sơ nông trại cần xem",
+    "selectFarmDescription": "Mỗi workspace chỉ hiển thị chứng nhận của sản phẩm và vùng sản xuất thuộc nông trại đã chọn.",
+    "locationUnknown": "Chưa cập nhật địa điểm",
+    "area": "Diện tích: {{area}} ha"
+  },
   "suppliers": {
     "title": "Nhà cung cấp & Vật tư",
     "subtitle": "Quản lý nhà cung cấp, vật tư và lô hàng",
@@ -2986,6 +3011,15 @@
     }
   },
   "documents": {
+    "system": {
+      "title": "Tài liệu hệ thống",
+      "subtitle": "Tra cứu tài nguyên nông nghiệp và hướng dẫn sử dụng nền tảng tại cùng một nơi",
+      "tabs": {
+        "ariaLabel": "Các nhóm tài liệu hệ thống",
+        "library": "Thư viện tài liệu",
+        "guide": "Hướng dẫn sử dụng"
+      }
+    },
     "title": "Tài liệu",
     "subtitle": "Truy cập hướng dẫn, mẫu biểu và tài nguyên nông nghiệp",
     "uploadButton": "Tải lên tài liệu",
