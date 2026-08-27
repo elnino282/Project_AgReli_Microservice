@@ -1,5 +1,7 @@
 package org.example.adminreporting.controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.example.adminreporting.dto.ApiResponse;
 import org.example.adminreporting.dto.PageResponse;
@@ -113,14 +115,16 @@ public class AdminDocumentController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/api/v1/admin/documents/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<AdminDocumentResponse>> getDocumentById(@PathVariable Integer id) {
         return ResponseEntity.ok(ApiResponse.success(adminDocumentService.getDocumentById(id)));
     }
 
-    @PostMapping
+    @PostMapping("/api/v1/admin/documents")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<AdminDocumentResponse>> createDocument(
-            @RequestBody CreateDocumentRequest request) {
+            @Valid @RequestBody CreateDocumentRequest request) {
         AdminDocumentResponse response = adminDocumentService.createDocument(
                 request.title(),
                 request.description(),
@@ -130,10 +134,11 @@ public class AdminDocumentController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/api/v1/admin/documents/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<AdminDocumentResponse>> updateDocument(
             @PathVariable Integer id,
-            @RequestBody CreateDocumentRequest request) {
+            @Valid @RequestBody CreateDocumentRequest request) {
         AdminDocumentResponse response = adminDocumentService.updateDocument(
                 id,
                 request.title(),
@@ -144,20 +149,22 @@ public class AdminDocumentController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/api/v1/admin/documents/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> softDeleteDocument(@PathVariable Integer id) {
         adminDocumentService.softDeleteDocument(id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    @DeleteMapping("/{id}/permanent")
+    @DeleteMapping("/api/v1/admin/documents/{id}/permanent")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> hardDeleteDocument(@PathVariable Integer id) {
         adminDocumentService.hardDeleteDocument(id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     public record CreateDocumentRequest(
-            String title,
+            @NotBlank(message = "Title is required") String title,
             String description,
             String documentUrl,
             String documentType,

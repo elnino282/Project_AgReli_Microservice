@@ -2,22 +2,24 @@ package org.example.adminreporting.smoke;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
-import org.example.adminreporting.config.TestSecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -44,13 +46,31 @@ import org.testcontainers.junit.jupiter.Testcontainers;
                 "spring.flyway.baseline-on-migrate=true",
                 "spring.jpa.hibernate.ddl-auto=none",
                 "spring.rabbitmq.listener.simple.auto-startup=false",
-                "admin-reporting.backfill.enabled=false"
+                "admin-reporting.backfill.enabled=false",
+                "management.endpoints.web.exposure.include=health,info,prometheus",
+                "management.endpoint.health.probes.enabled=true"
         })
 @AutoConfigureMockMvc
+@AutoConfigureObservability
 @ActiveProfiles("testcontainers")
-@Import(TestSecurityConfig.class)
 @Testcontainers
 class AdminReportingSmokeTest {
+
+        private static RequestPostProcessor adminJwt() {
+                return jwt()
+                        .jwt(token -> token
+                                .claim("user_id", 1L)
+                                .claim("scope", "ROLE_ADMIN"))
+                        .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        }
+
+        private static RequestPostProcessor buyerJwt() {
+                return jwt()
+                        .jwt(token -> token
+                                .claim("user_id", 2L)
+                                .claim("scope", "ROLE_BUYER"))
+                        .authorities(new SimpleGrantedAuthority("ROLE_BUYER"));
+        }
 
         @Container
         static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
@@ -94,33 +114,33 @@ class AdminReportingSmokeTest {
         class AdminFlowTests {
 
                 @Test
-                @DisplayName("GET /api/v1/admin/dashboard returns 200")
+                @DisplayName("GET /api/v1/admin/dashboard-stats returns 200")
                 void getDashboardReturns200() throws Exception {
-                        mockMvc.perform(get("/api/v1/admin/dashboard"))
+                        mockMvc.perform(get("/api/v1/admin/dashboard-stats").with(adminJwt()))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.code").value(1000))
+                                .andExpect(jsonPath("$.code").value("SUCCESS"))
                                 .andExpect(jsonPath("$.data").isMap());
                 }
 
                 @Test
-                @DisplayName("GET /api/v1/admin/reports/user-summary returns 200")
+                @DisplayName("GET /api/v1/admin/reports/users/summary returns 200")
                 void getUserSummaryReturns200() throws Exception {
-                        mockMvc.perform(get("/api/v1/admin/reports/user-summary")
-                                        .param("page", "0")
-                                        .param("size", "20"))
+                        mockMvc.perform(get("/api/v1/admin/reports/users/summary")
+                                        .with(adminJwt()))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.code").value(1000));
+                                .andExpect(jsonPath("$.code").value("SUCCESS"));
                 }
 
                 @Test
                 @DisplayName("GET /api/v1/admin/audit-logs returns paginated results")
                 void getAuditLogsReturns200() throws Exception {
                         mockMvc.perform(get("/api/v1/admin/audit-logs")
+                                        .with(adminJwt())
                                         .param("page", "0")
                                         .param("size", "10"))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.code").value(1000))
-                                .andExpect(jsonPath("$.data.content").isArray());
+                                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                                .andExpect(jsonPath("$.data.items").isArray());
                 }
         }
 
@@ -134,13 +154,15 @@ class AdminReportingSmokeTest {
                         Map<String, Object> request = Map.of(
                                 "title", "Smoke Test Document",
                                 "description", "Test content for smoke testing",
+                                "documentUrl", "https://example.test/smoke-document",
                                 "documentType", "NOTE");
 
                         mockMvc.perform(post("/api/v1/admin/documents")
+                                        .with(adminJwt())
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(request)))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.code").value(1000))
+                                .andExpect(jsonPath("$.code").value("SUCCESS"))
                                 .andExpect(jsonPath("$.data.title").value("Smoke Test Document"));
                 }
 
@@ -151,20 +173,49 @@ class AdminReportingSmokeTest {
                                 "description", "Content without title");
 
                         mockMvc.perform(post("/api/v1/admin/documents")
+                                        .with(adminJwt())
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(request)))
                                 .andExpect(status().isBadRequest());
                 }
 
                 @Test
+                @DisplayName("POST /api/v1/admin/documents rejects anonymous requests")
+                void createDocumentRejectsAnonymousRequest() throws Exception {
+                        Map<String, Object> request = Map.of(
+                                "title", "Protected document",
+                                "documentUrl", "https://example.test/protected");
+
+                        mockMvc.perform(post("/api/v1/admin/documents")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isUnauthorized());
+                }
+
+                @Test
+                @DisplayName("POST /api/v1/admin/documents rejects non-admin roles")
+                void createDocumentRejectsBuyerRole() throws Exception {
+                        Map<String, Object> request = Map.of(
+                                "title", "Protected document",
+                                "documentUrl", "https://example.test/protected");
+
+                        mockMvc.perform(post("/api/v1/admin/documents")
+                                        .with(buyerJwt())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isForbidden());
+                }
+
+                @Test
                 @DisplayName("GET /api/v1/admin/documents returns list")
                 void getDocumentsReturns200() throws Exception {
                         mockMvc.perform(get("/api/v1/admin/documents")
+                                        .with(adminJwt())
                                         .param("page", "0")
                                         .param("size", "10"))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.code").value(1000))
-                                .andExpect(jsonPath("$.data.content").isArray());
+                                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                                .andExpect(jsonPath("$.data.items").isArray());
                 }
         }
 
@@ -179,40 +230,43 @@ class AdminReportingSmokeTest {
                 @Test
                 @DisplayName("GET /api/v1/admin/farms/stats returns 200")
                 void getFarmStatsReturns200() throws Exception {
-                        mockMvc.perform(get("/api/v1/admin/farms/stats"))
+                        mockMvc.perform(get("/api/v1/admin/farms/stats").with(adminJwt()))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.code").value(1000));
+                                .andExpect(jsonPath("$.code").value("SUCCESS"));
                 }
 
                 @Test
                 @DisplayName("GET /api/v1/admin/farms returns paginated list")
                 void getFarmsReturns200() throws Exception {
                         mockMvc.perform(get("/api/v1/admin/farms")
+                                        .with(adminJwt())
                                         .param("page", "0")
                                         .param("size", "20"))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.code").value(1000))
-                                .andExpect(jsonPath("$.data.content").isArray());
+                                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                                .andExpect(jsonPath("$.data.items").isArray());
                 }
 
                 @Test
                 @DisplayName("GET /api/v1/admin/plots returns paginated list")
                 void getPlotsReturns200() throws Exception {
                         mockMvc.perform(get("/api/v1/admin/plots")
+                                        .with(adminJwt())
                                         .param("page", "0")
                                         .param("size", "20"))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.code").value(1000));
+                                .andExpect(jsonPath("$.code").value("SUCCESS"));
                 }
 
                 @Test
                 @DisplayName("GET /api/v1/admin/seasons returns paginated list")
                 void getSeasonsReturns200() throws Exception {
                         mockMvc.perform(get("/api/v1/admin/seasons")
+                                        .with(adminJwt())
                                         .param("page", "0")
                                         .param("size", "20"))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.code").value(1000));
+                                .andExpect(jsonPath("$.code").value("SUCCESS"));
                 }
         }
 
@@ -221,27 +275,27 @@ class AdminReportingSmokeTest {
         // ============================================================
 
         @Nested
-        @DisplayName("[Buyer] Marketplace Order Summary")
-        class BuyerFlowTests {
+        @DisplayName("[Admin] Cross-domain dashboard read models")
+        class CrossDomainDashboardTests {
 
                 @Test
-                @DisplayName("GET /api/v1/admin/marketplace/orders returns 200")
-                void getMarketplaceOrdersReturns200() throws Exception {
-                        mockMvc.perform(get("/api/v1/admin/marketplace/orders")
-                                        .param("page", "0")
-                                        .param("size", "20"))
+                @DisplayName("GET /api/v1/admin/dashboard/pending-approvals returns 200")
+                void getPendingApprovalsReturns200() throws Exception {
+                        mockMvc.perform(get("/api/v1/admin/dashboard/pending-approvals")
+                                        .with(adminJwt()))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.code").value(1000));
+                                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                                .andExpect(jsonPath("$.data").isArray());
                 }
 
                 @Test
-                @DisplayName("GET /api/v1/admin/marketplace/products returns 200")
-                void getMarketplaceProductsReturns200() throws Exception {
-                        mockMvc.perform(get("/api/v1/admin/marketplace/products")
-                                        .param("page", "0")
-                                        .param("size", "20"))
+                @DisplayName("GET /api/v1/admin/dashboard/inventory-health returns 200")
+                void getInventoryHealthReturns200() throws Exception {
+                        mockMvc.perform(get("/api/v1/admin/dashboard/inventory-health")
+                                        .with(adminJwt()))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.code").value(1000));
+                                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                                .andExpect(jsonPath("$.data").isMap());
                 }
         }
 
@@ -257,30 +311,31 @@ class AdminReportingSmokeTest {
                 @DisplayName("GET /api/v1/admin/incidents returns 200")
                 void getIncidentsReturns200() throws Exception {
                         mockMvc.perform(get("/api/v1/admin/incidents")
+                                        .with(adminJwt())
                                         .param("page", "0")
                                         .param("size", "20"))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.code").value(1000));
+                                .andExpect(jsonPath("$.code").value("SUCCESS"));
                 }
 
                 @Test
-                @DisplayName("GET /api/v1/admin/alerts returns 200")
-                void getAlertsReturns200() throws Exception {
-                        mockMvc.perform(get("/api/v1/admin/alerts")
-                                        .param("page", "0")
-                                        .param("size", "20"))
+                @DisplayName("GET /api/v1/admin/reports/incident-statistics returns 200")
+                void getIncidentStatisticsReturns200() throws Exception {
+                        mockMvc.perform(get("/api/v1/admin/reports/incident-statistics")
+                                        .with(adminJwt()))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.code").value(1000));
+                                .andExpect(jsonPath("$.code").value("SUCCESS"));
                 }
 
                 @Test
                 @DisplayName("GET /api/v1/admin/tasks returns 200")
                 void getTasksReturns200() throws Exception {
                         mockMvc.perform(get("/api/v1/admin/tasks")
+                                        .with(adminJwt())
                                         .param("page", "0")
                                         .param("size", "20"))
                                 .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.code").value(1000));
+                                .andExpect(jsonPath("$.code").value("SUCCESS"));
                 }
         }
 
@@ -318,7 +373,7 @@ class AdminReportingSmokeTest {
                 @Test
                 @DisplayName("Unknown endpoint returns 404")
                 void unknownEndpointReturns404() throws Exception {
-                        mockMvc.perform(get("/api/v1/nonexistent-endpoint"))
+                        mockMvc.perform(get("/api/v1/nonexistent-endpoint").with(adminJwt()))
                                 .andExpect(status().isNotFound());
                 }
         }

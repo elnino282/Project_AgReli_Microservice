@@ -83,11 +83,11 @@ class FlywayMigrationTest {
                 try (Connection conn = dataSource.getConnection();
                         Statement stmt = conn.createStatement();
                         ResultSet rs = stmt.executeQuery(
-                                "SELECT migration_id, success FROM flyway_schema_history WHERE success = 1 ORDER BY installed_rank")) {
+                                "SELECT version, success FROM flyway_schema_history WHERE success = 1 ORDER BY installed_rank")) {
 
                         Set<String> migrations = new HashSet<>();
                         while (rs.next()) {
-                                migrations.add(rs.getString("migration_id"));
+                                migrations.add(rs.getString("version"));
                         }
 
                         assertThat(migrations)
@@ -137,7 +137,7 @@ class FlywayMigrationTest {
                                 FROM information_schema.TABLE_CONSTRAINTS
                                 WHERE TABLE_SCHEMA = DATABASE()
                                   AND TABLE_NAME = 'processed_events'
-                                  AND CONSTRAINT_TYPE = 'UNIQUE'
+                                  AND CONSTRAINT_TYPE IN ('PRIMARY KEY', 'UNIQUE')
                                 """)) {
 
                         assertThat(rs.next())
@@ -147,21 +147,26 @@ class FlywayMigrationTest {
         }
 
         @Test
-        @DisplayName("Admin documents table has idempotent upsert support")
+        @DisplayName("Admin documents table has a stable primary key for idempotent upserts")
         void documentsTableHasIdempotency() throws Exception {
                 try (Connection conn = dataSource.getConnection();
                         Statement stmt = conn.createStatement();
                         ResultSet rs = stmt.executeQuery(
                                 """
-                                SELECT COLUMN_NAME
-                                FROM information_schema.COLUMNS
-                                WHERE TABLE_SCHEMA = DATABASE()
-                                  AND TABLE_NAME = 'admin_documents'
-                                  AND COLUMN_NAME IN ('document_uuid', 'external_id')
+                                SELECT kcu.COLUMN_NAME
+                                FROM information_schema.TABLE_CONSTRAINTS tc
+                                JOIN information_schema.KEY_COLUMN_USAGE kcu
+                                  ON tc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA
+                                 AND tc.TABLE_NAME = kcu.TABLE_NAME
+                                 AND tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
+                                WHERE tc.TABLE_SCHEMA = DATABASE()
+                                  AND tc.TABLE_NAME = 'admin_documents'
+                                  AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
+                                  AND kcu.COLUMN_NAME = 'document_id'
                                 """)) {
 
                         assertThat(rs.next())
-                                .as("admin_documents should have an external_id or document_uuid column for idempotent upserts")
+                                .as("admin_documents.document_id should be the stable key used by event upserts")
                                 .isTrue();
                 }
         }
