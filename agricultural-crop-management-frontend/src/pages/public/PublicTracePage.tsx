@@ -41,7 +41,7 @@ export function PublicTracePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+      <div className="h-full min-h-screen overflow-y-auto bg-slate-50 flex flex-col items-center justify-center p-4">
         <div className="flex flex-col items-center gap-4 bg-white p-8 rounded-3xl shadow-xl shadow-slate-100 max-w-sm w-full text-center">
           <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
           <div>
@@ -55,7 +55,7 @@ export function PublicTracePage() {
 
   if (isError || !traceability) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+      <div className="h-full min-h-screen overflow-y-auto bg-slate-50 flex flex-col items-center justify-center p-4">
         <div className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-100 max-w-md w-full text-center space-y-6">
           <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto text-rose-500">
             <AlertTriangle className="w-8 h-8" />
@@ -141,7 +141,10 @@ export function PublicTracePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-16 font-sans text-slate-800">
+    <div
+      data-testid="public-trace-scroll-container"
+      className="h-full min-h-screen overflow-y-auto bg-slate-50/50 pb-16 font-sans text-slate-800"
+    >
       {/* HEADER BANNER */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
